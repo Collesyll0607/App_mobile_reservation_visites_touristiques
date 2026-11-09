@@ -1,12 +1,14 @@
 
 import 'package:flutter/material.dart';
+
+import '../../core/config/api_config.dart';
 import '../../core/models/patrimoine.dart';
 import '../../core/models/reservation.dart';
 import '../../core/models/utilisateur.dart';
-import '../ticketing/ticket_qr_screen.dart';
+import '../payment/payment_screen.dart';
 
 /// Écran du Formulaire de Réservation d'une Visite Touristique
-/// Responsable : Ndeye Thiamba FAYE (Pôle 2)
+/// Responsable : Pôle 2
 class BookingFormScreen extends StatefulWidget {
   final Patrimoine site;
 
@@ -24,8 +26,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   String _modePaiement = 'WAVE';
 
   double get _montantTotal {
-    final totalEntrees = widget.site.tarifEntree * _nombrePersonnes;
-    final tarifGuide = _selectedGuide?.tarifGuideJournalier ?? 0;
+    final totalEntrees =
+        widget.site.tarifEntree * _nombrePersonnes;
+    final tarifGuide =
+        _selectedGuide?.tarifGuideJournalier ?? 0;
+
     return totalEntrees + tarifGuide;
   }
 
@@ -42,16 +47,24 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
           children: [
             Text(
               widget.site.nom,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
+
             const SizedBox(height: 16),
 
             // 1. Sélection de la date
             ListTile(
               tileColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              leading: const Icon(Icons.calendar_today, color: Color(0xFF1B5E20)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              leading: const Icon(
+                Icons.calendar_today,
+                color: Color(0xFF1B5E20),
+              ),
               title: const Text('Date de la visite'),
               subtitle: Text(
                 '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
@@ -63,20 +76,26 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     context: context,
                     initialDate: _selectedDate,
                     firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 180)),
+                    lastDate: DateTime.now().add(
+                      const Duration(days: 180),
+                    ),
                   );
+
                   if (picked != null) {
-                    setState(() => _selectedDate = picked);
+                    setState(() {
+                      _selectedDate = picked;
+                    });
                   }
                 },
                 child: const Text('Modifier'),
               ),
             ),
+
             const SizedBox(height: 14),
 
             // 2. Créneau horaire
             DropdownButtonFormField<String>(
-              value: _selectedSlot,
+              initialValue: _selectedSlot,
               decoration: const InputDecoration(
                 labelText: 'Créneau horaire',
                 border: OutlineInputBorder(),
@@ -85,50 +104,72 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               ),
               items: const [
                 DropdownMenuItem(
-                    value: '09h00 - 11h00', child: Text('Matin (09h00 - 11h00)')),
+                  value: '09h00 - 11h00',
+                  child: Text('Matin (09h00 - 11h00)'),
+                ),
                 DropdownMenuItem(
-                    value: '11h30 - 13h30', child: Text('Midi (11h30 - 13h30)')),
+                  value: '11h30 - 13h30',
+                  child: Text('Midi (11h30 - 13h30)'),
+                ),
                 DropdownMenuItem(
-                    value: '15h00 - 17h30',
-                    child: Text('Après-midi (15h00 - 17h30)')),
+                  value: '15h00 - 17h30',
+                  child: Text('Après-midi (15h00 - 17h30)'),
+                ),
               ],
-              onChanged: (val) =>
-                  setState(() => _selectedSlot = val ?? '09h00 - 11h00'),
+              onChanged: (val) {
+                setState(() {
+                  _selectedSlot = val ?? '09h00 - 11h00';
+                });
+              },
             ),
+
             const SizedBox(height: 14),
 
             // 3. Nombre de visiteurs
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Nombre de participants :',
-                    style: TextStyle(fontSize: 16)),
+                const Text(
+                  'Nombre de participants :',
+                  style: TextStyle(fontSize: 16),
+                ),
                 Row(
                   children: [
                     IconButton(
                       onPressed: _nombrePersonnes > 1
-                          ? () => setState(() => _nombrePersonnes--)
+                          ? () {
+                              setState(() {
+                                _nombrePersonnes--;
+                              });
+                            }
                           : null,
                       icon: const Icon(Icons.remove_circle_outline),
                     ),
                     Text(
                       '$_nombrePersonnes',
                       style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     IconButton(
-                      onPressed: () => setState(() => _nombrePersonnes++),
+                      onPressed: () {
+                        setState(() {
+                          _nombrePersonnes++;
+                        });
+                      },
                       icon: const Icon(Icons.add_circle_outline),
                     ),
                   ],
                 ),
               ],
             ),
+
             const SizedBox(height: 14),
 
-            // 4. Sélection d'un guide touristique (Optionnel)
+            // 4. Sélection du guide touristique
             DropdownButtonFormField<Utilisateur?>(
-              value: _selectedGuide,
+              initialValue: _selectedGuide,
               decoration: const InputDecoration(
                 labelText: 'Accompagnement par un Guide Touristique',
                 border: OutlineInputBorder(),
@@ -144,17 +185,23 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                   (g) => DropdownMenuItem<Utilisateur?>(
                     value: g,
                     child: Text(
-                        '${g.nomComplet} (+${g.tarifGuideJournalier!.toInt()} FCFA)'),
+                      '${g.nomComplet} (+${(g.tarifGuideJournalier ?? 0).toInt()} FCFA)',
+                    ),
                   ),
                 ),
               ],
-              onChanged: (val) => setState(() => _selectedGuide = val),
+              onChanged: (val) {
+                setState(() {
+                  _selectedGuide = val;
+                });
+              },
             ),
+
             const SizedBox(height: 14),
 
             // 5. Mode de paiement
             DropdownButtonFormField<String>(
-              value: _modePaiement,
+              initialValue: _modePaiement,
               decoration: const InputDecoration(
                 labelText: 'Moyen de paiement',
                 border: OutlineInputBorder(),
@@ -162,17 +209,29 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 fillColor: Colors.white,
               ),
               items: const [
-                DropdownMenuItem(value: 'WAVE', child: Text('Wave Mobile Money')),
                 DropdownMenuItem(
-                    value: 'ORANGE_MONEY', child: Text('Orange Money')),
+                  value: 'WAVE',
+                  child: Text('Wave Mobile Money'),
+                ),
                 DropdownMenuItem(
-                    value: 'SUR_PLACE', child: Text('Paiement au guichet')),
+                  value: 'ORANGE_MONEY',
+                  child: Text('Orange Money'),
+                ),
+                DropdownMenuItem(
+                  value: 'SUR_PLACE',
+                  child: Text('Paiement au guichet'),
+                ),
               ],
-              onChanged: (val) => setState(() => _modePaiement = val ?? 'WAVE'),
+              onChanged: (val) {
+                setState(() {
+                  _modePaiement = val ?? 'WAVE';
+                });
+              },
             ),
+
             const SizedBox(height: 24),
 
-            // Récapitulatif du tarif
+            // 6. Récapitulatif du tarif
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -184,7 +243,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 children: [
                   const Text(
                     'Montant Total :',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     '${_montantTotal.toInt()} FCFA',
@@ -197,10 +259,24 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
 
+            // 7. Continuer vers le paiement
             ElevatedButton.icon(
               onPressed: () {
+                // Le paiement au guichet n'est pas encore géré.
+                if (_modePaiement == 'SUR_PLACE') {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Veuillez choisir Wave ou Orange Money.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
                 final nouvelleReservation = Reservation(
                   id: DateTime.now().millisecondsSinceEpoch % 10000,
                   patrimoineId: widget.site.id,
@@ -213,7 +289,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                   nomGuide: _selectedGuide?.nomComplet,
                   montantTotal: _montantTotal,
                   modePaiement: _modePaiement,
-                  statut: 'CONFIRMEE',
+                  statut: 'EN_ATTENTE',
                   codeReservation:
                       'ZIG-${DateTime.now().millisecondsSinceEpoch % 100000}',
                 );
@@ -221,13 +297,14 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        TicketQrScreen(reservation: nouvelleReservation),
+                    builder: (_) => PaymentScreen(
+                      reservation: nouvelleReservation,
+                    ),
                   ),
                 );
               },
-              icon: const Icon(Icons.qr_code_2),
-              label: const Text('Confirmer & Générer le Billet QR'),
+              icon: const Icon(Icons.payment),
+              label: const Text('Continuer vers le paiement'),
             ),
           ],
         ),
