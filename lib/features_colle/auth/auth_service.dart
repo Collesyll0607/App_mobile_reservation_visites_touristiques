@@ -1,16 +1,18 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/utilisateur.dart';
 
-/// Service d'Authentification & Gestion de Session
+/// Service d'Authentification & Gestion de Session connecté à MySQL (ms-patrimoine)
 /// Responsable : Collé SYLL (Pôle 1 - Module Auth)
 class AuthService {
   static const String _sessionKey = 'colle_auth_current_user';
   static const String _usersListKey = 'colle_auth_registered_users';
+  static const String _apiAuthBase = 'http://127.0.0.1:8081/api/auth';
 
   static Utilisateur? _currentUser;
 
-  /// Comptes pré-configurés pour les tests et la soutenance
+  /// Comptes pré-configurés pour le mode hors-ligne
   static final List<Map<String, dynamic>> _defaultAccounts = [
     {
       'id': 1,
@@ -45,8 +47,36 @@ class AuthService {
     return _currentUser;
   }
 
-  /// Connexion avec email et mot de passe
+  /// Connexion avec email et mot de passe (Interroge MySQL via ms-patrimoine puis Fallback local)
   static Future<Utilisateur?> login(String email, String password) async {
+    // 1. Tentative sur MySQL (API Spring Boot ms-patrimoine)
+    try {
+      final resp = await http
+          .post(
+            Uri.parse('$_apiAuthBase/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'motDePasse': password.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 3));
+
+      if (resp.statusCode == 200) {
+        final map = jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+        final user = _mapToUser(map);
+        _currentUser = user;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_sessionKey, jsonEncode(map));
+        return user;
+      } else if (resp.statusCode == 401) {
+        return null;
+      }
+    } catch (_) {
+      // Serveur éteint : on bascule sur le stockage local
+    }
+
+    // 2. Fallback sur le stockage local SharedPreferences
     final accounts = await _getAllAccounts();
     for (final acc in accounts) {
       if (acc['email'].toString().toLowerCase() == email.trim().toLowerCase() &&
@@ -61,7 +91,7 @@ class AuthService {
     return null;
   }
 
-  /// Inscription d'un nouvel utilisateur (Touriste ou Guide)
+  /// Inscription d'un nouvel utilisateur (Enregistre dans MySQL -> table comptes_mobile)
   static Future<Utilisateur> register({
     required String nomComplet,
     required String email,
@@ -71,9 +101,43 @@ class AuthService {
     String? languesParlees,
     double? tarifGuideJournalier,
   }) async {
-    final accounts = await _getAllAccounts();
+    final payload = {
+      'nomComplet': nomComplet.trim(),
+      'email': email.trim(),
+      'motDePasse': password.trim(),
+      'telephone': telephone.trim(),
+      'role': role,
+      'languesParlees': languesParlees,
+      'tarifGuideJournalier': tarifGuideJournalier,
+    };
 
-    // Vérifier si l'email existe déjà
+    // 1. Enregistrement direct dans MySQL (patrimoinedb -> comptes_mobile) via ms-patrimoine
+    try {
+      final resp = await http
+          .post(
+            Uri.parse('$_apiAuthBase/register'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 3));
+
+      if (resp.statusCode == 201 || resp.statusCode == 200) {
+        final savedMap =
+            jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_sessionKey, jsonEncode(savedMap));
+        _currentUser = _mapToUser(savedMap);
+        return _currentUser!;
+      } else if (resp.statusCode == 409) {
+        throw Exception('Un compte existe déjà avec cet email dans MySQL.');
+      }
+    } catch (e) {
+      if (e.toString().contains('existe déjà')) rethrow;
+      // Si serveur éteint, on continue vers l'enregistrement local
+    }
+
+    // 2. Fallback enregistrement local
+    final accounts = await _getAllAccounts();
     final exists = accounts.any(
       (a) => a['email'].toString().toLowerCase() == email.trim().toLowerCase(),
     );
@@ -83,13 +147,7 @@ class AuthService {
 
     final newAccount = {
       'id': DateTime.now().millisecondsSinceEpoch % 100000,
-      'nomComplet': nomComplet.trim(),
-      'email': email.trim(),
-      'motDePasse': password.trim(),
-      'telephone': telephone.trim(),
-      'role': role,
-      'languesParlees': languesParlees,
-      'tarifGuideJournalier': tarifGuideJournalier,
+      ...payload,
     };
 
     accounts.add(newAccount);
@@ -101,14 +159,37 @@ class AuthService {
     return _currentUser!;
   }
 
-  /// Réinitialisation du mot de passe oublié à partir de l'adresse email
+  /// Réinitialisation du mot de passe oublié (Met à jour dans MySQL et en local)
   static Future<void> resetPassword({
     required String email,
     required String newPassword,
   }) async {
+    bool updatedInMysql = false;
+    try {
+      final resp = await http
+          .post(
+            Uri.parse('$_apiAuthBase/reset-password'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'nouveauMotDePasse': newPassword.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 3));
+
+      if (resp.statusCode == 200) {
+        updatedInMysql = true;
+      } else if (resp.statusCode == 404) {
+        throw Exception('Aucun compte trouvé avec cet email dans MySQL.');
+      }
+    } catch (e) {
+      if (e.toString().contains('Aucun compte')) rethrow;
+    }
+
+    if (updatedInMysql) return;
+
     final accounts = await _getAllAccounts();
     int foundIndex = -1;
-
     for (int i = 0; i < accounts.length; i++) {
       if (accounts[i]['email'].toString().toLowerCase() ==
           email.trim().toLowerCase()) {
@@ -138,6 +219,22 @@ class AuthService {
       throw Exception('Aucun utilisateur connecté.');
     }
     final currentMap = jsonDecode(raw) as Map<String, dynamic>;
+    final id = currentMap['id'];
+
+    try {
+      await http
+          .put(
+            Uri.parse('$_apiAuthBase/profile/$id'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'nomComplet': nomComplet.trim(),
+              'telephone': telephone.trim(),
+              'languesParlees': languesParlees?.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {}
+
     currentMap['nomComplet'] = nomComplet.trim();
     currentMap['telephone'] = telephone.trim();
     currentMap['languesParlees'] = languesParlees?.trim();
@@ -166,12 +263,12 @@ class AuthService {
 
   static Utilisateur _mapToUser(Map<String, dynamic> map) {
     return Utilisateur(
-      id: map['id'] ?? 1,
-      nomComplet: map['nomComplet'] ?? '',
-      email: map['email'] ?? '',
-      telephone: map['telephone'] ?? '',
-      role: map['role'] ?? 'TOURISTE',
-      languesParlees: map['languesParlees'],
+      id: (map['id'] ?? 1) as int,
+      nomComplet: (map['nomComplet'] ?? '').toString(),
+      email: (map['email'] ?? '').toString(),
+      telephone: (map['telephone'] ?? '').toString(),
+      role: (map['role'] ?? 'TOURISTE').toString(),
+      languesParlees: map['languesParlees']?.toString(),
       tarifGuideJournalier: map['tarifGuideJournalier'] != null
           ? (map['tarifGuideJournalier'] as num).toDouble()
           : null,
