@@ -101,6 +101,31 @@ class AuthService {
     return _currentUser!;
   }
 
+  /// Réinitialisation du mot de passe oublié à partir de l'adresse email
+  static Future<void> resetPassword({
+    required String email,
+    required String newPassword,
+  }) async {
+    final accounts = await _getAllAccounts();
+    int foundIndex = -1;
+
+    for (int i = 0; i < accounts.length; i++) {
+      if (accounts[i]['email'].toString().toLowerCase() ==
+          email.trim().toLowerCase()) {
+        foundIndex = i;
+        break;
+      }
+    }
+
+    if (foundIndex == -1) {
+      throw Exception('Aucun compte trouvé avec cet email.');
+    }
+
+    accounts[foundIndex]['motDePasse'] = newPassword.trim();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_usersListKey, jsonEncode(accounts));
+  }
+
   /// Mise à jour du profil de l'utilisateur connecté
   static Future<Utilisateur> updateProfile({
     required String nomComplet,

@@ -19,11 +19,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _telController = TextEditingController(text: '+221 77 ');
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _languesController =
       TextEditingController(text: 'Français, Wolof, Diola');
   final _tarifController = TextEditingController(text: '10000');
 
   String _selectedRole = 'TOURISTE';
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -144,17 +147,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 14),
 
+              // Champ Mot de passe avec icône œil pour afficher/masquer
               TextFormField(
                 controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
                   labelText: 'Mot de passe',
-                  prefixIcon: Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    tooltip: _obscurePassword
+                        ? 'Afficher le mot de passe'
+                        : 'Masquer le mot de passe',
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                  ),
                 ),
                 validator: (v) => (v == null || v.length < 4)
                     ? 'Minimum 4 caractères'
                     : null,
+              ),
+              const SizedBox(height: 14),
+
+              // Champ Confirmation du mot de passe avec icône œil
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: _obscureConfirmPassword,
+                decoration: InputDecoration(
+                  labelText: 'Confirmer le mot de passe',
+                  prefixIcon: const Icon(Icons.lock_reset_outlined),
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    tooltip: _obscureConfirmPassword
+                        ? 'Afficher la confirmation'
+                        : 'Masquer la confirmation',
+                    onPressed: () => setState(() =>
+                        _obscureConfirmPassword = !_obscureConfirmPassword),
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                  ),
+                ),
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'Veuillez confirmer le mot de passe';
+                  }
+                  if (v != _passwordController.text) {
+                    return 'Les deux mots de passe ne correspondent pas';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 14),
 
@@ -183,8 +232,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitRegister,
-                child: Text(
-                    _isLoading ? 'Création en cours...' : 'Valider l\'inscription'),
+                child: Text(_isLoading
+                    ? 'Création en cours...'
+                    : 'Valider l\'inscription'),
               ),
             ],
           ),

@@ -19,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Utilisateur? _currentUser;
   bool _isLoading = true;
+  bool _obscurePassword = true;
   String? _errorMessage;
 
   @override
@@ -54,6 +55,146 @@ class _LoginScreenState extends State<LoginScreen> {
         _errorMessage = 'Email ou mot de passe incorrect.';
       }
     });
+  }
+
+  Future<void> _openForgotPasswordDialog() async {
+    final resetEmailCtrl = TextEditingController(text: _emailController.text);
+    final newPassCtrl = TextEditingController();
+    final confirmPassCtrl = TextEditingController();
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+    String? dialogError;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              title: const Text('Récupération de mot de passe'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Saisissez l\'adresse email de votre compte et choisissez un nouveau mot de passe.',
+                      style: TextStyle(fontSize: 13, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 14),
+                    if (dialogError != null)
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          dialogError!,
+                          style:
+                              const TextStyle(color: Colors.red, fontSize: 13),
+                        ),
+                      ),
+                    TextField(
+                      controller: resetEmailCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Votre Email',
+                        prefixIcon: Icon(Icons.email_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: newPassCtrl,
+                      obscureText: obscureNew,
+                      decoration: InputDecoration(
+                        labelText: 'Nouveau mot de passe',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          onPressed: () =>
+                              setDialogState(() => obscureNew = !obscureNew),
+                          icon: Icon(
+                            obscureNew
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: confirmPassCtrl,
+                      obscureText: obscureConfirm,
+                      decoration: InputDecoration(
+                        labelText: 'Confirmer le mot de passe',
+                        prefixIcon: const Icon(Icons.lock_reset_outlined),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          onPressed: () => setDialogState(
+                              () => obscureConfirm = !obscureConfirm),
+                          icon: Icon(
+                            obscureConfirm
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Annuler'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (newPassCtrl.text.length < 4) {
+                      setDialogState(() => dialogError =
+                          'Le mot de passe doit contenir au moins 4 caractères.');
+                      return;
+                    }
+                    if (newPassCtrl.text != confirmPassCtrl.text) {
+                      setDialogState(() => dialogError =
+                          'Les deux mots de passe ne correspondent pas.');
+                      return;
+                    }
+                    try {
+                      await AuthService.resetPassword(
+                        email: resetEmailCtrl.text,
+                        newPassword: newPassCtrl.text,
+                      );
+                      if (!ctx.mounted) return;
+                      Navigator.pop(ctx);
+                      if (!mounted) return;
+                      setState(() {
+                        _emailController.text = resetEmailCtrl.text;
+                        _passwordController.text = newPassCtrl.text;
+                        _errorMessage = null;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Mot de passe réinitialisé avec succès ! Vous pouvez vous connecter.'),
+                        ),
+                      );
+                    } catch (e) {
+                      setDialogState(() {
+                        dialogError =
+                            e.toString().replaceAll('Exception: ', '');
+                      });
+                    }
+                  },
+                  child: const Text('Réinitialiser'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -121,16 +262,40 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+
+                      // Champ Mot de passe avec icône œil pour afficher/masquer
                       TextField(
                         controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
                           labelText: 'Mot de passe',
-                          prefixIcon: Icon(Icons.lock_outline),
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            tooltip: _obscurePassword
+                                ? 'Afficher le mot de passe'
+                                : 'Masquer le mot de passe',
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+
+                      // Lien "Mot de passe oublié ?"
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _openForgotPasswordDialog,
+                          child: const Text('Mot de passe oublié ?'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
                       ElevatedButton(
                         onPressed: _handleLogin,
                         child: const Text('Se connecter'),
