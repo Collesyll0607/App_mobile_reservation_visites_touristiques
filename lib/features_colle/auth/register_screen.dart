@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/utilisateur.dart';
 import 'auth_service.dart';
 
-/// Écran d'Inscription d'un nouveau Touriste ou Guide Touristique
+/// Écran d'Inscription d'un Touriste
 /// Responsable : Collé SYLL (Pôle 1 - Module Auth)
 class RegisterScreen extends StatefulWidget {
   final ValueChanged<Utilisateur> onRegistered;
@@ -20,11 +20,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _telController = TextEditingController(text: '+221 77 ');
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _languesController =
-      TextEditingController(text: 'Français, Wolof, Diola');
-  final _tarifController = TextEditingController(text: '10000');
+  final _languesController = TextEditingController(text: 'Français');
 
-  String _selectedRole = 'TOURISTE';
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -43,11 +40,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _emailController.text,
         password: _passwordController.text,
         telephone: _telController.text,
-        role: _selectedRole,
+        role: 'TOURISTE',
         languesParlees: _languesController.text,
-        tarifGuideJournalier: _selectedRole == 'GUIDE'
-            ? double.tryParse(_tarifController.text) ?? 10000
-            : null,
+        tarifGuideJournalier: null,
       );
       if (!mounted) return;
       widget.onRegistered(user);
@@ -64,7 +59,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Créer un compte')),
+      appBar: AppBar(title: const Text('Créer un compte Touriste')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -73,10 +68,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
-                'Inscription Touriste / Guide',
+                'Inscription Touriste',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 6),
+              const Text(
+                'Créez votre compte pour réserver vos visites touristiques en Casamance.',
+                style: TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+              const SizedBox(height: 18),
 
               if (_errorMessage != null)
                 Container(
@@ -91,24 +91,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
-
-              DropdownButtonFormField<String>(
-                initialValue: _selectedRole,
-                decoration: const InputDecoration(
-                  labelText: 'Type de compte',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                      value: 'TOURISTE', child: Text('Touriste / Visiteur')),
-                  DropdownMenuItem(
-                      value: 'GUIDE',
-                      child: Text('Guide Touristique Certifié')),
-                ],
-                onChanged: (val) =>
-                    setState(() => _selectedRole = val ?? 'TOURISTE'),
-              ),
-              const SizedBox(height: 14),
 
               TextFormField(
                 controller: _nomController,
@@ -210,31 +192,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextFormField(
                 controller: _languesController,
                 decoration: const InputDecoration(
-                  labelText: 'Langues parlées',
+                  labelText: 'Langue préférée pour la visite',
                   prefixIcon: Icon(Icons.language),
                   border: OutlineInputBorder(),
                 ),
               ),
-
-              if (_selectedRole == 'GUIDE') ...[
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _tarifController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Tarif d\'accompagnement (FCFA / visite)',
-                    prefixIcon: Icon(Icons.payments_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
 
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitRegister,
                 child: Text(_isLoading
                     ? 'Création en cours...'
-                    : 'Valider l\'inscription'),
+                    : 'Valider mon inscription'),
               ),
             ],
           ),

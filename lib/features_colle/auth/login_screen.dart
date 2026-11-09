@@ -226,14 +226,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'Espace Authentification',
+                        'Espace Touriste — Connexion',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Comptes démo : touriste@uasz.sn ou guide@uasz.sn (Mdp : 123456)',
+                        'Compte démo : touriste@uasz.sn (Mdp : 123456)',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
