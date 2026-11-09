@@ -14,8 +14,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController(text: 'touriste@uasz.sn');
-  final _passwordController = TextEditingController(text: '123456');
+  final _emailController =
+      TextEditingController(text: 'aissatou.fall@gmail.com');
+  final _passwordController = TextEditingController(text: 'passer123');
 
   Utilisateur? _currentUser;
   bool _isLoading = true;
@@ -233,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Compte démo : touriste@uasz.sn (Mdp : 123456)',
+                        'Comptes de la table "utilisateurs" : aissatou.fall@gmail.com (ou "touriste") — Mdp : passer123',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
@@ -256,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextField(
                         controller: _emailController,
                         decoration: const InputDecoration(
-                          labelText: 'Adresse Email',
+                          labelText: 'Adresse Email ou Identifiant (username)',
                           prefixIcon: Icon(Icons.email_outlined),
                           border: OutlineInputBorder(),
                         ),
