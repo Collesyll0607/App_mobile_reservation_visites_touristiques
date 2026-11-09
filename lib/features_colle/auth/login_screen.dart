@@ -32,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 24),
             DropdownButtonFormField<String>(
-              value: _selectedRole,
+              initialValue: _selectedRole,
               decoration: const InputDecoration(
                 labelText: 'Profil de connexion',
                 border: OutlineInputBorder(),

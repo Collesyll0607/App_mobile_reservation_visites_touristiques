@@ -76,7 +76,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
             // 2. Créneau horaire
             DropdownButtonFormField<String>(
-              value: _selectedSlot,
+              initialValue: _selectedSlot,
               decoration: const InputDecoration(
                 labelText: 'Créneau horaire',
                 border: OutlineInputBorder(),
@@ -128,7 +128,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
             // 4. Sélection d'un guide touristique (Optionnel)
             DropdownButtonFormField<Utilisateur?>(
-              value: _selectedGuide,
+              initialValue: _selectedGuide,
               decoration: const InputDecoration(
                 labelText: 'Accompagnement par un Guide Touristique',
                 border: OutlineInputBorder(),
@@ -154,7 +154,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
             // 5. Mode de paiement
             DropdownButtonFormField<String>(
-              value: _modePaiement,
+              initialValue: _modePaiement,
               decoration: const InputDecoration(
                 labelText: 'Moyen de paiement',
                 border: OutlineInputBorder(),
