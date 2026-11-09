@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
 import '../../core/models/reservation.dart';
+import '../services/reservation_service.dart';
 import '../ticketing/ticket_qr_screen.dart';
 
 /// Écran de paiement simulé
@@ -21,15 +21,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _telephoneController =
       TextEditingController();
+  final ReservationService _reservationService = ReservationService();
 
   String _modePaiement = 'WAVE';
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
 
-    if (widget.reservation.modePaiement == 'ORANGE_MONEY') {
-      _modePaiement = 'ORANGE_MONEY';
+    if (widget.reservation.modePaiement == 'ORANGE_MONEY' ||
+        widget.reservation.modePaiement == 'SUR_PLACE') {
+      _modePaiement = widget.reservation.modePaiement;
     }
   }
 
@@ -39,41 +42,70 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.dispose();
   }
 
-  void _simulerPaiement() {
-    if (!_formKey.currentState!.validate()) {
+  Future<void> _simulerPaiement() async {
+    if (_isSaving) return;
+
+    if (_modePaiement != 'SUR_PLACE' &&
+        !_formKey.currentState!.validate()) {
       return;
     }
 
-    final reservationPayee = Reservation(
-      id: widget.reservation.id,
-      patrimoineId: widget.reservation.patrimoineId,
-      nomPatrimoine: widget.reservation.nomPatrimoine,
-      nomTouriste: widget.reservation.nomTouriste,
-      dateVisite: widget.reservation.dateVisite,
-      creneauHoraire: widget.reservation.creneauHoraire,
-      nombrePersonnes: widget.reservation.nombrePersonnes,
-      nomGuide: widget.reservation.nomGuide,
-      montantTotal: widget.reservation.montantTotal,
+    setState(() {
+      _isSaving = true;
+    });
+
+    final bool estSurPlace = _modePaiement == 'SUR_PLACE';
+    final String statutFinal = estSurPlace ? 'EN_ATTENTE' : 'CONFIRMEE';
+
+    final reservationFinale = widget.reservation.copyWith(
       modePaiement: _modePaiement,
-      statut: 'CONFIRMEE',
-      codeReservation: widget.reservation.codeReservation,
+      statut: statutFinal,
     );
+
+    final bool sauvegardeReussie =
+        await _reservationService.save(reservationFinale);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isSaving = false;
+    });
+
+    if (!sauvegardeReussie) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.red,
+          content: Text(
+            'Erreur lors de la sauvegarde de la réservation. Veuillez réessayer.',
+          ),
+        ),
+      );
+      return;
+    }
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          icon: const Icon(
-            Icons.check_circle,
-            color: Colors.green,
+          icon: Icon(
+            estSurPlace ? Icons.schedule : Icons.check_circle,
+            color: estSurPlace ? Colors.orange : Colors.green,
             size: 55,
           ),
-          title: const Text('Paiement réussi !'),
+          title: Text(
+            estSurPlace
+                ? 'Réservation enregistrée !'
+                : 'Paiement réussi !',
+          ),
           content: Text(
-            'Votre paiement de '
-            '${widget.reservation.montantTotal.toInt()} FCFA '
-            'a été simulé avec succès.',
+            estSurPlace
+                ? 'Votre réservation de ${widget.reservation.montantTotal.toInt()} FCFA '
+                    'est enregistrée avec le statut EN ATTENTE.\n'
+                    'Le règlement se fera directement au guichet.'
+                : 'Votre paiement de '
+                    '${widget.reservation.montantTotal.toInt()} FCFA '
+                    'a été simulé et sauvegardé avec succès.',
           ),
           actions: [
             ElevatedButton(
@@ -84,7 +116,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => TicketQrScreen(
-                      reservation: reservationPayee,
+                      reservation: reservationFinale,
                     ),
                   ),
                 );
@@ -99,6 +131,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool estSurPlace = _modePaiement == 'SUR_PLACE';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Paiement de la réservation'),
@@ -163,61 +197,103 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              RadioListTile<String>(
-                title: const Text('Wave'),
-                subtitle: const Text('Paiement avec Wave'),
-                value: 'WAVE',
+              RadioGroup<String>(
                 groupValue: _modePaiement,
                 onChanged: (value) {
-                  setState(() {
-                    _modePaiement = value!;
-                  });
+                  if (value != null) {
+                    setState(() {
+                      _modePaiement = value;
+                    });
+                  }
                 },
-              ),
-              RadioListTile<String>(
-                title: const Text('Orange Money'),
-                subtitle: const Text('Paiement avec Orange Money'),
-                value: 'ORANGE_MONEY',
-                groupValue: _modePaiement,
-                onChanged: (value) {
-                  setState(() {
-                    _modePaiement = value!;
-                  });
-                },
+                child: const Column(
+                  children: [
+                    RadioListTile<String>(
+                      title: Text('Wave'),
+                      subtitle: Text('Paiement mobile immédiat avec Wave'),
+                      value: 'WAVE',
+                    ),
+                    RadioListTile<String>(
+                      title: Text('Orange Money'),
+                      subtitle: Text('Paiement mobile immédiat avec Orange Money'),
+                      value: 'ORANGE_MONEY',
+                    ),
+                    RadioListTile<String>(
+                      title: Text('Paiement sur place (Guichet)'),
+                      subtitle: Text(
+                        'Réservation en attente — règlement au guichet le jour de la visite',
+                      ),
+                      value: 'SUR_PLACE',
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 15),
-              TextFormField(
-                controller: _telephoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Numéro de téléphone',
-                  hintText: 'Exemple : 77 123 45 67',
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(),
+              if (!estSurPlace)
+                TextFormField(
+                  controller: _telephoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Numéro de téléphone',
+                    hintText: 'Exemple : 77 123 45 67',
+                    prefixIcon: Icon(Icons.phone),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (_modePaiement == 'SUR_PLACE') {
+                      return null;
+                    }
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Veuillez saisir votre numéro.';
+                    }
+
+                    final numero = value.replaceAll(
+                      RegExp(r'[\s+]'),
+                      '',
+                    );
+
+                    if (!RegExp(r'^(70|75|76|77|78)\d{7}$')
+                        .hasMatch(numero)) {
+                      return 'Veuillez saisir un numéro sénégalais valide.';
+                    }
+
+                    return null;
+                  },
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.orange),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Votre réservation sera sauvegardée avec le statut EN ATTENTE. Vous présenterez votre QR Code au guichet pour régler sur place.',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Veuillez saisir votre numéro.';
-                  }
-
-                  final numero = value.replaceAll(
-                    RegExp(r'[\s+]'),
-                    '',
-                  );
-
-                  if (!RegExp(r'^(70|75|76|77|78)\d{7}$')
-                      .hasMatch(numero)) {
-                    return 'Veuillez saisir un numéro sénégalais valide.';
-                  }
-
-                  return null;
-                },
-              ),
               const SizedBox(height: 25),
               ElevatedButton.icon(
-                onPressed: _simulerPaiement,
-                icon: const Icon(Icons.lock),
-                label: const Text('Simuler le paiement'),
+                onPressed: _isSaving ? null : _simulerPaiement,
+                icon: Icon(
+                  estSurPlace ? Icons.bookmark_added : Icons.lock,
+                ),
+                label: Text(
+                  _isSaving
+                      ? 'Enregistrement en cours...'
+                      : (estSurPlace
+                          ? 'Confirmer la réservation (Sur place)'
+                          : 'Simuler le paiement'),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1B5E20),
                   foregroundColor: Colors.white,
