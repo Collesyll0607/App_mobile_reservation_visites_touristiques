@@ -72,4 +72,22 @@ class Patrimoine {
       noteMoyenne: ((json['noteMoyenne'] ?? 4.8) as num).toDouble(),
     );
   }
+
+  /// Sérialise le patrimoine en JSON pour la persistance locale des favoris (SharedPreferences).
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nom': nom,
+      'description': description,
+      'historique': historique,
+      'categorie': categorie,
+      'localisation': localisation,
+      'latitude': latitude,
+      'longitude': longitude,
+      'tarifEntree': tarifEntree,
+      'horairesOuverture': horairesOuverture,
+      'imageUrl': imageUrl,
+      'noteMoyenne': noteMoyenne,
+    };
+  }
 }

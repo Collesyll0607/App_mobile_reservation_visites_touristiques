@@ -44,4 +44,54 @@ class Reservation {
       codeReservation: json['codeReservation'] ?? 'ZIG-2026-001',
     );
   }
+
+  /// Sérialise la réservation en Map JSON pour la persistance locale (SharedPreferences).
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'patrimoineId': patrimoineId,
+      'nomPatrimoine': nomPatrimoine,
+      'nomTouriste': nomTouriste,
+      'dateVisite': dateVisite,
+      'creneauHoraire': creneauHoraire,
+      'nombrePersonnes': nombrePersonnes,
+      'nomGuide': nomGuide,
+      'montantTotal': montantTotal,
+      'modePaiement': modePaiement,
+      'statut': statut,
+      'codeReservation': codeReservation,
+    };
+  }
+
+  /// Retourne une copie de la réservation avec les champs modifiés.
+  /// Utile pour changer le statut (ex : EN_ATTENTE → ANNULEE) sans recréer l'objet.
+  Reservation copyWith({
+    int? id,
+    int? patrimoineId,
+    String? nomPatrimoine,
+    String? nomTouriste,
+    String? dateVisite,
+    String? creneauHoraire,
+    int? nombrePersonnes,
+    String? nomGuide,
+    double? montantTotal,
+    String? modePaiement,
+    String? statut,
+    String? codeReservation,
+  }) {
+    return Reservation(
+      id: id ?? this.id,
+      patrimoineId: patrimoineId ?? this.patrimoineId,
+      nomPatrimoine: nomPatrimoine ?? this.nomPatrimoine,
+      nomTouriste: nomTouriste ?? this.nomTouriste,
+      dateVisite: dateVisite ?? this.dateVisite,
+      creneauHoraire: creneauHoraire ?? this.creneauHoraire,
+      nombrePersonnes: nombrePersonnes ?? this.nombrePersonnes,
+      nomGuide: nomGuide ?? this.nomGuide,
+      montantTotal: montantTotal ?? this.montantTotal,
+      modePaiement: modePaiement ?? this.modePaiement,
+      statut: statut ?? this.statut,
+      codeReservation: codeReservation ?? this.codeReservation,
+    );
+  }
 }

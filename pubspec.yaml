@@ -1,3 +1,4 @@
+
 name: reservation_visites_touristiques
 description: "Application mobile Flutter de réservation de visites touristiques (UASZ L3-2I - Collé SYLL & Ndeye Thiamba FAYE)"
 publish_to: 'none'
@@ -13,6 +14,7 @@ dependencies:
   http: ^1.2.0
   shared_preferences: ^2.2.2
   intl: ^0.19.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
