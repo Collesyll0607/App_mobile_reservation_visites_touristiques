@@ -29,19 +29,47 @@ class Patrimoine {
   });
 
   factory Patrimoine.fromJson(Map<String, dynamic> json) {
+    final nom = (json['nom'] ?? json['nomPatrimoine'] ?? '').toString();
+    String categorie = (json['categorie'] ?? '').toString();
+    if (categorie.isEmpty) {
+      if (nom.toLowerCase().contains('impluvium') ||
+          nom.toLowerCase().contains('case')) {
+        categorie = 'ARCHITECTURE';
+      } else if (nom.toLowerCase().contains('mémorial') ||
+          nom.toLowerCase().contains('musée')) {
+        categorie = 'MUSEE';
+      } else if (nom.toLowerCase().contains('port') ||
+          nom.toLowerCase().contains('bolong') ||
+          nom.toLowerCase().contains('réserve')) {
+        categorie = 'NATURE';
+      } else {
+        categorie = 'MONUMENT';
+      }
+    }
+
     return Patrimoine(
-      id: json['id'] ?? 0,
-      nom: json['nom'] ?? '',
-      description: json['description'] ?? '',
-      historique: json['historique'] ?? '',
-      categorie: json['categorie'] ?? 'PATRIMOINE',
-      localisation: json['localisation'] ?? 'Ziguinchor',
-      latitude: (json['latitude'] ?? 12.5833).toDouble(),
-      longitude: (json['longitude'] ?? -16.2719).toDouble(),
-      tarifEntree: (json['tarifEntree'] ?? 2000).toDouble(),
-      horairesOuverture: json['horairesOuverture'] ?? '08h00 - 18h00',
-      imageUrl: json['imageUrl'] ?? '',
-      noteMoyenne: (json['noteMoyenne'] ?? 4.7).toDouble(),
+      id: (json['id'] ?? 0) as int,
+      nom: nom,
+      description:
+          (json['description'] ?? json['descriptionPatrimoine'] ?? '').toString(),
+      historique:
+          (json['historique'] ?? json['historiquePatrimoine'] ?? '').toString(),
+      categorie: categorie,
+      localisation: (json['localisation'] ??
+              json['adressePatrimoine'] ??
+              'Ziguinchor')
+          .toString(),
+      latitude:
+          ((json['latitude'] ?? json['latitudePatrimoine'] ?? 12.5833) as num)
+              .toDouble(),
+      longitude:
+          ((json['longitude'] ?? json['longitudePatrimoine'] ?? -16.2719) as num)
+              .toDouble(),
+      tarifEntree: ((json['tarifEntree'] ?? 2000) as num).toDouble(),
+      horairesOuverture:
+          (json['horairesOuverture'] ?? '08h00 - 18h00').toString(),
+      imageUrl: (json['imageUrl'] ?? '').toString(),
+      noteMoyenne: ((json['noteMoyenne'] ?? 4.8) as num).toDouble(),
     );
   }
 }

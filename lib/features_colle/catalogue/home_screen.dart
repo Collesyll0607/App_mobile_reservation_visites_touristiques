@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/config/api_config.dart';
 import '../../core/models/patrimoine.dart';
+import 'patrimoine_service.dart';
 import 'site_detail_screen.dart';
 
 /// Écran d'Accueil & Catalogue des Sites Touristiques
-/// Responsable : Collé SYLL (Pôle 1)
+/// Responsable : Collé SYLL (Pôle 1 - Module Catalogue & API)
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -13,8 +14,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<Patrimoine> _allSites = ApiConfig.sitesCasamance;
+  bool _isLoading = true;
+  bool _fromApiRest = false;
+
   String _searchQuery = '';
   String _selectedCategory = 'TOUS';
+  String _sortBy = 'NOTE'; // NOTE, PRIX_ASC
 
   final List<String> _categories = [
     'TOUS',
@@ -24,8 +30,25 @@ class _HomeScreenState extends State<HomeScreen> {
     'ARCHITECTURE',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSites();
+  }
+
+  Future<void> _loadSites() async {
+    setState(() => _isLoading = true);
+    final result = await PatrimoineService.fetchPatrimoines();
+    if (!mounted) return;
+    setState(() {
+      _allSites = result.sites;
+      _fromApiRest = result.fromApiRest;
+      _isLoading = false;
+    });
+  }
+
   List<Patrimoine> get _filteredSites {
-    return ApiConfig.sitesCasamance.where((site) {
+    final list = _allSites.where((site) {
       final matchesCategory =
           _selectedCategory == 'TOUS' || site.categorie == _selectedCategory;
       final matchesSearch = site.nom
@@ -34,6 +57,13 @@ class _HomeScreenState extends State<HomeScreen> {
           site.localisation.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     }).toList();
+
+    if (_sortBy == 'PRIX_ASC') {
+      list.sort((a, b) => a.tarifEntree.compareTo(b.tarifEntree));
+    } else {
+      list.sort((a, b) => b.noteMoyenne.compareTo(a.noteMoyenne));
+    }
+    return list;
   }
 
   @override
@@ -41,12 +71,61 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Casamance Tourisme & Visites'),
+        actions: [
+          IconButton(
+            tooltip: 'Actualiser depuis l\'API',
+            onPressed: _loadSites,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
       ),
       body: Column(
         children: [
+          // Bandeau d'état de connexion avec l'API REST Spring Boot
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            color: _fromApiRest ? Colors.green.shade100 : Colors.amber.shade50,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _fromApiRest
+                      ? '● Connecté au serveur API Spring Boot (ms-patrimoine)'
+                      : '● Mode Local (Cache de secours actif)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _fromApiRest
+                        ? Colors.green.shade900
+                        : Colors.brown.shade800,
+                  ),
+                ),
+                DropdownButton<String>(
+                  value: _sortBy,
+                  underline: const SizedBox(),
+                  isDense: true,
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'NOTE',
+                      child: Text('Tri : Meilleure note',
+                          style: TextStyle(fontSize: 12)),
+                    ),
+                    DropdownMenuItem(
+                      value: 'PRIX_ASC',
+                      child: Text('Tri : Tarif croissant',
+                          style: TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                  onChanged: (val) => setState(() => _sortBy = val ?? 'NOTE'),
+                ),
+              ],
+            ),
+          ),
+
           // Barre de recherche
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(14.0),
             child: TextField(
               onChanged: (value) => setState(() => _searchQuery = value),
               decoration: InputDecoration(
@@ -64,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // Filtres par catégorie
           SizedBox(
-            height: 44,
+            height: 42,
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               scrollDirection: Axis.horizontal,
@@ -81,114 +160,118 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Liste des sites touristiques
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _filteredSites.length,
-              itemBuilder: (context, index) {
-                final site = _filteredSites[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 2,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SiteDetailScreen(site: site),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _filteredSites.length,
+                    itemBuilder: (context, index) {
+                      final site = _filteredSites[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SiteDetailScreen(site: site),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Chip(
+                                      label: Text(
+                                        site.categorie,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.star,
+                                            color: Colors.amber, size: 18),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          site.noteMoyenne.toString(),
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  site.nom,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_on_outlined,
+                                        size: 16, color: Colors.grey),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        site.localisation,
+                                        style:
+                                            const TextStyle(color: Colors.grey),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  site.description,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Tarif : ${site.tarifEntree.toInt()} FCFA / pers.',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1B5E20),
+                                      ),
+                                    ),
+                                    const Text(
+                                      'Détails & Avis →',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF1B5E20),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       );
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Chip(
-                                label: Text(
-                                  site.categorie,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  const Icon(Icons.star,
-                                      color: Colors.amber, size: 18),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    site.noteMoyenne.toString(),
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            site.nom,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on_outlined,
-                                  size: 16, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  site.localisation,
-                                  style: const TextStyle(color: Colors.grey),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            site.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Tarif : ${site.tarifEntree.toInt()} FCFA / pers.',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1B5E20),
-                                ),
-                              ),
-                              const Text(
-                                'Voir & Réserver →',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1B5E20),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
