@@ -41,3 +41,11 @@ app.*.map.json
 /android/app/release
 /android/.gradle/
 /android/local.properties
+
+# Java / Maven (Backend Spring Boot)
+target/
+backend/target/
+*.jar
+*.war
+*.ear
+
