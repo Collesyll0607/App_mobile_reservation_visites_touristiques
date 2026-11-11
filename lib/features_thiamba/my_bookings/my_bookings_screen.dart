@@ -428,6 +428,82 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
+  Future<void> _ouvrirEspaceGuideSecurise() async {
+    final pinController = TextEditingController();
+    String? erreurPin;
+
+    final bool? autorise = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.lock_person_outlined, color: Color(0xFF1B5E20)),
+                SizedBox(width: 8),
+                Text('Accès Guichet / Guide'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Cet espace est réservé aux guides et agents d\'accueil pour contrôler et valider les billets QR.',
+                  style: TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: pinController,
+                  obscureText: true,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Code PIN Agent / Guide',
+                    hintText: 'Code démo : 2026',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.pin_outlined),
+                  ),
+                ),
+                if (erreurPin != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    erreurPin!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Annuler'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (pinController.text.trim() == '2026') {
+                    Navigator.pop(ctx, true);
+                  } else {
+                    setDialogState(
+                        () => erreurPin = 'Code PIN incorrect (indice : 2026).');
+                  }
+                },
+                child: const Text('Déverrouiller'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (autorise == true && mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const GuideDashboardScreen()),
+      );
+      _chargerReservations();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final listeAffichee = _reservationsFiltrees;
@@ -439,15 +515,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            tooltip: 'Espace Guide',
-            icon: const Icon(Icons.badge_outlined),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const GuideDashboardScreen()),
-              );
-              _chargerReservations();
-            },
+            tooltip: 'Contrôle Guichet / Guide (PIN)',
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: _ouvrirEspaceGuideSecurise,
           ),
           IconButton(
             tooltip: 'Actualiser',

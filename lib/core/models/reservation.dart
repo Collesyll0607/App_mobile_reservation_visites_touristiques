@@ -30,18 +30,18 @@ class Reservation {
 
   factory Reservation.fromJson(Map<String, dynamic> json) {
     return Reservation(
-      id: json['id'] ?? 0,
-      patrimoineId: json['patrimoineId'] ?? 0,
-      nomPatrimoine: json['nomPatrimoine'] ?? '',
-      nomTouriste: json['nomTouriste'] ?? '',
-      dateVisite: json['dateVisite'] ?? '',
-      creneauHoraire: json['creneauHoraire'] ?? '09h00 - 11h00',
-      nombrePersonnes: json['nombrePersonnes'] ?? 1,
-      nomGuide: json['nomGuide'],
-      montantTotal: (json['montantTotal'] ?? 0).toDouble(),
-      modePaiement: json['modePaiement'] ?? 'WAVE',
-      statut: json['statut'] ?? 'CONFIRMEE',
-      codeReservation: json['codeReservation'] ?? 'ZIG-2026-001',
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      patrimoineId: (json['patrimoineId'] as num?)?.toInt() ?? 0,
+      nomPatrimoine: (json['nomPatrimoine'] ?? '').toString(),
+      nomTouriste: (json['nomTouriste'] ?? '').toString(),
+      dateVisite: (json['dateVisite'] ?? '').toString(),
+      creneauHoraire: (json['creneauHoraire'] ?? '09h00 - 11h00').toString(),
+      nombrePersonnes: (json['nombrePersonnes'] as num?)?.toInt() ?? 1,
+      nomGuide: json['nomGuide']?.toString(),
+      montantTotal: (json['montantTotal'] as num?)?.toDouble() ?? 0.0,
+      modePaiement: (json['modePaiement'] ?? 'WAVE').toString(),
+      statut: (json['statut'] ?? 'CONFIRMEE').toString(),
+      codeReservation: (json['codeReservation'] ?? 'ZIG-2026-001').toString(),
     );
   }
 

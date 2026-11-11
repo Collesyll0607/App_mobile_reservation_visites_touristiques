@@ -20,3 +20,4 @@ Ce dossier contient le microservice REST Spring Boot connecté à MySQL (`patrim
 - `POST /api/auth/register` : Inscription d'un nouveau touriste dans MySQL
 - `POST /api/auth/reset-password` : Réinitialisation de mot de passe oublié
 - `GET /api/avis/site/{id}` & `POST /api/avis` : Avis et notes sur les sites
+- `GET /api/reservations`, `POST /api/reservations`, `PUT /api/reservations/{code}/statut`, `DELETE /api/reservations/{code}` : Gestion complète des réservations dans MySQL (`reservations_mobile`)

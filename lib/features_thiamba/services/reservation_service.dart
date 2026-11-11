@@ -1,18 +1,16 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/reservation.dart';
 
-/// Service de persistance locale des reservations (Pole 2 - Ndeye Thiamba FAYE)
-///
-/// Toutes les reservations sont stockees dans SharedPreferences sous forme
-/// d'une liste JSON serialisee. La cle utilisee est [_storageKey].
-///
-/// Prevu pour fonctionner 100 % hors-ligne (sans backend Spring Boot).
-/// Lorsque le backend sera disponible, ce service pourra etre remplace
-/// ou complete par un appel HTTP tout en conservant la meme interface.
+/// Service de gestion des réservations connecté à MySQL (via ms-patrimoine /api/reservations)
+/// avec synchronisation locale SharedPreferences pour le mode hors-ligne.
 class ReservationService {
-  // Cle de stockage
   static const String _storageKey = 'pole2_reservations';
+  static const List<String> _candidateBaseUrls = [
+    'http://127.0.0.1:8081/api/reservations',
+    'http://10.0.2.2:8081/api/reservations',
+  ];
 
   // Singleton
   static final ReservationService _instance = ReservationService._internal();
@@ -21,27 +19,31 @@ class ReservationService {
 
   // ─── LECTURE ──────────────────────────────────────────────────────────────
 
-  /// Charge toutes les reservations sauvegardees localement.
-  /// Retourne une liste vide en cas d'erreur ou si aucune reservation n'existe.
+  /// Charge les réservations depuis l'API Spring Boot / MySQL,
+  /// puis met à jour le cache local. Bascule en mode local si le serveur est éteint.
   Future<List<Reservation>> loadAll() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? rawJson = prefs.getString(_storageKey);
-
-      if (rawJson == null || rawJson.isEmpty) return [];
-
-      final List<dynamic> decoded = jsonDecode(rawJson) as List<dynamic>;
-      return decoded
-          .map((item) => Reservation.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      await _clearCorruptedData();
-      return [];
+    for (final baseUrl in _candidateBaseUrls) {
+      try {
+        final resp = await http
+            .get(Uri.parse(baseUrl))
+            .timeout(const Duration(seconds: 2));
+        if (resp.statusCode == 200) {
+          final decoded =
+              jsonDecode(utf8.decode(resp.bodyBytes)) as List<dynamic>;
+          final list = decoded
+              .map((item) => Reservation.fromJson(item as Map<String, dynamic>))
+              .toList();
+          await _persistLocal(list);
+          return list;
+        }
+      } catch (_) {
+        // Test de l'URL suivante ou bascule locale
+      }
     }
+    return await _loadLocal();
   }
 
-  /// Charge une seule reservation par son [codeReservation].
-  /// Retourne null si introuvable.
+  /// Charge une seule réservation par son [codeReservation].
   Future<Reservation?> loadByCode(String codeReservation) async {
     final all = await loadAll();
     try {
@@ -51,100 +53,161 @@ class ReservationService {
     }
   }
 
-  /// Charge toutes les reservations filtrees par statut.
-  /// [statut] : 'EN_ATTENTE', 'CONFIRMEE', 'ANNULEE', 'EFFECTUEE'
+  /// Charge toutes les réservations filtrées par statut.
   Future<List<Reservation>> loadByStatut(String statut) async {
     final all = await loadAll();
     return all.where((r) => r.statut == statut).toList();
   }
 
-  /// Charge toutes les reservations associees a un guide (Espace Guide - Etape 5).
+  /// Charge toutes les réservations associées à un guide.
   Future<List<Reservation>> loadByGuide(String nomGuide) async {
     final all = await loadAll();
     return all.where((r) => r.nomGuide == nomGuide).toList();
   }
 
-  // ─── ECRITURE ─────────────────────────────────────────────────────────────
+  // ─── ÉCRITURE ─────────────────────────────────────────────────────────────
 
-  /// Sauvegarde une reservation (upsert par codeReservation).
-  /// Si une reservation avec le meme code existe deja, elle est remplacee.
-  /// Retourne true si la sauvegarde a reussi, false sinon.
+  /// Enregistre la réservation dans MySQL (table reservations_mobile) ET en cache local.
   Future<bool> save(Reservation reservation) async {
-    try {
-      final List<Reservation> all = await loadAll();
+    Reservation savedToStore = reservation;
 
-      final int existingIndex = all.indexWhere(
-        (r) =>
-            r.codeReservation == reservation.codeReservation ||
-            r.id == reservation.id,
-      );
+    for (final baseUrl in _candidateBaseUrls) {
+      try {
+        final resp = await http
+            .post(
+              Uri.parse(baseUrl),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(reservation.toJson()),
+            )
+            .timeout(const Duration(seconds: 3));
 
-      if (existingIndex >= 0) {
-        all[existingIndex] = reservation; // Mise a jour
-      } else {
-        all.add(reservation); // Nouvel ajout
+        if (resp.statusCode == 200 || resp.statusCode == 201) {
+          final map =
+              jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+          savedToStore = Reservation.fromJson(map);
+          break;
+        }
+      } catch (_) {
+        // Essai URL suivante ou sauvegarde locale seule
       }
-
-      return await _persist(all);
-    } catch (e) {
-      return false;
     }
+
+    return await _saveLocal(savedToStore);
   }
 
-  // ─── MISE A JOUR DE STATUT ────────────────────────────────────────────────
+  // ─── MISE À JOUR DE STATUT ────────────────────────────────────────────────
 
-  /// Met a jour le statut d'une reservation identifiee par [codeReservation].
-  /// Retourne true si la mise a jour a reussi, false si introuvable ou erreur.
-  Future<bool> updateStatut(String codeReservation, String nouveauStatut) async {
+  /// Met à jour le statut d'une réservation dans MySQL et en local.
+  Future<bool> updateStatut(
+      String codeReservation, String nouveauStatut) async {
+    bool savedInBackend = false;
+
+    for (final baseUrl in _candidateBaseUrls) {
+      try {
+        final resp = await http
+            .put(
+              Uri.parse('$baseUrl/$codeReservation/statut'),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({'statut': nouveauStatut}),
+            )
+            .timeout(const Duration(seconds: 3));
+
+        if (resp.statusCode == 200) {
+          savedInBackend = true;
+          final map =
+              jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+          await _saveLocal(Reservation.fromJson(map));
+          break;
+        }
+      } catch (_) {}
+    }
+
+    if (savedInBackend) return true;
+
     try {
-      final List<Reservation> all = await loadAll();
+      final List<Reservation> all = await _loadLocal();
       final int index = all.indexWhere(
         (r) => r.codeReservation == codeReservation,
       );
-
       if (index < 0) return false;
-
       all[index] = all[index].copyWith(statut: nouveauStatut);
-      return await _persist(all);
-    } catch (e) {
+      return await _persistLocal(all);
+    } catch (_) {
       return false;
     }
   }
 
   // ─── SUPPRESSION ──────────────────────────────────────────────────────────
 
-  /// Supprime definitivement une reservation par son [codeReservation].
-  /// Pour annuler, preferer updateStatut(..., 'ANNULEE') pour garder l'historique.
-  /// Retourne true si la suppression a reussi, false si introuvable ou erreur.
   Future<bool> delete(String codeReservation) async {
+    for (final baseUrl in _candidateBaseUrls) {
+      try {
+        final resp = await http
+            .delete(Uri.parse('$baseUrl/$codeReservation'))
+            .timeout(const Duration(seconds: 2));
+        if (resp.statusCode == 204 || resp.statusCode == 200) {
+          break;
+        }
+      } catch (_) {}
+    }
+
     try {
-      final List<Reservation> all = await loadAll();
+      final List<Reservation> all = await _loadLocal();
       final int countBefore = all.length;
-
       all.removeWhere((r) => r.codeReservation == codeReservation);
-
       if (all.length == countBefore) return false;
-
-      return await _persist(all);
-    } catch (e) {
+      return await _persistLocal(all);
+    } catch (_) {
       return false;
     }
   }
 
-  /// Supprime TOUTES les reservations. Utiliser uniquement en developpement.
   Future<bool> deleteAll() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       return await prefs.remove(_storageKey);
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
 
-  // ─── UTILITAIRES PRIVES ───────────────────────────────────────────────────
+  // ─── CACHE LOCAL (HORS-LIGNE) ─────────────────────────────────────────────
 
-  /// Serialise la liste et l'ecrit dans SharedPreferences.
-  Future<bool> _persist(List<Reservation> reservations) async {
+  Future<List<Reservation>> _loadLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? rawJson = prefs.getString(_storageKey);
+      if (rawJson == null || rawJson.isEmpty) return [];
+      final List<dynamic> decoded = jsonDecode(rawJson) as List<dynamic>;
+      return decoded
+          .map((item) => Reservation.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      await _clearCorruptedData();
+      return [];
+    }
+  }
+
+  Future<bool> _saveLocal(Reservation reservation) async {
+    try {
+      final List<Reservation> all = await _loadLocal();
+      final int existingIndex = all.indexWhere(
+        (r) =>
+            r.codeReservation == reservation.codeReservation ||
+            r.id == reservation.id,
+      );
+      if (existingIndex >= 0) {
+        all[existingIndex] = reservation;
+      } else {
+        all.insert(0, reservation);
+      }
+      return await _persistLocal(all);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> _persistLocal(List<Reservation> reservations) async {
     final prefs = await SharedPreferences.getInstance();
     final String encoded = jsonEncode(
       reservations.map((r) => r.toJson()).toList(),
@@ -152,13 +215,10 @@ class ReservationService {
     return await prefs.setString(_storageKey, encoded);
   }
 
-  /// Supprime la cle corrompue pour eviter de bloquer l'application.
   Future<void> _clearCorruptedData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_storageKey);
-    } catch (_) {
-      // Rien a faire
-    }
+    } catch (_) {}
   }
 }

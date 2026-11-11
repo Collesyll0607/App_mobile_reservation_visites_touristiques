@@ -4,6 +4,7 @@ import '../../core/config/api_config.dart';
 import '../../core/models/patrimoine.dart';
 import '../../core/models/reservation.dart';
 import '../../core/models/utilisateur.dart';
+import '../../features_colle/auth/auth_service.dart';
 import '../payment/payment_screen.dart';
 import '../services/favorites_service.dart';
 
@@ -32,6 +33,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   Utilisateur? _selectedGuide;
   String _modePaiement = 'WAVE';
   bool _estFavori = false;
+  String? _compteConnecteEmail;
 
   @override
   void initState() {
@@ -43,6 +45,18 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
           '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year}',
     );
     _verifierFavori();
+    _preremplirTouristeConnecte();
+  }
+
+  Future<void> _preremplirTouristeConnecte() async {
+    final user = await AuthService.getCurrentUser();
+    if (!mounted || user == null) return;
+    setState(() {
+      _compteConnecteEmail = user.email;
+      if (_nomTouristeController.text.trim().isEmpty) {
+        _nomTouristeController.text = user.nomComplet;
+      }
+    });
   }
 
   @override
@@ -182,6 +196,34 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 'Tarif unitaire : ${widget.site.tarifEntree.toInt()} FCFA / personne',
                 style: const TextStyle(color: Colors.grey, fontSize: 14),
               ),
+
+              if (_compteConnecteEmail != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.verified_user,
+                          size: 16, color: Color(0xFF1B5E20)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Compte connecté : $_compteConnecteEmail',
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1B5E20)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 18),
 
