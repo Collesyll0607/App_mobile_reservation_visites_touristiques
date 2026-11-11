@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../core/models/utilisateur.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/casamance_widgets.dart';
 import 'auth_service.dart';
 import 'profile_screen.dart';
 import 'register_screen.dart';
 
-/// Écran d'Authentification & Profil Utilisateur
+/// Écran d'Authentification & Profil Utilisateur — DA Casamance Tourisme
 /// Responsable : Collé SYLL (Pôle 1 - Module Auth)
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -53,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (user != null) {
         _currentUser = user;
       } else {
-        _errorMessage = 'Email ou mot de passe incorrect.';
+        _errorMessage = 'Email/identifiant ou mot de passe incorrect.';
       }
     });
   }
@@ -72,14 +74,22 @@ class _LoginScreenState extends State<LoginScreen> {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
-              title: const Text('Récupération de mot de passe'),
+              backgroundColor: AppTheme.cardSurface,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Text(
+                'Récupération de mot de passe',
+                style: AppTheme.editorialTitle(
+                    fontSize: 19, color: AppTheme.deepForest),
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       'Saisissez l\'adresse email de votre compte et choisissez un nouveau mot de passe.',
-                      style: TextStyle(fontSize: 13, color: Colors.black87),
+                      style: AppTheme.bodyStyle(
+                          fontSize: 12.5, color: AppTheme.textMuted),
                     ),
                     const SizedBox(height: 14),
                     if (dialogError != null)
@@ -87,13 +97,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         padding: const EdgeInsets.all(10),
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppTheme.lateriteRed.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           dialogError!,
-                          style:
-                              const TextStyle(color: Colors.red, fontSize: 13),
+                          style: const TextStyle(
+                              color: AppTheme.lateriteRed, fontSize: 12.5),
                         ),
                       ),
                     TextField(
@@ -101,7 +111,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Votre Email',
                         prefixIcon: Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -111,7 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: InputDecoration(
                         labelText: 'Nouveau mot de passe',
                         prefixIcon: const Icon(Icons.lock_outline),
-                        border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           onPressed: () =>
                               setDialogState(() => obscureNew = !obscureNew),
@@ -130,7 +138,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: InputDecoration(
                         labelText: 'Confirmer le mot de passe',
                         prefixIcon: const Icon(Icons.lock_reset_outlined),
-                        border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           onPressed: () => setDialogState(
                               () => obscureConfirm = !obscureConfirm),
@@ -200,127 +207,188 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppTheme.ivorySand,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_currentUser != null) {
+      return Scaffold(
+        backgroundColor: AppTheme.ivorySand,
+        body: ProfileScreen(
+          user: _currentUser!,
+          onUpdated: (updated) => setState(() => _currentUser = updated),
+          onLogout: () => setState(() => _currentUser = null),
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _currentUser == null ? 'Connexion & Inscription' : 'Mon Profil',
+      backgroundColor: AppTheme.ivorySand,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            CasamanceCurvedHeader(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 34),
+              child: Column(
+                children: [
+                  const CasamanceEmblemMark(size: 76, darkBackground: true),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Espace Touriste',
+                    style: AppTheme.editorialTitle(
+                      fontSize: 26,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Connectez-vous pour retrouver vos réservations',
+                    textAlign: TextAlign.center,
+                    style: AppTheme.bodyStyle(
+                      fontSize: 12.5,
+                      color: AppTheme.ivorySand.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 6, 20, 28),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardSurface,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: AppTheme.softShadow,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.sageSurface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Compte démo MySQL : aissatou.fall@gmail.com (ou "touriste") • Mdp : passer123',
+                        textAlign: TextAlign.center,
+                        style: AppTheme.bodyStyle(
+                          fontSize: 11.5,
+                          color: AppTheme.deepForest,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (_errorMessage != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 14),
+                        decoration: BoxDecoration(
+                          color: AppTheme.lateriteRed.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                              color: AppTheme.lateriteRed, fontSize: 13),
+                        ),
+                      ),
+
+                    TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Adresse Email ou Identifiant',
+                        prefixIcon: Icon(Icons.email_outlined,
+                            color: AppTheme.deepForest),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Mot de passe',
+                        prefixIcon: const Icon(Icons.lock_outline,
+                            color: AppTheme.deepForest),
+                        suffixIcon: IconButton(
+                          tooltip: _obscurePassword
+                              ? 'Afficher le mot de passe'
+                              : 'Masquer le mot de passe',
+                          onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword),
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _openForgotPasswordDialog,
+                        child: Text(
+                          'Mot de passe oublié ?',
+                          style: AppTheme.bodyStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.bolongTurquoise,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+
+                    ElevatedButton(
+                      onPressed: _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(26),
+                        ),
+                      ),
+                      child: const Text('Se connecter →'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => RegisterScreen(
+                              onRegistered: (newUser) {
+                                setState(() => _currentUser = newUser);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(26),
+                        ),
+                      ),
+                      icon: const Icon(Icons.person_add_outlined),
+                      label: const Text('Créer un nouveau compte Touriste'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _currentUser != null
-              ? ProfileScreen(
-                  user: _currentUser!,
-                  onUpdated: (updated) =>
-                      setState(() => _currentUser = updated),
-                  onLogout: () => setState(() => _currentUser = null),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Icon(
-                        Icons.account_circle,
-                        size: 72,
-                        color: Color(0xFF1B5E20),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Espace Touriste — Connexion',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Comptes de la table "utilisateurs" : aissatou.fall@gmail.com (ou "touriste") — Mdp : passer123',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 20),
-
-                      if (_errorMessage != null)
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _errorMessage!,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-
-                      TextField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Adresse Email ou Identifiant (username)',
-                          prefixIcon: Icon(Icons.email_outlined),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Champ Mot de passe avec icône œil pour afficher/masquer
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          labelText: 'Mot de passe',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          border: const OutlineInputBorder(),
-                          suffixIcon: IconButton(
-                            tooltip: _obscurePassword
-                                ? 'Afficher le mot de passe'
-                                : 'Masquer le mot de passe',
-                            onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword),
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Lien "Mot de passe oublié ?"
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _openForgotPasswordDialog,
-                          child: const Text('Mot de passe oublié ?'),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      ElevatedButton(
-                        onPressed: _handleLogin,
-                        child: const Text('Se connecter'),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => RegisterScreen(
-                                onRegistered: (newUser) {
-                                  setState(() => _currentUser = newUser);
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.person_add_outlined),
-                        label: const Text('Créer un nouveau compte'),
-                      ),
-                    ],
-                  ),
-                ),
     );
   }
 }

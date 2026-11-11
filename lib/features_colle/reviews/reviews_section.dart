@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/models/avis.dart';
+import '../../core/theme/app_theme.dart';
 import '../auth/auth_service.dart';
 import 'reviews_service.dart';
 
@@ -60,7 +61,14 @@ class _ReviewsSectionState extends State<ReviewsSection> {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
-              title: const Text('Donner mon avis sur ce site'),
+              backgroundColor: AppTheme.cardSurface,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Text(
+                'Partager votre avis',
+                style: AppTheme.editorialTitle(
+                    fontSize: 20, color: AppTheme.deepForest),
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -69,10 +77,15 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                       controller: nameCtrl,
                       decoration: const InputDecoration(
                         labelText: 'Votre nom',
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person_outline),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Note de la visite',
+                      style: AppTheme.bodyStyle(
+                          fontSize: 12.5, color: AppTheme.textMuted),
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(5, (i) {
@@ -82,10 +95,10 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                               setDialogState(() => selectedStars = starIndex),
                           icon: Icon(
                             starIndex <= selectedStars
-                                ? Icons.star
-                                : Icons.star_border,
-                            color: Colors.amber,
-                            size: 30,
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            color: AppTheme.solarGold,
+                            size: 32,
                           ),
                         );
                       }),
@@ -96,8 +109,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                       maxLines: 3,
                       decoration: const InputDecoration(
                         labelText: 'Votre commentaire',
-                        hintText: 'Partagez votre expérience de visite...',
-                        border: OutlineInputBorder(),
+                        hintText: 'Racontez votre expérience sur ce site...',
                       ),
                     ),
                   ],
@@ -121,7 +133,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     Navigator.pop(ctx);
                     await _loadReviews();
                   },
-                  child: const Text('Publier'),
+                  child: const Text('Publier l\'avis'),
                 ),
               ],
             );
@@ -137,71 +149,133 @@ class _ReviewsSectionState extends State<ReviewsSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Avis des visiteurs (${_reviews.length}) — ★ $_average/5',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Avis des visiteurs',
+                    style: AppTheme.editorialTitle(
+                      fontSize: 20,
+                      color: AppTheme.deepForest,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.star_rounded,
+                          color: AppTheme.solarGold, size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$_average / 5 • ${_reviews.length} avis',
+                        style: AppTheme.bodyStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            TextButton.icon(
+            OutlinedButton.icon(
               onPressed: _openAddReviewDialog,
-              icon: const Icon(Icons.rate_review_outlined),
-              label: const Text('Ajouter un avis'),
+              icon: const Icon(Icons.rate_review_outlined, size: 18),
+              label: const Text('Donner un avis'),
+              style: OutlinedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 14),
         if (_isLoading)
           const Center(child: CircularProgressIndicator())
         else if (_reviews.isEmpty)
-          const Text(
-            'Aucun avis pour le moment. Soyez le premier à partager votre expérience !',
-            style: TextStyle(color: Colors.grey),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.sageSurface.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              'Aucun avis pour le moment. Soyez le premier à partager votre découverte !',
+              style: AppTheme.bodyStyle(fontSize: 13, color: AppTheme.textMuted),
+            ),
           )
         else
           ..._reviews.map(
-            (r) => Card(
-              margin: const EdgeInsets.only(bottom: 10),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.green.shade100,
-                  child: Text(
-                    r.auteur.isNotEmpty ? r.auteur[0].toUpperCase() : 'V',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1B5E20),
-                    ),
-                  ),
-                ),
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(r.auteur,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Row(
-                      children: List.generate(
-                        5,
-                        (idx) => Icon(
-                          idx < r.note ? Icons.star : Icons.star_border,
-                          size: 16,
-                          color: Colors.amber,
+            (r) => Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppTheme.softShadow,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppTheme.deepForest,
+                        child: Text(
+                          r.auteur.isNotEmpty
+                              ? r.auteur[0].toUpperCase()
+                              : 'V',
+                          style: AppTheme.bodyStyle(
+                            color: AppTheme.solarGold,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 4),
-                    Text(r.commentaire),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Publié le ${r.datePublication}',
-                      style: const TextStyle(fontSize: 11, color: Colors.grey),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              r.auteur,
+                              style: AppTheme.bodyStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              'Publié le ${r.datePublication}',
+                              style: AppTheme.bodyStyle(
+                                fontSize: 11,
+                                color: AppTheme.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: List.generate(
+                          5,
+                          (idx) => Icon(
+                            idx < r.note
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            size: 16,
+                            color: AppTheme.solarGold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    r.commentaire,
+                    style: AppTheme.bodyStyle(fontSize: 13.5, height: 1.45),
+                  ),
+                ],
               ),
             ),
           ),

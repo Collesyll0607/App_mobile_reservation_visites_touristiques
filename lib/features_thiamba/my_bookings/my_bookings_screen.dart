@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../core/models/reservation.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/casamance_widgets.dart';
 import '../guide/guide_dashboard_screen.dart';
 import '../services/reservation_service.dart';
 import '../ticketing/ticket_qr_screen.dart';
 
-/// Écran Historique et Gestion des Réservations
+/// Écran Historique et Gestion des Réservations — DA Casamance Tourisme
 /// Responsable : Ndeye Thiamba FAYE (Pôle 2)
 class MyBookingsScreen extends StatefulWidget {
   final List<Reservation> reservations;
@@ -27,10 +29,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 
   static const List<Map<String, String>> _filtres = [
     {'code': 'TOUTES', 'label': 'Toutes'},
-    {'code': 'EN_ATTENTE', 'label': 'EN_ATTENTE'},
-    {'code': 'CONFIRMEE', 'label': 'CONFIRMEE'},
-    {'code': 'ANNULEE', 'label': 'ANNULEE'},
-    {'code': 'EFFECTUEE', 'label': 'EFFECTUEE'},
+    {'code': 'EN_ATTENTE', 'label': 'En attente'},
+    {'code': 'CONFIRMEE', 'label': 'Confirmées'},
+    {'code': 'EFFECTUEE', 'label': 'Effectuées'},
+    {'code': 'ANNULEE', 'label': 'Annulées'},
   ];
 
   @override
@@ -40,12 +42,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   Future<void> _chargerReservations() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     final sauvegardees = await _reservationService.loadAll();
-
     if (!mounted) return;
 
     setState(() {
@@ -61,30 +59,25 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   List<Reservation> get _reservationsFiltrees {
-    if (_filtreStatut == 'TOUTES') {
-      return _reservations;
-    }
-    return _reservations
-        .where((r) => r.statut == _filtreStatut)
-        .toList();
+    if (_filtreStatut == 'TOUTES') return _reservations;
+    return _reservations.where((r) => r.statut == _filtreStatut).toList();
   }
 
-  bool _estAnnulable(Reservation reservation) {
-    return reservation.statut == 'EN_ATTENTE';
-  }
+  bool _estAnnulable(Reservation reservation) =>
+      reservation.statut == 'EN_ATTENTE';
 
   Color _couleurStatut(String statut) {
     switch (statut) {
       case 'CONFIRMEE':
-        return Colors.green;
+        return AppTheme.deepForest;
       case 'EN_ATTENTE':
-        return Colors.orange;
+        return AppTheme.solarGold;
       case 'ANNULEE':
-        return Colors.red;
+        return AppTheme.lateriteRed;
       case 'EFFECTUEE':
-        return Colors.blue;
+        return AppTheme.bolongTurquoise;
       default:
-        return Colors.grey;
+        return AppTheme.textMuted;
     }
   }
 
@@ -106,11 +99,11 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   String _libelleModePaiement(String mode) {
     switch (mode) {
       case 'WAVE':
-        return 'Wave (WAVE)';
+        return 'Wave Mobile Money';
       case 'ORANGE_MONEY':
-        return 'Orange Money (ORANGE_MONEY)';
+        return 'Orange Money';
       case 'SUR_PLACE':
-        return 'Sur place / Guichet (SUR_PLACE)';
+        return 'Sur place (Guichet)';
       default:
         return mode;
     }
@@ -121,21 +114,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       reservation.codeReservation,
       'ANNULEE',
     );
-
     if (!ok) {
-      // Si la réservation venait uniquement du constructeur en mémoire, on la sauvegarde annulée
-      final annulee = reservation.copyWith(statut: 'ANNULEE');
-      await _reservationService.save(annulee);
+      await _reservationService.save(reservation.copyWith(statut: 'ANNULEE'));
     }
-
     await _chargerReservations();
-
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Réservation annulée et enregistrée.'),
-      ),
+      const SnackBar(content: Text('Réservation annulée et enregistrée.')),
     );
   }
 
@@ -143,10 +129,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     final confirmation = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Annuler la réservation ?'),
+        backgroundColor: AppTheme.cardSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Annuler la réservation ?',
+          style: AppTheme.editorialTitle(
+              fontSize: 19, color: AppTheme.deepForest),
+        ),
         content: Text(
-          'Voulez-vous vraiment annuler la réservation '
-          '${reservation.codeReservation} pour "${reservation.nomPatrimoine}" ?',
+          'Voulez-vous vraiment annuler la réservation ${reservation.codeReservation} pour "${reservation.nomPatrimoine}" ?',
         ),
         actions: [
           TextButton(
@@ -156,7 +147,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppTheme.lateriteRed,
               foregroundColor: Colors.white,
             ),
             child: const Text('Oui, annuler'),
@@ -170,264 +161,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     }
   }
 
-  Widget _barreFiltres() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: _filtres.map((filtre) {
-          final String code = filtre['code']!;
-          final String label = filtre['label']!;
-          final bool estSelectionne = _filtreStatut == code;
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(label),
-              selected: estSelectionne,
-              selectedColor: const Color(0xFF1B5E20),
-              labelStyle: TextStyle(
-                color: estSelectionne ? Colors.white : Colors.black87,
-                fontWeight: estSelectionne
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-              ),
-              onSelected: (_) {
-                setState(() {
-                  _filtreStatut = code;
-                });
-              },
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _carteReservation(Reservation reservation) {
-    final couleur = _couleurStatut(reservation.statut);
-    final bool annulable = _estAnnulable(reservation);
-    final bool billetDisponible =
-        reservation.statut == 'CONFIRMEE' ||
-        reservation.statut == 'EFFECTUEE';
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    reservation.nomPatrimoine,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    reservation.codeReservation,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 18),
-                const SizedBox(width: 8),
-                Text('Date : ${reservation.dateVisite}'),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                const Icon(Icons.badge_outlined, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Touriste : ${reservation.nomTouriste}',
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                const Icon(Icons.access_time, size: 18),
-                const SizedBox(width: 8),
-                Text('Horaire : ${reservation.creneauHoraire}'),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                const Icon(Icons.people, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  '${reservation.nombrePersonnes} participant(s)',
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                const Icon(Icons.person, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Guide : ${reservation.nomGuide ?? "Sans guide (Visite libre)"}',
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                const Icon(Icons.account_balance_wallet_outlined, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Paiement : ${_libelleModePaiement(reservation.modePaiement)}',
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            Text(
-              '${reservation.montantTotal.toInt()} FCFA',
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1B5E20),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: couleur.withAlpha(30),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${_nomStatut(reservation.statut)} (${reservation.statut})',
-                    style: TextStyle(
-                      color: couleur,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-
-                if (annulable)
-                  TextButton.icon(
-                    onPressed: () => _confirmerAnnulation(reservation),
-                    icon: const Icon(
-                      Icons.cancel_outlined,
-                      color: Colors.red,
-                      size: 18,
-                    ),
-                    label: const Text(
-                      'Annuler',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ),
-
-                if (billetDisponible)
-                  IconButton(
-                    tooltip: 'Voir mon billet QR',
-                    icon: const Icon(
-                      Icons.qr_code_2,
-                      color: Color(0xFF1B5E20),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TicketQrScreen(
-                            reservation: reservation,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _affichageVide() {
-    final bool aucunDansBase = _reservations.isEmpty;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.event_busy,
-              size: 70,
-              color: Colors.grey,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              aucunDansBase
-                  ? 'Aucune réservation pour le moment.'
-                  : 'Aucune réservation avec le statut $_filtreStatut.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _ouvrirEspaceGuideSecurise() async {
     final pinController = TextEditingController();
     String? erreurPin;
@@ -437,11 +170,19 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
           return AlertDialog(
-            title: const Row(
+            backgroundColor: AppTheme.cardSurface,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
               children: [
-                Icon(Icons.lock_person_outlined, color: Color(0xFF1B5E20)),
-                SizedBox(width: 8),
-                Text('Accès Guichet / Guide'),
+                const Icon(Icons.lock_person_outlined,
+                    color: AppTheme.deepForest),
+                const SizedBox(width: 8),
+                Text(
+                  'Accès Guichet / Guide',
+                  style: AppTheme.editorialTitle(
+                      fontSize: 19, color: AppTheme.deepForest),
+                ),
               ],
             ),
             content: Column(
@@ -460,7 +201,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Code PIN Agent / Guide',
                     hintText: 'Code démo : 2026',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.pin_outlined),
                   ),
                 ),
@@ -468,7 +208,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   const SizedBox(height: 8),
                   Text(
                     erreurPin!,
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                    style: const TextStyle(
+                        color: AppTheme.lateriteRed, fontSize: 12),
                   ),
                 ],
               ],
@@ -504,47 +245,287 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     }
   }
 
+  Widget _barreFiltres() {
+    return SizedBox(
+      height: 52,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        itemCount: _filtres.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final filtre = _filtres[index];
+          final code = filtre['code']!;
+          final label = filtre['label']!;
+          final estSelectionne = _filtreStatut == code;
+
+          return ChoiceChip(
+            label: Text(label),
+            selected: estSelectionne,
+            selectedColor: AppTheme.deepForest,
+            backgroundColor: AppTheme.cardSurface,
+            showCheckmark: false,
+            labelStyle: AppTheme.bodyStyle(
+              fontSize: 12.5,
+              fontWeight: estSelectionne ? FontWeight.w600 : FontWeight.w500,
+              color: estSelectionne ? AppTheme.solarGold : AppTheme.textDark,
+            ),
+            onSelected: (_) => setState(() => _filtreStatut = code),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _carteReservation(Reservation reservation) {
+    final couleur = _couleurStatut(reservation.statut);
+    final bool annulable = _estAnnulable(reservation);
+    final bool billetDisponible = reservation.statut == 'CONFIRMEE' ||
+        reservation.statut == 'EFFECTUEE' ||
+        reservation.statut == 'EN_ATTENTE';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppTheme.softShadow,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    reservation.nomPatrimoine,
+                    style: AppTheme.editorialTitle(
+                      fontSize: 18,
+                      color: AppTheme.deepForest,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.ivorySand,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    reservation.codeReservation,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11.5,
+                      color: AppTheme.deepForest,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _infoLine(Icons.calendar_today_rounded,
+                '${reservation.dateVisite} • ${reservation.creneauHoraire}'),
+            const SizedBox(height: 5),
+            _infoLine(Icons.person_outline_rounded,
+                'Touriste : ${reservation.nomTouriste} (${reservation.nombrePersonnes} pers.)'),
+            const SizedBox(height: 5),
+            _infoLine(Icons.tour_outlined,
+                'Guide : ${reservation.nomGuide ?? "Visite libre"}'),
+            const SizedBox(height: 5),
+            _infoLine(Icons.account_balance_wallet_outlined,
+                'Paiement : ${_libelleModePaiement(reservation.modePaiement)}'),
+            const Divider(height: 22),
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: couleur.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    _nomStatut(reservation.statut),
+                    style: AppTheme.bodyStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: couleur == AppTheme.solarGold
+                          ? AppTheme.deepForest
+                          : couleur,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  '${reservation.montantTotal.toInt()} FCFA',
+                  style: AppTheme.bodyStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.deepForest,
+                  ),
+                ),
+                const Spacer(),
+                if (annulable)
+                  IconButton(
+                    tooltip: 'Annuler cette réservation',
+                    onPressed: () => _confirmerAnnulation(reservation),
+                    icon: const Icon(Icons.cancel_outlined,
+                        color: AppTheme.lateriteRed),
+                  ),
+                if (billetDisponible)
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              TicketQrScreen(reservation: reservation),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: const Icon(Icons.qr_code_2_rounded, size: 18),
+                    label: const Text('Billet'),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _infoLine(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppTheme.bolongTurquoise),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: AppTheme.bodyStyle(fontSize: 12.5, color: AppTheme.textDark),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _affichageVide() {
+    final bool aucunDansBase = _reservations.isEmpty;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: const BoxDecoration(
+                color: AppTheme.sageSurface,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.confirmation_number_outlined,
+                size: 54,
+                color: AppTheme.deepForest,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              aucunDansBase
+                  ? 'Aucune réservation pour le moment'
+                  : 'Aucune réservation "$_filtreStatut"',
+              textAlign: TextAlign.center,
+              style: AppTheme.editorialTitle(
+                fontSize: 20,
+                color: AppTheme.deepForest,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Explorez les sites de Casamance depuis l\'accueil pour réserver votre première visite.',
+              textAlign: TextAlign.center,
+              style: AppTheme.bodyStyle(fontSize: 13, color: AppTheme.textMuted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final listeAffichee = _reservationsFiltrees;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mes Réservations'),
-        backgroundColor: const Color(0xFF1B5E20),
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            tooltip: 'Contrôle Guichet / Guide (PIN)',
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: _ouvrirEspaceGuideSecurise,
-          ),
-          IconButton(
-            tooltip: 'Actualiser',
-            icon: const Icon(Icons.refresh),
-            onPressed: _chargerReservations,
-          ),
-        ],
-      ),
+      backgroundColor: AppTheme.ivorySand,
       body: Column(
         children: [
+          CasamanceCurvedHeader(
+            padding: const EdgeInsets.fromLTRB(20, 10, 12, 26),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mes Réservations',
+                        style: AppTheme.editorialTitle(
+                          fontSize: 24,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Vos pass numériques et visites planifiées',
+                        style: AppTheme.bodyStyle(
+                          fontSize: 12,
+                          color: AppTheme.ivorySand.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Contrôle Guichet / Guide (PIN)',
+                  icon: const Icon(Icons.qr_code_scanner_rounded,
+                      color: AppTheme.solarGold),
+                  onPressed: _ouvrirEspaceGuideSecurise,
+                ),
+                IconButton(
+                  tooltip: 'Actualiser depuis MySQL',
+                  icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                  onPressed: _chargerReservations,
+                ),
+              ],
+            ),
+          ),
           _barreFiltres(),
-          const Divider(height: 1),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : listeAffichee.isEmpty
                     ? _affichageVide()
                     : RefreshIndicator(
+                        color: AppTheme.deepForest,
                         onRefresh: _chargerReservations,
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
                           itemCount: listeAffichee.length,
-                          itemBuilder: (context, index) {
-                            return _carteReservation(
-                              listeAffichee[index],
-                            );
-                          },
+                          itemBuilder: (context, index) =>
+                              _carteReservation(listeAffichee[index]),
                         ),
                       ),
           ),

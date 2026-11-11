@@ -3,6 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/config/api_config.dart';
 import '../../core/models/patrimoine.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/casamance_widgets.dart';
 import '../catalogue/patrimoine_service.dart';
 import '../catalogue/site_detail_screen.dart';
 import 'location_service.dart';
@@ -63,7 +65,7 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'GPS navigateur/appareil non autorisé. Vous pouvez choisir un point de départ dans la liste.',
+            'GPS navigateur/appareil non autorisé. Choisissez un repère dans la liste.',
           ),
         ),
       );
@@ -136,84 +138,119 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Carte Interactive & GPS'),
-        actions: [
-          IconButton(
-            tooltip: _cartePleinEcran ? 'Afficher la liste' : 'Agrandir la carte',
-            onPressed: () =>
-                setState(() => _cartePleinEcran = !_cartePleinEcran),
-            icon: Icon(
-              _cartePleinEcran ? Icons.view_agenda_outlined : Icons.fullscreen,
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: AppTheme.ivorySand,
       body: Column(
         children: [
-          // Barre de sélection du point de départ GPS
+          // En-tête vert forêt avec sélecteur GPS intégré
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            color: Colors.white,
-            child: Row(
-              children: [
-                const Icon(Icons.my_location, color: Color(0xFF1B5E20)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: DropdownButtonFormField<PointRepereGps>(
-                    key: ValueKey(_positionActuelle.nom),
-                    initialValue: _positionActuelle,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Ma position de départ',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                    ),
-                    items: _positionsDisponibles.map((pt) {
-                      return DropdownMenuItem<PointRepereGps>(
-                        value: pt,
-                        child: Text(
-                          pt.nom,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (val) async {
-                      if (val == null) return;
-                      setState(() => _positionActuelle = val);
-                      _deplacerCarte(val.toLatLng(), 12.8);
-                      if (_siteSelectionne != null) {
-                        await _selectionnerSite(_siteSelectionne!);
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
-                  ),
-                  onPressed: _gpsEnCours ? null : _localiserAppareil,
-                  child: _gpsEnCours
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+            color: AppTheme.deepForest,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 12, 14),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        if (Navigator.canPop(context))
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.arrow_back,
+                                color: Colors.white),
                           ),
-                        )
-                      : const Icon(Icons.gps_fixed, size: 20),
+                        Expanded(
+                          child: Text(
+                            'Carte & Itinéraires GPS',
+                            style: AppTheme.editorialTitle(
+                              fontSize: 21,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: _cartePleinEcran
+                              ? 'Afficher la liste'
+                              : 'Agrandir la carte',
+                          onPressed: () => setState(
+                              () => _cartePleinEcran = !_cartePleinEcran),
+                          icon: Icon(
+                            _cartePleinEcran
+                                ? Icons.view_agenda_outlined
+                                : Icons.fullscreen_rounded,
+                            color: AppTheme.solarGold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<PointRepereGps>(
+                            key: ValueKey(_positionActuelle.nom),
+                            initialValue: _positionActuelle,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.my_location_rounded,
+                                  color: AppTheme.bolongTurquoise, size: 20),
+                              fillColor: Colors.white,
+                              filled: true,
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 10),
+                            ),
+                            items: _positionsDisponibles.map((pt) {
+                              return DropdownMenuItem<PointRepereGps>(
+                                value: pt,
+                                child: Text(
+                                  pt.nom,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTheme.bodyStyle(fontSize: 12.5),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (val) async {
+                              if (val == null) return;
+                              setState(() => _positionActuelle = val);
+                              _deplacerCarte(val.toLatLng(), 12.8);
+                              if (_siteSelectionne != null) {
+                                await _selectionnerSite(_siteSelectionne!);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.bolongTurquoise,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          onPressed: _gpsEnCours ? null : _localiserAppareil,
+                          child: _gpsEnCours
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.gps_fixed_rounded, size: 20),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
 
-          // CARTE INTERACTIVE INTÉGRÉE (OpenStreetMap via flutter_map)
+          // CARTE INTERACTIVE INTÉGRÉE
           Expanded(
             flex: _cartePleinEcran ? 10 : 6,
             child: Stack(
@@ -237,32 +274,29 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'sn.uasz.reservation_visites',
                     ),
-
-                    // Tracé de l'itinéraire sélectionné
                     if (_itineraireActif != null)
                       PolylineLayer(
                         polylines: [
                           Polyline(
                             points: _itineraireActif!.points,
                             strokeWidth: 5.0,
-                            color: const Color(0xFF1565C0),
+                            color: AppTheme.bolongTurquoise,
                             borderStrokeWidth: 2.0,
                             borderColor: Colors.white,
                           ),
                         ],
                       ),
-
-                    // Marqueurs (Position du touriste + Sites touristiques)
                     MarkerLayer(
                       markers: [
-                        // Marqueur de la position actuelle du touriste
+                        // Position du touriste
                         Marker(
                           point: _positionActuelle.toLatLng(),
                           width: 44,
                           height: 44,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha: 0.25),
+                              color: AppTheme.bolongTurquoise
+                                  .withValues(alpha: 0.25),
                               shape: BoxShape.circle,
                             ),
                             child: Center(
@@ -270,7 +304,7 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
                                 width: 18,
                                 height: 18,
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.shade700,
+                                  color: AppTheme.bolongTurquoise,
                                   shape: BoxShape.circle,
                                   border:
                                       Border.all(color: Colors.white, width: 3),
@@ -279,14 +313,13 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
                             ),
                           ),
                         ),
-
                         // Marqueurs des sites touristiques
                         ...sitesTries.map((site) {
                           final isSelected = _siteSelectionne?.id == site.id;
                           return Marker(
                             point: LatLng(site.latitude, site.longitude),
-                            width: isSelected ? 170 : 44,
-                            height: isSelected ? 64 : 44,
+                            width: isSelected ? 175 : 44,
+                            height: isSelected ? 66 : 44,
                             alignment: Alignment.topCenter,
                             child: GestureDetector(
                               onTap: () => _selectionnerSite(site),
@@ -296,33 +329,29 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
                                   if (isSelected)
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 3),
+                                          horizontal: 9, vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF1B5E20),
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: const [
-                                          BoxShadow(
-                                              color: Colors.black26,
-                                              blurRadius: 4)
-                                        ],
+                                        color: AppTheme.deepForest,
+                                        borderRadius: BorderRadius.circular(10),
+                                        boxShadow: AppTheme.softShadow,
                                       ),
                                       child: Text(
                                         site.nom,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.white,
+                                        style: AppTheme.bodyStyle(
+                                          color: AppTheme.solarGold,
                                           fontSize: 11,
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                     ),
                                   Icon(
-                                    Icons.location_on,
-                                    size: isSelected ? 38 : 34,
+                                    Icons.location_on_rounded,
+                                    size: isSelected ? 40 : 34,
                                     color: isSelected
-                                        ? Colors.amber.shade700
-                                        : const Color(0xFF1B5E20),
+                                        ? AppTheme.lateriteRed
+                                        : AppTheme.deepForest,
                                   ),
                                 ],
                               ),
@@ -334,109 +363,117 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
                   ],
                 ),
 
-                // Boutons de contrôle Zoom & Recentrage sur la carte
+                // Contrôles de zoom & recentrage
                 Positioned(
                   right: 12,
                   top: 12,
                   child: Column(
                     children: [
-                      FloatingActionButton.small(
+                      _mapControlBtn(
                         heroTag: 'zoom_in',
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black87,
-                        onPressed: () => _deplacerCarte(
+                        icon: Icons.add,
+                        onTap: () => _deplacerCarte(
                           _mapController.camera.center,
                           _currentZoom + 1,
                         ),
-                        child: const Icon(Icons.add),
                       ),
                       const SizedBox(height: 6),
-                      FloatingActionButton.small(
+                      _mapControlBtn(
                         heroTag: 'zoom_out',
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black87,
-                        onPressed: () => _deplacerCarte(
+                        icon: Icons.remove,
+                        onTap: () => _deplacerCarte(
                           _mapController.camera.center,
                           _currentZoom - 1,
                         ),
-                        child: const Icon(Icons.remove),
                       ),
                       const SizedBox(height: 6),
-                      FloatingActionButton.small(
+                      _mapControlBtn(
                         heroTag: 'recenter_me',
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF1B5E20),
-                        onPressed: () =>
+                        icon: Icons.center_focus_strong_rounded,
+                        color: AppTheme.deepForest,
+                        onTap: () =>
                             _deplacerCarte(_positionActuelle.toLatLng(), 12.5),
-                        child: const Icon(Icons.center_focus_strong),
                       ),
                     ],
                   ),
                 ),
 
-                // Carte flottante d'information sur l'itinéraire actif
+                // Carte flottante d'info itinéraire
                 if (_siteSelectionne != null)
                   Positioned(
                     left: 12,
                     right: 12,
                     bottom: 12,
-                    child: Card(
-                      elevation: 5,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardSurface,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: AppTheme.softShadow,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _siteSelectionne!.nom,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                      child: Row(
+                        children: [
+                          SitePhotoView(
+                            site: _siteSelectionne!,
+                            width: 56,
+                            height: 56,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _siteSelectionne!.nom,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTheme.editorialTitle(
+                                    fontSize: 15.5,
+                                    color: AppTheme.deepForest,
                                   ),
-                                  const SizedBox(height: 4),
-                                  if (_calculEnCours)
-                                    const Text(
-                                      'Calcul de l\'itinéraire en cours...',
-                                      style: TextStyle(fontSize: 12),
-                                    )
-                                  else if (_itineraireActif != null)
-                                    Text(
-                                      '${_itineraireActif!.distanceKm} km • ${_itineraireActif!.dureeEstimee} (${_itineraireActif!.traceRoutierReel ? "Tracé routier" : "Trajet direct / fluvial"})',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.green.shade800,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                ),
+                                const SizedBox(height: 2),
+                                if (_calculEnCours)
+                                  Text(
+                                    'Calcul du trajet...',
+                                    style: AppTheme.bodyStyle(fontSize: 11.5),
+                                  )
+                                else if (_itineraireActif != null)
+                                  Text(
+                                    '${_itineraireActif!.distanceKm} km • ${_itineraireActif!.dureeEstimee}',
+                                    style: AppTheme.bodyStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.bolongTurquoise,
+                                      fontWeight: FontWeight.w700,
                                     ),
-                                ],
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => SiteDetailScreen(
+                                    site: _siteSelectionne!,
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => SiteDetailScreen(
-                                      site: _siteSelectionne!,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: const Text('Fiche & Réserver'),
-                            ),
-                          ],
-                        ),
+                            child: const Text('Découvrir'),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -444,12 +481,12 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
             ),
           ),
 
-          // Liste des sites triés par proximité (masquée si mode plein écran)
+          // Liste des sites triés par proximité
           if (!_cartePleinEcran)
             Expanded(
               flex: 4,
               child: ListView.builder(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
                 itemCount: sitesTries.length,
                 itemBuilder: (context, index) {
                   final site = sitesTries[index];
@@ -462,34 +499,63 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
                   final duree = LocationService.estimerTempsTrajet(distKm);
                   final isSelected = _siteSelectionne?.id == site.id;
 
-                  return Card(
-                    color: isSelected ? Colors.green.shade50 : Colors.white,
+                  return Container(
                     margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppTheme.sageSurface
+                          : AppTheme.cardSurface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppTheme.deepForest
+                            : AppTheme.deepForest.withValues(alpha: 0.08),
+                      ),
+                    ),
                     child: ListTile(
                       dense: true,
                       leading: CircleAvatar(
-                        radius: 18,
+                        radius: 17,
                         backgroundColor: index == 0
-                            ? Colors.amber.shade700
-                            : const Color(0xFF1B5E20),
+                            ? AppTheme.solarGold
+                            : AppTheme.deepForest,
                         child: Text(
                           '#${index + 1}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                          style: AppTheme.bodyStyle(
+                            color: index == 0
+                                ? AppTheme.deepForest
+                                : Colors.white,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
                       title: Text(
                         site.nom,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTheme.bodyStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      subtitle: Text('À $distKm km • $duree'),
+                      subtitle: Text(
+                        'À $distKm km • $duree',
+                        style: AppTheme.bodyStyle(
+                            fontSize: 11.5, color: AppTheme.textMuted),
+                      ),
                       trailing: TextButton.icon(
                         onPressed: () => _selectionnerSite(site),
-                        icon: const Icon(Icons.directions, size: 18),
-                        label: const Text('Tracer'),
+                        icon: const Icon(Icons.directions,
+                            size: 17, color: AppTheme.bolongTurquoise),
+                        label: Text(
+                          'Tracer',
+                          style: AppTheme.bodyStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.bolongTurquoise,
+                          ),
+                        ),
                       ),
                       onTap: () => _selectionnerSite(site),
                     ),
@@ -499,6 +565,21 @@ class _MapExploreScreenState extends State<MapExploreScreen> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _mapControlBtn({
+    required String heroTag,
+    required IconData icon,
+    required VoidCallback onTap,
+    Color color = AppTheme.textDark,
+  }) {
+    return FloatingActionButton.small(
+      heroTag: heroTag,
+      backgroundColor: AppTheme.cardSurface,
+      foregroundColor: color,
+      onPressed: onTap,
+      child: Icon(icon, size: 20),
     );
   }
 }

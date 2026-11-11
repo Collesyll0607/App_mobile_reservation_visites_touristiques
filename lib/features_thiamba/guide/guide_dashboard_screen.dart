@@ -91,7 +91,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
           return AlertDialog(
             title: const Row(
               children: [
-                Icon(Icons.qr_code_scanner, color: Color(0xFF1B5E20)),
+                Icon(Icons.qr_code_scanner, color: Color(0xFF063D2E)),
                 SizedBox(width: 8),
                 Text('Valider un Billet QR'),
               ],
@@ -224,7 +224,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        backgroundColor: const Color(0xFF1B5E20),
+                        backgroundColor: const Color(0xFF063D2E),
                         content: Text(
                           'Billet ${reservation.codeReservation} validé avec succès ! Visite marquée EFFECTUEE.',
                         ),
@@ -239,7 +239,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                 icon: const Icon(Icons.check_circle_outline),
                 label: const Text('Valider le billet'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1B5E20),
+                  backgroundColor: const Color(0xFF063D2E),
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -282,7 +282,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
               icon: const Icon(Icons.check_circle),
               label: const Text('Valider ce billet'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1B5E20),
+                backgroundColor: const Color(0xFF063D2E),
                 foregroundColor: Colors.white,
               ),
             ),
@@ -358,7 +358,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
 
             Row(
               children: [
-                const Icon(Icons.calendar_month, size: 16, color: Color(0xFF1B5E20)),
+                const Icon(Icons.calendar_month, size: 16, color: Color(0xFF063D2E)),
                 const SizedBox(width: 6),
                 Text('${r.dateVisite} (${r.creneauHoraire})'),
               ],
@@ -397,7 +397,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                     icon: const Icon(Icons.check, size: 18),
                     label: const Text('Valider'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1B5E20),
+                      backgroundColor: const Color(0xFF063D2E),
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -419,7 +419,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Espace Guide Touristique'),
-        backgroundColor: const Color(0xFF1B5E20),
+        backgroundColor: const Color(0xFF063D2E),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -446,7 +446,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                     Row(
                       children: [
                         const CircleAvatar(
-                          backgroundColor: Color(0xFF1B5E20),
+                          backgroundColor: Color(0xFF063D2E),
                           foregroundColor: Colors.white,
                           radius: 24,
                           child: Icon(Icons.person, size: 28),
@@ -521,7 +521,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1B5E20),
+                backgroundColor: const Color(0xFF063D2E),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
