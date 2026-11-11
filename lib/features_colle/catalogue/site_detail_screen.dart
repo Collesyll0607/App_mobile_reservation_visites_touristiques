@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/patrimoine.dart';
 import '../../features_thiamba/reservation/booking_form_screen.dart';
 import '../map/location_service.dart';
+import '../map/map_explore_screen.dart';
 import '../reviews/reviews_section.dart';
 
 /// Écran de Détail d'un Site Touristique
@@ -82,10 +83,25 @@ class SiteDetailScreen extends StatelessWidget {
               children: [
                 const Icon(Icons.gps_fixed, color: Color(0xFF1B5E20)),
                 const SizedBox(width: 6),
-                Text(
-                  'GPS : Lat ${site.latitude.toStringAsFixed(4)}, Lon ${site.longitude.toStringAsFixed(4)}',
+                Expanded(
+                  child: Text(
+                    'GPS : Lat ${site.latitude.toStringAsFixed(4)}, Lon ${site.longitude.toStringAsFixed(4)}',
+                  ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MapExploreScreen(initialSite: site),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Voir sur la carte & Tracer l\'itinéraire'),
             ),
             const Divider(height: 32),
 
