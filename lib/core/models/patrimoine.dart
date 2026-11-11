@@ -32,15 +32,27 @@ class Patrimoine {
     final nom = (json['nom'] ?? json['nomPatrimoine'] ?? '').toString();
     String categorie = (json['categorie'] ?? '').toString();
     if (categorie.isEmpty) {
-      if (nom.toLowerCase().contains('impluvium') ||
-          nom.toLowerCase().contains('case')) {
+      final lower = nom.toLowerCase();
+      if (lower.contains('artisan')) {
+        categorie = 'ARTISANAT';
+      } else if (lower.contains('alliance') || lower.contains('culture')) {
+        categorie = 'CULTURE';
+      } else if (lower.contains('impluvium') || lower.contains('case')) {
         categorie = 'ARCHITECTURE';
-      } else if (nom.toLowerCase().contains('mémorial') ||
-          nom.toLowerCase().contains('musée')) {
+      } else if (lower.contains('mémorial') ||
+          lower.contains('memorial') ||
+          lower.contains('musée') ||
+          lower.contains('musee')) {
         categorie = 'MUSEE';
-      } else if (nom.toLowerCase().contains('port') ||
-          nom.toLowerCase().contains('bolong') ||
-          nom.toLowerCase().contains('réserve')) {
+      } else if (lower.contains('plage') || lower.contains('cap skirring')) {
+        categorie = 'PLAGES';
+      } else if (lower.contains('port') ||
+          lower.contains('bolong') ||
+          lower.contains('mangrove') ||
+          lower.contains('forêt') ||
+          lower.contains('foret') ||
+          lower.contains('réserve') ||
+          lower.contains('reserve')) {
         categorie = 'NATURE';
       } else {
         categorie = 'MONUMENT';

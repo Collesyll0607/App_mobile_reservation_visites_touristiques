@@ -3,6 +3,7 @@ import '../../core/models/utilisateur.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/site_media_helper.dart';
 import '../../core/widgets/casamance_widgets.dart';
+import '../../features_thiamba/my_bookings/my_bookings_screen.dart';
 import '../../main.dart';
 import 'auth_service.dart';
 
@@ -272,7 +273,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         icon: Icons.confirmation_number_outlined,
                         title: 'Mes réservations',
                         subtitle: 'Consulter mes visites et billets QR',
-                        onTap: () => MainNavigationShell.switchTab(context, 2),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const MyBookingsScreen(),
+                            ),
+                          );
+                        },
                       ),
                       _divider(),
                       _menuItem(
@@ -346,17 +354,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       _divider(),
                       _menuItem(
-                        icon: Icons.notifications_none_rounded,
-                        title: 'Notifications',
+                        icon: Icons.tune_rounded,
+                        title: 'Paramètres',
                         subtitle: _notifRappels
-                            ? 'Rappels de visites activés'
-                            : 'Notifications désactivées',
+                            ? 'Notifications & rappels activés'
+                            : 'Préférences de notifications',
                         onTap: _openNotificationsDialog,
                       ),
                       _divider(),
                       _menuItem(
                         icon: Icons.help_outline_rounded,
-                        title: 'Aide & Support',
+                        title: 'Aide et assistance',
                         subtitle: 'Assistance Office du Tourisme Ziguinchor',
                         onTap: _openHelpDialog,
                       ),

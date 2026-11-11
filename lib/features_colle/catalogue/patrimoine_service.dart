@@ -7,10 +7,12 @@ import '../../core/models/patrimoine.dart';
 class PatrimoineFetchResult {
   final List<Patrimoine> sites;
   final bool fromApiRest;
+  final String? errorMessage;
 
   const PatrimoineFetchResult({
     required this.sites,
     required this.fromApiRest,
+    this.errorMessage,
   });
 }
 
@@ -23,13 +25,15 @@ class PatrimoineService {
   ];
 
   /// Récupère les sites depuis le microservice Spring Boot (ms-patrimoine)
-  /// et bascule automatiquement sur le cache local en cas d'indisponibilité réseau.
+  /// et fournit une erreur explicite + cache local en cas d'indisponibilité réseau.
   static Future<PatrimoineFetchResult> fetchPatrimoines() async {
+    String lastReason = 'Serveur backend ms-patrimoine injoignable (port 8081).';
+
     for (final url in _candidateUrls) {
       try {
         final response = await http
             .get(Uri.parse(url))
-            .timeout(const Duration(seconds: 2));
+            .timeout(const Duration(seconds: 3));
 
         if (response.statusCode == 200) {
           final dynamic decoded = jsonDecode(utf8.decode(response.bodyBytes));
@@ -38,18 +42,27 @@ class PatrimoineService {
                 .map((item) =>
                     Patrimoine.fromJson(item as Map<String, dynamic>))
                 .toList();
-            return PatrimoineFetchResult(sites: parsed, fromApiRest: true);
+            return PatrimoineFetchResult(
+              sites: parsed,
+              fromApiRest: true,
+              errorMessage: null,
+            );
           }
+          lastReason = 'Catalogue backend vide sur $url.';
+        } else {
+          lastReason =
+              'Réponse HTTP ${response.statusCode} du serveur ms-patrimoine.';
         }
-      } catch (_) {
-        // En cas d'absence du serveur Spring Boot sur cette adresse, on teste la suivante
+      } catch (e) {
+        lastReason = 'Connexion impossible au serveur ($e).';
       }
     }
 
-    // Mode dégradé (Fallback local) si le serveur backend est éteint
-    return const PatrimoineFetchResult(
+    // Mode dégradé (Fallback local) avec message d'erreur explicite
+    return PatrimoineFetchResult(
       sites: ApiConfig.sitesCasamance,
       fromApiRest: false,
+      errorMessage: lastReason,
     );
   }
 }

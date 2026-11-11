@@ -3,6 +3,7 @@ import '../../core/models/patrimoine.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/casamance_widgets.dart';
 import '../../features_colle/catalogue/site_detail_screen.dart';
+import '../../main.dart';
 import '../reservation/booking_form_screen.dart';
 import '../services/favorites_service.dart';
 
@@ -130,12 +131,49 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  site.nom,
-                  style: AppTheme.editorialTitle(
-                    fontSize: 19,
-                    color: AppTheme.deepForest,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        site.nom,
+                        style: AppTheme.editorialTitle(
+                          fontSize: 18,
+                          color: AppTheme.deepForest,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.warmOrange.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 15,
+                            color: AppTheme.warmOrange,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            site.noteMoyenne.toStringAsFixed(1),
+                            style: AppTheme.bodyStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 6),
                 Row(
@@ -154,7 +192,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${site.tarifEntree.toInt()} FCFA / personne • ${site.horairesOuverture}',
+                  site.tarifEntree <= 0
+                      ? 'Entrée gratuite • ${site.horairesOuverture}'
+                      : '${site.tarifEntree.toInt()} FCFA / personne • ${site.horairesOuverture}',
                   style: AppTheme.bodyStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -182,6 +222,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.warmOrange,
+                          foregroundColor: Colors.white,
+                        ),
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -205,46 +249,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _vueVide() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: const BoxDecoration(
-                color: AppTheme.sageSurface,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.favorite_border_rounded,
-                size: 56,
-                color: AppTheme.lateriteRed,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Aucun favori pour le moment',
-              textAlign: TextAlign.center,
-              style: AppTheme.editorialTitle(
-                fontSize: 21,
-                color: AppTheme.deepForest,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Ajoutez des sites touristiques à vos favoris (icône cœur ❤️) depuis l\'accueil, la fiche détaillée ou la réservation pour les retrouver même sans connexion Internet.',
-              textAlign: TextAlign.center,
-              style: AppTheme.bodyStyle(
-                fontSize: 13,
-                color: AppTheme.textMuted,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return CasamanceEmptyState(
+      icon: Icons.favorite_border_rounded,
+      title: 'Aucun favori pour le moment',
+      subtitle:
+          'Ajoutez des sites touristiques à vos favoris depuis l\'accueil, Explorer ou la fiche détaillée pour les retrouver hors-ligne.',
+      actionLabel: 'Explorer les sites',
+      onAction: () => MainNavigationShell.switchTab(context, 1),
     );
   }
 

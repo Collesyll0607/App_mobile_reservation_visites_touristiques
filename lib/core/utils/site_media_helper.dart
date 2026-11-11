@@ -41,6 +41,10 @@ class SiteMediaHelper {
       return 'assets/images/casamance/bolong_mangrove.jpg';
     }
 
+    if (nom.contains('artisan')) {
+      return 'assets/images/casamance/cases_mlomp.jpg';
+    }
+
     switch (site.categorie.toUpperCase()) {
       case 'NATURE':
         return 'assets/images/casamance/foret_casamance.jpg';
@@ -48,6 +52,12 @@ class SiteMediaHelper {
         return 'assets/images/casamance/cases_mlomp.jpg';
       case 'MUSEE':
         return 'assets/images/casamance/memorial_joola.jpg';
+      case 'CULTURE':
+        return 'assets/images/casamance/alliance_francaise.jpg';
+      case 'ARTISANAT':
+        return 'assets/images/casamance/cases_mlomp.jpg';
+      case 'PLAGES':
+        return 'assets/images/casamance/carabane_bolong.jpg';
       default:
         return 'assets/images/casamance/bras_de_mer.jpg';
     }
@@ -125,13 +135,19 @@ class SiteMediaHelper {
   static String labelCategorie(String categorie) {
     switch (categorie.toUpperCase()) {
       case 'MONUMENT':
-        return 'Culture & Monuments';
+        return 'Monuments';
       case 'NATURE':
-        return 'Nature & Bolongs';
+        return 'Nature';
       case 'MUSEE':
-        return 'Mémoire & Musées';
+        return 'Musées';
       case 'ARCHITECTURE':
-        return 'Traditions & Cases';
+        return 'Architecture';
+      case 'CULTURE':
+        return 'Culture';
+      case 'ARTISANAT':
+        return 'Artisanat';
+      case 'PLAGES':
+        return 'Plages';
       default:
         return 'Découverte';
     }

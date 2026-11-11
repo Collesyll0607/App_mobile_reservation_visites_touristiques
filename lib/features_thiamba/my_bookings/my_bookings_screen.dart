@@ -26,6 +26,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   List<Reservation> _reservations = [];
   String _filtreStatut = 'TOUTES';
   bool _isLoading = true;
+  String? _apiErrorMessage;
 
   static const List<Map<String, String>> _filtres = [
     {'code': 'TOUTES', 'label': 'Toutes'},
@@ -42,11 +43,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   Future<void> _chargerReservations() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _apiErrorMessage = null;
+    });
     final sauvegardees = await _reservationService.loadAll();
     if (!mounted) return;
 
     setState(() {
+      _apiErrorMessage = _reservationService.lastError;
       if (sauvegardees.isNotEmpty) {
         _reservations = sauvegardees;
       } else if (widget.reservations.isNotEmpty) {
@@ -469,14 +474,24 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   Widget build(BuildContext context) {
     final listeAffichee = _reservationsFiltrees;
 
+    final canPop = Navigator.canPop(context);
+
     return Scaffold(
       backgroundColor: AppTheme.ivorySand,
       body: Column(
         children: [
           CasamanceCurvedHeader(
-            padding: const EdgeInsets.fromLTRB(20, 10, 12, 26),
+            padding: const EdgeInsets.fromLTRB(14, 10, 12, 26),
             child: Row(
               children: [
+                if (canPop)
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -484,7 +499,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       Text(
                         'Mes Réservations',
                         style: AppTheme.editorialTitle(
-                          fontSize: 24,
+                          fontSize: 22,
                           color: Colors.white,
                         ),
                       ),
@@ -513,6 +528,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             ),
           ),
           _barreFiltres(),
+          if (_apiErrorMessage != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: CasamanceApiErrorBanner(
+                message: _apiErrorMessage!,
+                onRetry: _chargerReservations,
+              ),
+            ),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())

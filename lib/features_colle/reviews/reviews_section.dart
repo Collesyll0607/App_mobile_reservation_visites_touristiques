@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/models/avis.dart';
 import '../../core/theme/app_theme.dart';
 import '../auth/auth_service.dart';
@@ -9,11 +10,13 @@ import 'reviews_service.dart';
 class ReviewsSection extends StatefulWidget {
   final int patrimoineId;
   final double initialAverage;
+  final VoidCallback? onReviewsChanged;
 
   const ReviewsSection({
     super.key,
     required this.patrimoineId,
     required this.initialAverage,
+    this.onReviewsChanged,
   });
 
   @override
@@ -61,13 +64,17 @@ class _ReviewsSectionState extends State<ReviewsSection> {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
-              backgroundColor: AppTheme.cardSurface,
+              backgroundColor: AppTheme.pureWhite,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
+                borderRadius: BorderRadius.circular(20),
+              ),
               title: Text(
                 'Partager votre avis',
-                style: AppTheme.editorialTitle(
-                    fontSize: 20, color: AppTheme.deepForest),
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.forestGreen,
+                ),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -77,15 +84,18 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                       controller: nameCtrl,
                       decoration: const InputDecoration(
                         labelText: 'Votre nom',
-                        prefixIcon: Icon(Icons.person_outline),
+                        prefixIcon: Icon(Icons.person_outline_rounded),
                       ),
                     ),
                     const SizedBox(height: 14),
                     Text(
                       'Note de la visite',
-                      style: AppTheme.bodyStyle(
-                          fontSize: 12.5, color: AppTheme.textMuted),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12.5,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
+                    const SizedBox(height: 4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(5, (i) {
@@ -97,7 +107,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                             starIndex <= selectedStars
                                 ? Icons.star_rounded
                                 : Icons.star_outline_rounded,
-                            color: AppTheme.solarGold,
+                            color: AppTheme.warmOrange,
                             size: 32,
                           ),
                         );
@@ -121,6 +131,10 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                   child: const Text('Annuler'),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.forestGreen,
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: () async {
                     if (commentCtrl.text.trim().isEmpty) return;
                     await ReviewsService.addReview(
@@ -132,8 +146,9 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     if (!ctx.mounted) return;
                     Navigator.pop(ctx);
                     await _loadReviews();
+                    widget.onReviewsChanged?.call();
                   },
-                  child: const Text('Publier l\'avis'),
+                  child: const Text('Publier'),
                 ),
               ],
             );
@@ -156,23 +171,27 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                 children: [
                   Text(
                     'Avis des visiteurs',
-                    style: AppTheme.editorialTitle(
-                      fontSize: 20,
-                      color: AppTheme.deepForest,
+                    style: GoogleFonts.poppins(
+                      fontSize: 17.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Icon(Icons.star_rounded,
-                          color: AppTheme.solarGold, size: 18),
+                      const Icon(
+                        Icons.star_rounded,
+                        color: AppTheme.warmOrange,
+                        size: 18,
+                      ),
                       const SizedBox(width: 4),
                       Text(
-                        '$_average / 5 • ${_reviews.length} avis',
-                        style: AppTheme.bodyStyle(
-                          fontSize: 13,
+                        '${_average.toStringAsFixed(1)} / 5 • ${_reviews.length} avis',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textMuted,
+                          color: AppTheme.textSecondary,
                         ),
                       ),
                     ],
@@ -182,28 +201,46 @@ class _ReviewsSectionState extends State<ReviewsSection> {
             ),
             OutlinedButton.icon(
               onPressed: _openAddReviewDialog,
-              icon: const Icon(Icons.rate_review_outlined, size: 18),
+              icon: const Icon(Icons.rate_review_outlined, size: 17),
               label: const Text('Donner un avis'),
               style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.forestGreen,
+                side: const BorderSide(color: AppTheme.forestGreen),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                textStyle: GoogleFonts.poppins(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 14),
         if (_isLoading)
-          const Center(child: CircularProgressIndicator())
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(color: AppTheme.forestGreen),
+            ),
+          )
         else if (_reviews.isEmpty)
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.sageSurface.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(14),
+              color: AppTheme.lightGreen.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppTheme.naturalGreen.withValues(alpha: 0.2),
+              ),
             ),
             child: Text(
               'Aucun avis pour le moment. Soyez le premier à partager votre découverte !',
-              style: AppTheme.bodyStyle(fontSize: 13, color: AppTheme.textMuted),
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
+              ),
             ),
           )
         else
@@ -212,8 +249,9 @@ class _ReviewsSectionState extends State<ReviewsSection> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.pureWhite,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.borderLight),
                 boxShadow: AppTheme.softShadow,
               ),
               child: Column(
@@ -223,13 +261,13 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: AppTheme.deepForest,
+                        backgroundColor: AppTheme.lightGreen,
                         child: Text(
                           r.auteur.isNotEmpty
                               ? r.auteur[0].toUpperCase()
                               : 'V',
-                          style: AppTheme.bodyStyle(
-                            color: AppTheme.solarGold,
+                          style: GoogleFonts.poppins(
+                            color: AppTheme.forestGreen,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -241,16 +279,17 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                           children: [
                             Text(
                               r.auteur,
-                              style: AppTheme.bodyStyle(
+                              style: GoogleFonts.poppins(
                                 fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
                               ),
                             ),
                             Text(
                               'Publié le ${r.datePublication}',
-                              style: AppTheme.bodyStyle(
+                              style: GoogleFonts.poppins(
                                 fontSize: 11,
-                                color: AppTheme.textMuted,
+                                color: AppTheme.textSecondary,
                               ),
                             ),
                           ],
@@ -264,7 +303,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                                 ? Icons.star_rounded
                                 : Icons.star_outline_rounded,
                             size: 16,
-                            color: AppTheme.solarGold,
+                            color: AppTheme.warmOrange,
                           ),
                         ),
                       ),
@@ -273,7 +312,11 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                   const SizedBox(height: 10),
                   Text(
                     r.commentaire,
-                    style: AppTheme.bodyStyle(fontSize: 13.5, height: 1.45),
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: AppTheme.textPrimary,
+                      height: 1.45,
+                    ),
                   ),
                 ],
               ),

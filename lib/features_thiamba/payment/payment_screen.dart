@@ -67,12 +67,56 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() => _isSaving = false);
 
     if (!sauvegardeReussie) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppTheme.lateriteRed,
-          content: Text(
-            'Erreur lors de la sauvegarde de la réservation. Veuillez réessayer.',
+      final errDetail = _reservationService.lastError ??
+          'Le serveur n\'a pas confirmé la réservation. Vérifiez votre connexion et le backend.';
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.pureWhite,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
+          title: Row(
+            children: [
+              const Icon(Icons.error_outline_rounded, color: AppTheme.errorRed),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Réservation non confirmée',
+                  style: AppTheme.headingStyle(
+                    fontSize: 16.5,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            errDetail,
+            style: AppTheme.bodyStyle(
+              fontSize: 13,
+              color: AppTheme.textSecondary,
+              height: 1.45,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Fermer'),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.warmOrange,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pop(ctx);
+                _simulerPaiement();
+              },
+              icon: const Icon(Icons.refresh_rounded, size: 17),
+              label: const Text('Réessayer'),
+            ),
+          ],
         ),
       );
       return;

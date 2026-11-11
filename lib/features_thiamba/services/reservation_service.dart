@@ -17,16 +17,20 @@ class ReservationService {
   factory ReservationService() => _instance;
   ReservationService._internal();
 
+  /// Dernier message d'erreur réseau/serveur pour diagnostic UI explicite
+  String? lastError;
+
   // ─── LECTURE ──────────────────────────────────────────────────────────────
 
   /// Charge les réservations depuis l'API Spring Boot / MySQL,
   /// puis met à jour le cache local. Bascule en mode local si le serveur est éteint.
   Future<List<Reservation>> loadAll() async {
+    lastError = null;
     for (final baseUrl in _candidateBaseUrls) {
       try {
         final resp = await http
             .get(Uri.parse(baseUrl))
-            .timeout(const Duration(seconds: 2));
+            .timeout(const Duration(seconds: 3));
         if (resp.statusCode == 200) {
           final decoded =
               jsonDecode(utf8.decode(resp.bodyBytes)) as List<dynamic>;
@@ -36,8 +40,10 @@ class ReservationService {
           await _persistLocal(list);
           return list;
         }
-      } catch (_) {
-        // Test de l'URL suivante ou bascule locale
+        lastError =
+            'Erreur serveur lors du chargement des réservations (HTTP ${resp.statusCode}).';
+      } catch (e) {
+        lastError = 'Serveur Spring Boot injoignable ($e).';
       }
     }
     return await _loadLocal();
@@ -67,9 +73,10 @@ class ReservationService {
 
   // ─── ÉCRITURE ─────────────────────────────────────────────────────────────
 
-  /// Enregistre la réservation dans MySQL (table reservations_mobile) ET en cache local.
+  /// Enregistre la réservation dans MySQL (table reservations_mobile) via Spring Boot.
+  /// Ne retourne true QUE si le backend a réellement confirmé l'enregistrement (200/201).
   Future<bool> save(Reservation reservation) async {
-    Reservation savedToStore = reservation;
+    lastError = null;
 
     for (final baseUrl in _candidateBaseUrls) {
       try {
@@ -79,20 +86,24 @@ class ReservationService {
               headers: {'Content-Type': 'application/json'},
               body: jsonEncode(reservation.toJson()),
             )
-            .timeout(const Duration(seconds: 3));
+            .timeout(const Duration(seconds: 4));
 
         if (resp.statusCode == 200 || resp.statusCode == 201) {
           final map =
               jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
-          savedToStore = Reservation.fromJson(map);
-          break;
+          final savedToStore = Reservation.fromJson(map);
+          await _saveLocal(savedToStore);
+          return true;
         }
+        lastError =
+            'Le serveur a refusé la réservation (HTTP ${resp.statusCode}).';
       } catch (_) {
-        // Essai URL suivante ou sauvegarde locale seule
+        lastError =
+            'Impossible de joindre le serveur de réservation (port 8081). Vérifiez que le backend est actif.';
       }
     }
 
-    return await _saveLocal(savedToStore);
+    return false;
   }
 
   // ─── MISE À JOUR DE STATUT ────────────────────────────────────────────────
