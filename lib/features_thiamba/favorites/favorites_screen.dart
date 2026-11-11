@@ -240,7 +240,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Ajoutez des sites touristiques à vos favoris depuis la réservation pour les retrouver rapidement même sans connexion Internet.',
+              'Ajoutez des sites touristiques à vos favoris (icône cœur ❤️) depuis la liste des sites, leur fiche détaillée ou la réservation pour les retrouver rapidement même sans connexion Internet.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

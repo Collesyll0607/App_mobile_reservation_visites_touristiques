@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/config/api_config.dart';
 import '../../core/models/patrimoine.dart';
+import '../../features_thiamba/services/favorites_service.dart';
 import 'patrimoine_service.dart';
 import 'site_detail_screen.dart';
 
@@ -14,7 +15,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final FavoritesService _favoritesService = FavoritesService();
+
   List<Patrimoine> _allSites = ApiConfig.sitesCasamance;
+  Set<int> _favoriteIds = {};
   bool _isLoading = true;
   bool _fromApiRest = false;
 
@@ -34,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadSites();
+    _loadFavorites();
   }
 
   Future<void> _loadSites() async {
@@ -45,6 +50,36 @@ class _HomeScreenState extends State<HomeScreen> {
       _fromApiRest = result.fromApiRest;
       _isLoading = false;
     });
+  }
+
+  Future<void> _loadFavorites() async {
+    final favs = await _favoritesService.loadAll();
+    if (!mounted) return;
+    setState(() {
+      _favoriteIds = favs.map((s) => s.id).toSet();
+    });
+  }
+
+  Future<void> _toggleFavorite(Patrimoine site) async {
+    final isNowFavorite = await _favoritesService.toggleFavorite(site);
+    if (!mounted) return;
+    setState(() {
+      if (isNowFavorite) {
+        _favoriteIds.add(site.id);
+      } else {
+        _favoriteIds.remove(site.id);
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isNowFavorite
+              ? '${site.nom} ajouté aux favoris (accessible hors-ligne) !'
+              : '${site.nom} retiré des favoris.',
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   List<Patrimoine> get _filteredSites {
@@ -74,7 +109,10 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             tooltip: 'Actualiser depuis l\'API',
-            onPressed: _loadSites,
+            onPressed: () {
+              _loadSites();
+              _loadFavorites();
+            },
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -171,6 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: _filteredSites.length,
                     itemBuilder: (context, index) {
                       final site = _filteredSites[index];
+                      final isFav = _favoriteIds.contains(site.id);
                       return Card(
                         margin: const EdgeInsets.only(bottom: 14),
                         shape: RoundedRectangleBorder(
@@ -178,13 +217,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(14),
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => SiteDetailScreen(site: site),
                               ),
                             );
+                            _loadFavorites();
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
@@ -210,6 +250,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                           site.noteMoyenne.toString(),
                                           style: const TextStyle(
                                               fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        IconButton(
+                                          tooltip: isFav
+                                              ? 'Retirer des favoris'
+                                              : 'Ajouter aux favoris',
+                                          onPressed: () =>
+                                              _toggleFavorite(site),
+                                          icon: Icon(
+                                            isFav
+                                                ? Icons.favorite
+                                                : Icons.favorite_border,
+                                            color: isFav
+                                                ? Colors.redAccent
+                                                : Colors.grey,
+                                          ),
                                         ),
                                       ],
                                     ),
