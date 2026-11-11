@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/config/api_config.dart';
 import '../../core/models/patrimoine.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/site_media_helper.dart';
 import '../../core/widgets/casamance_widgets.dart';
 import '../../features_thiamba/my_bookings/my_bookings_screen.dart';
 import '../../features_thiamba/services/favorites_service.dart';
@@ -13,7 +12,7 @@ import '../reviews/reviews_service.dart';
 import 'patrimoine_service.dart';
 import 'site_detail_screen.dart';
 
-/// Écran d'Accueil Magazine — Casamance Tourisme & Visites
+/// Écran d'Accueil Principal — Casamance Tourisme & Visites
 /// Responsable : Collé SYLL (Pôle 1 - Module Catalogue & API)
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,7 +24,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FavoritesService _favoritesService = FavoritesService();
   final TextEditingController _searchController = TextEditingController();
-  final PageController _heroController = PageController();
 
   List<Patrimoine> _allSites = ApiConfig.sitesCasamance;
   Set<int> _favoriteIds = {};
@@ -35,68 +33,25 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _userFirstName;
   bool _isLoading = true;
   String? _apiErrorMessage;
-  int _heroIndex = 0;
 
-  final List<Map<String, dynamic>> _themeArches = const [
+  static const List<Map<String, dynamic>> _categories = [
+    {'code': 'NATURE', 'label': 'Nature', 'icon': Icons.eco_outlined},
     {
-      'code': 'NATURE',
-      'label': 'Nature',
-      'asset': 'assets/images/casamance/bolong_mangrove.jpg',
-      'icon': Icons.eco_outlined,
+      'code': 'MONUMENT',
+      'label': 'Monument',
+      'icon': Icons.account_balance_outlined
     },
+    {'code': 'MUSEE', 'label': 'Musée', 'icon': Icons.museum_outlined},
+    {
+      'code': 'ARCHITECTURE',
+      'label': 'Architecture',
+      'icon': Icons.holiday_village_outlined
+    },
+    {'code': 'ARTISANAT', 'label': 'Artisanat', 'icon': Icons.handyman_outlined},
     {
       'code': 'CULTURE',
       'label': 'Culture',
-      'asset': SiteMediaHelper.cultureAsset,
-      'icon': Icons.theater_comedy_outlined,
-    },
-    {
-      'code': 'PLAGES',
-      'label': 'Plages',
-      'asset': SiteMediaHelper.beachCapSkirringAsset,
-      'icon': Icons.beach_access_outlined,
-    },
-    {
-      'code': 'ARTISANAT',
-      'label': 'Artisanat',
-      'asset': SiteMediaHelper.artisanatAsset,
-      'icon': Icons.handyman_outlined,
-    },
-    {
-      'code': 'PATRIMOINE',
-      'label': 'Patrimoine',
-      'asset': 'assets/images/casamance/cases_mlomp.jpg',
-      'icon': Icons.account_balance_outlined,
-    },
-    {
-      'code': 'GASTRONOMIE',
-      'label': 'Gastronomie',
-      'asset': SiteMediaHelper.gastronomieAsset,
-      'icon': Icons.restaurant_outlined,
-    },
-  ];
-
-  final List<Map<String, String>> _ziguinchorSlides = const [
-    {
-      'asset': 'assets/images/casamance/port_ziguinchor.jpg',
-      'badge': 'ZIGUINCHOR • PORT DE BOUDODY',
-      'title': 'Vivez la magie de Ziguinchor & du fleuve Casamance',
-      'subtitle':
-          'Des quais colorés aux mangroves émeraude, explorez le sud du Sénégal.',
-    },
-    {
-      'asset': SiteMediaHelper.beachCarabaneAsset,
-      'badge': 'ESCALE INSULAIRE • CARABANE',
-      'title': 'Cocotiers, comptoirs historiques et plages sauvages',
-      'subtitle':
-          'Embarquez en pirogue traditionnelle vers les joyaux du fleuve.',
-    },
-    {
-      'asset': SiteMediaHelper.artisanatAsset,
-      'badge': 'SANTHIABA • ARTISANAT DIOLA',
-      'title': 'Sculptures, vannerie et teintures indigo',
-      'subtitle':
-          'Rencontrez les maîtres artisans au cœur de Ziguinchor.',
+      'icon': Icons.theater_comedy_outlined
     },
   ];
 
@@ -109,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
-    _heroController.dispose();
     super.dispose();
   }
 
@@ -143,7 +97,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _apiErrorMessage = result.fromApiRest ? null : result.errorMessage;
       _isLoading = false;
     });
-
     _loadReviewMetrics(result.sites);
   }
 
@@ -196,25 +149,6 @@ class _HomeScreenState extends State<HomeScreen> {
   double _ratingFor(Patrimoine site) =>
       _liveRatings[site.id] ?? site.noteMoyenne;
 
-  Patrimoine _withRating(Patrimoine site) {
-    final r = _ratingFor(site);
-    if (r == site.noteMoyenne) return site;
-    return Patrimoine(
-      id: site.id,
-      nom: site.nom,
-      description: site.description,
-      historique: site.historique,
-      categorie: site.categorie,
-      localisation: site.localisation,
-      latitude: site.latitude,
-      longitude: site.longitude,
-      tarifEntree: site.tarifEntree,
-      horairesOuverture: site.horairesOuverture,
-      imageUrl: site.imageUrl,
-      noteMoyenne: r,
-    );
-  }
-
   Future<void> _openDetail(Patrimoine site) async {
     await Navigator.push(
       context,
@@ -235,673 +169,70 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final popularSites = _allSites.take(5).map(_withRating).toList();
-    final mustVisitSites = _allSites.where((s) {
-      final n = s.nom.toLowerCase();
-      return n.contains('carabane') ||
-          n.contains('mlomp') ||
-          n.contains('artisan') ||
-          n.contains('joola');
-    }).toList();
-    final incontournables = (mustVisitSites.isNotEmpty
-            ? mustVisitSites
-            : _allSites.take(3).toList())
-        .map(_withRating)
-        .toList();
+    final isWide = MediaQuery.sizeOf(context).width >= 768;
+    final horizontalPad = isWide ? 24.0 : 16.0;
 
-    final topRated = ([..._allSites]
-          ..sort((a, b) => _ratingFor(b).compareTo(_ratingFor(a))))
-        .map(_withRating)
-        .toList();
+    final popularSites = _allSites.take(3).toList();
+    final topRated = [..._allSites]
+      ..sort((a, b) => _ratingFor(b).compareTo(_ratingFor(a)));
+    final topThree = topRated.take(3).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.ivorySand,
+      backgroundColor: AppTheme.offWhite,
       body: RefreshIndicator(
-        color: AppTheme.deepForest,
-        backgroundColor: AppTheme.ivorySand,
+        color: AppTheme.forestGreen,
         onRefresh: _refreshAll,
-        child: CustomScrollView(
+        child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            // 1. Zone supérieure légère sur Ivoire sable
-            SliverToBoxAdapter(
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-                  child: Row(
-                    children: [
-                      const CasamanceEmblemMark(size: 44),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _userFirstName != null &&
-                                      _userFirstName!.isNotEmpty
-                                  ? 'Bonjour $_userFirstName,'
-                                  : 'Bienvenue en Casamance,',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTheme.editorialTitle(
-                                fontSize: 19,
-                                color: AppTheme.deepForest,
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.location_on_rounded,
-                                  size: 13,
-                                  color: AppTheme.hibiscusRed,
-                                ),
-                                const SizedBox(width: 3),
-                                Expanded(
-                                  child: Text(
-                                    'Ziguinchor, perle du sud sénégalais',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11.5,
-                                      color: AppTheme.earthBrown,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Material(
-                        color: AppTheme.terracottaSoft,
-                        shape: const CircleBorder(),
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const MyBookingsScreen(),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppTheme.sandBorder),
-                            ),
-                            child: const Icon(
-                              Icons.confirmation_number_outlined,
-                              color: AppTheme.earthBrown,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Material(
-                        color: AppTheme.deepForest,
-                        shape: const CircleBorder(),
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () => MainNavigationShell.switchTab(context, 4),
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            child: Icon(
-                              _userFirstName != null
-                                  ? Icons.person_rounded
-                                  : Icons.person_outline_rounded,
-                              color: AppTheme.champagneGold,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // 2. Bannière photographique Ziguinchor + Barre de recherche chevauchante
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 230,
-                      child: PageView.builder(
-                        controller: _heroController,
-                        itemCount: _ziguinchorSlides.length,
-                        onPageChanged: (idx) =>
-                            setState(() => _heroIndex = idx),
-                        itemBuilder: (context, index) {
-                          final slide = _ziguinchorSlides[index];
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(28),
-                            child: ClipPath(
-                              clipper:
-                                  const CasamanceBolongWaveClipper(depth: 16),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  CasamanceAssetPhoto(
-                                    assetPath: slide['asset']!,
-                                    fit: BoxFit.cover,
-                                  ),
-                                  DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Colors.black.withValues(alpha: 0.14),
-                                          AppTheme.deepForest
-                                              .withValues(alpha: 0.88),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      20,
-                                      18,
-                                      20,
-                                      38,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.champagneGold,
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                          ),
-                                          child: Text(
-                                            slide['badge']!,
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 9.8,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppTheme.deepForest,
-                                            ),
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        Text(
-                                          slide['title']!,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: AppTheme.editorialTitle(
-                                            fontSize: 21,
-                                            color: Colors.white,
-                                            height: 1.15,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          slide['subtitle']!,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 11.8,
-                                            color: AppTheme.ivorySand
-                                                .withValues(alpha: 0.92),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    // Barre de recherche flottante verre dépoli
-                    Transform.translate(
-                      offset: const Offset(0, -22),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppTheme.warmCream.withValues(alpha: 0.96),
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(
-                              color: AppTheme.sandBorder,
-                              width: 1.2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    AppTheme.deepForest.withValues(alpha: 0.13),
-                                blurRadius: 18,
-                                offset: const Offset(0, 7),
-                              ),
-                            ],
-                          ),
-                          child: TextField(
-                            controller: _searchController,
-                            textInputAction: TextInputAction.search,
-                            onSubmitted: (value) =>
-                                _openExplorer(query: value),
-                            style: GoogleFonts.poppins(
-                              fontSize: 13.5,
-                              color: AppTheme.deepForest,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'Rechercher une plage, un bolong...',
-                              prefixIcon: const Icon(
-                                Icons.search_rounded,
-                                color: AppTheme.earthBrown,
-                              ),
-                              suffixIcon: Padding(
-                                padding: const EdgeInsets.all(5),
-                                child: Material(
-                                  color: AppTheme.deepForest,
-                                  borderRadius: BorderRadius.circular(14),
-                                  child: InkWell(
-                                    onTap: () => _openExplorer(
-                                      query: _searchController.text,
-                                    ),
-                                    borderRadius: BorderRadius.circular(14),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: Icon(
-                                        Icons.arrow_forward_rounded,
-                                        color: AppTheme.champagneGold,
-                                        size: 18,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              filled: false,
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Transform.translate(
-                      offset: const Offset(0, -10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(_ziguinchorSlides.length, (i) {
-                          final active = i == _heroIndex;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 220),
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            width: active ? 22 : 7,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: active
-                                  ? AppTheme.hibiscusRed
-                                  : AppTheme.earthBrown.withValues(alpha: 0.28),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            if (_apiErrorMessage != null)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  child: CasamanceApiErrorBanner(
-                    message: _apiErrorMessage!,
-                    onRetry: _loadSites,
-                  ),
-                ),
-              ),
-
-            // 3. Arches Photographiques « Explorer par catégorie »
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 6, 18, 10),
-                child: CasamanceSectionHeader(
-                  title: 'Explorer par catégorie',
-                  subtitle: 'Choisissez votre ambiance casamançaise',
-                  onSeeAll: () => _openExplorer(category: 'TOUS'),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 112,
-                child: ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _themeArches.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 11),
-                  itemBuilder: (context, index) {
-                    final t = _themeArches[index];
-                    return CasamanceArchCategoryTile(
-                      label: t['label'] as String,
-                      assetPath: t['asset'] as String,
-                      icon: t['icon'] as IconData,
-                      selected: index == 0,
-                      onTap: () =>
-                          _openExplorer(category: t['code'] as String),
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            // 4. « Sites populaires » — Cartes portrait plein cadre
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 20, 18, 12),
-                child: CasamanceSectionHeader(
-                  title: 'Sites populaires',
-                  subtitle: 'Les escapades les plus demandées',
-                  onSeeAll: () => _openExplorer(category: 'TOUS'),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _isLoading && _allSites.isEmpty
-                  ? const SizedBox(
-                      height: 260,
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: AppTheme.deepForest,
-                        ),
-                      ),
-                    )
-                  : SizedBox(
-                      height: 294,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: popularSites.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 14),
-                        itemBuilder: (context, index) {
-                          final site = popularSites[index];
-                          return CasamanceFeaturedSiteCard(
-                            site: site,
-                            heroTagPrefix: 'site_photo_pop',
-                            isFavorite: _favoriteIds.contains(site.id),
-                            reviewCount: _reviewCounts[site.id] ?? 0,
-                            onTap: () => _openDetail(site),
-                            onToggleFavorite: () => _toggleFavorite(site),
-                          );
-                        },
-                      ),
-                    ),
-            ),
-
-            // 5. « Les incontournables de la Casamance » — Collage Éditorial Asymétrique
-            if (incontournables.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 24, 18, 12),
-                  child: CasamanceSectionHeader(
-                    title: 'Les incontournables',
-                    subtitle: 'Trésors architecturaux, îles & artisanat vivant',
-                    onSeeAll: () => _openExplorer(category: 'PATRIMOINE'),
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _MustVisitAsymmetricCollage(
-                    sites: incontournables,
-                    favoriteIds: _favoriteIds,
-                    onTapSite: _openDetail,
-                    onToggleFavorite: _toggleFavorite,
-                  ),
-                ),
-              ),
-            ],
-
-            // 6. « Les mieux notés »
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 24, 18, 12),
-                child: CasamanceSectionHeader(
-                  title: 'Les mieux notés',
-                  subtitle: 'Plébiscités par nos voyageurs',
-                  onSeeAll: () => _openExplorer(category: 'TOUS'),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 294,
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: topRated.take(5).length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 14),
-                  itemBuilder: (context, index) {
-                    final site = topRated[index];
-                    return CasamanceFeaturedSiteCard(
-                      site: site,
-                      heroTagPrefix: 'site_photo_top',
-                      isFavorite: _favoriteIds.contains(site.id),
-                      reviewCount: _reviewCounts[site.id] ?? 0,
-                      onTap: () => _openDetail(site),
-                      onToggleFavorite: () => _toggleFavorite(site),
-                    );
-                  },
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Composition asymétrique pour « Les incontournables » sur l'accueil
-class _MustVisitAsymmetricCollage extends StatelessWidget {
-  final List<Patrimoine> sites;
-  final Set<int> favoriteIds;
-  final ValueChanged<Patrimoine> onTapSite;
-  final ValueChanged<Patrimoine> onToggleFavorite;
-
-  const _MustVisitAsymmetricCollage({
-    required this.sites,
-    required this.favoriteIds,
-    required this.onTapSite,
-    required this.onToggleFavorite,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = sites.first;
-    final secondary = sites.skip(1).take(2).toList();
-
-    return Column(
-      children: [
-        // Grande carte panoramique éditoriale avec motif tissé diola
-        SizedBox(
-          height: 184,
-          child: CasamanceInteractiveCard(
-            onTap: () => onTapSite(primary),
-            borderRadius: BorderRadius.circular(24),
-            child: Stack(
-              fit: StackFit.expand,
+          child: CasamanceResponsiveContainer(
+            padding: EdgeInsets.fromLTRB(horizontalPad, 16, horizontalPad, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SitePhotoView(site: primary, fit: BoxFit.cover),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        AppTheme.earthBrown.withValues(alpha: 0.90),
-                        AppTheme.deepForest.withValues(alpha: 0.45),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: CasamanceFavoriteButton(
-                    isFavorite: favoriteIds.contains(primary.id),
-                    onTap: () => onToggleFavorite(primary),
-                    size: 34,
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 60,
-                  bottom: 18,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.champagneGold,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'COUP DE CŒUR CASAMANCE',
-                          style: GoogleFonts.poppins(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.deepForest,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        primary.nom,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTheme.editorialTitle(
-                          fontSize: 19,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${primary.localisation} • ${SiteMediaHelper.dureeEstimee(primary)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11.5,
-                          color: AppTheme.ivorySand.withValues(alpha: 0.92),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: CasamanceWovenMotifStrip(
-                    height: 6,
-                    color: AppTheme.champagneGold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (secondary.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Row(
-            children: List.generate(secondary.length, (idx) {
-              final s = secondary[idx];
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    right: idx == 0 && secondary.length > 1 ? 6 : 0,
-                    left: idx == 1 ? 6 : 0,
-                  ),
-                  child: SizedBox(
-                    height: 148,
-                    child: CasamanceInteractiveCard(
-                      onTap: () => onTapSite(s),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Stack(
-                        fit: StackFit.expand,
+                // 1. En-tête mobile (sur desktop, la TopNavBar joue ce rôle + salutation discrète)
+                if (!isWide) ...[
+                  SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: Row(
                         children: [
-                          SitePhotoView(site: s, fit: BoxFit.cover),
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.transparent,
-                                  AppTheme.deepForest.withValues(alpha: 0.88),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: CasamanceFavoriteButton(
-                              isFavorite: favoriteIds.contains(s.id),
-                              onTap: () => onToggleFavorite(s),
-                              size: 30,
-                            ),
-                          ),
-                          Positioned(
-                            left: 10,
-                            right: 10,
-                            bottom: 10,
+                          const CasamanceEmblemMark(size: 40),
+                          const SizedBox(width: 10),
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  s.nom,
-                                  maxLines: 2,
+                                  _userFirstName != null &&
+                                          _userFirstName!.isNotEmpty
+                                      ? 'Bonjour $_userFirstName'
+                                      : 'Casamance Tourisme',
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: AppTheme.editorialTitle(
-                                    fontSize: 13.5,
-                                    color: Colors.white,
-                                    height: 1.15,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.textDark,
                                   ),
                                 ),
-                                const SizedBox(height: 3),
                                 Row(
                                   children: [
                                     const Icon(
-                                      Icons.star_rounded,
+                                      Icons.location_on_outlined,
                                       size: 13,
-                                      color: AppTheme.champagneGold,
+                                      color: AppTheme.naturalGreen,
                                     ),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      s.noteMoyenne.toStringAsFixed(1),
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppTheme.champagneGold,
+                                    const SizedBox(width: 3),
+                                    Expanded(
+                                      child: Text(
+                                        'Ziguinchor, Sénégal',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11.5,
+                                          color: AppTheme.textMuted,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -909,16 +240,374 @@ class _MustVisitAsymmetricCollage extends StatelessWidget {
                               ],
                             ),
                           ),
+                          IconButton(
+                            tooltip: 'Mes réservations',
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MyBookingsScreen(),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.confirmation_number_outlined,
+                              color: AppTheme.forestGreen,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Mon compte',
+                            onPressed: () =>
+                                MainNavigationShell.switchTab(context, 4),
+                            icon: const Icon(
+                              Icons.person_outline_rounded,
+                              color: AppTheme.textDark,
+                            ),
+                          ),
                         ],
                       ),
                     ),
+                  ),
+                ] else ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _userFirstName != null &&
+                                      _userFirstName!.isNotEmpty
+                                  ? 'Bonjour $_userFirstName, prêt pour la Casamance ?'
+                                  : 'Découvrez la Casamance authentique',
+                              style: GoogleFonts.poppins(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textDark,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Patrimoine culturel, îles, bolongs et artisanat autour de Ziguinchor',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13.5,
+                                color: AppTheme.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MyBookingsScreen(),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.confirmation_number_outlined,
+                          size: 18,
+                        ),
+                        label: const Text('Mes billets'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // 2. Bannière Ziguinchor propre & proportionnée (aucun texte chevauchant)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: SizedBox(
+                    height: isWide ? 260 : 228,
+                    width: double.infinity,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        const CasamanceAssetPhoto(
+                          assetPath: 'assets/images/casamance/carabane_bolong.jpg',
+                          fit: BoxFit.cover,
+                        ),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.12),
+                                Colors.black.withValues(alpha: 0.68),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(isWide ? 24 : 14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.pureWhite
+                                      .withValues(alpha: 0.92),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'Ziguinchor • Destination Phare',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.forestGreen,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Entre fleuve, mangroves et patrimoine vivant',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: isWide ? 22 : 16.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  height: 1.25,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              ElevatedButton(
+                                onPressed: () => _openExplorer(),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.forestGreen,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 10,
+                                  ),
+                                  minimumSize: Size.zero,
+                                ),
+                                child: const Text('Explorer tous les sites →'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // 3. Barre de recherche moderne blanche
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.pureWhite,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.borderLight),
+                    boxShadow: AppTheme.softShadow,
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (value) => _openExplorer(query: value),
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: AppTheme.textDark,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Rechercher un site, un quartier, un musée...',
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: AppTheme.textMuted,
+                      ),
+                      suffixIcon: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: ElevatedButton(
+                          onPressed: () => _openExplorer(
+                            query: _searchController.text,
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.forestGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            minimumSize: Size.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text('Rechercher'),
+                        ),
+                      ),
+                      filled: false,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                    ),
+                  ),
+                ),
+
+                if (_apiErrorMessage != null) ...[
+                  const SizedBox(height: 14),
+                  CasamanceApiErrorBanner(
+                    message: _apiErrorMessage!,
+                    onRetry: _loadSites,
+                  ),
+                ],
+
+                // 4. Catégories nettes et contrastées
+                const SizedBox(height: 22),
+                CasamanceSectionHeader(
+                  title: 'Explorer par catégorie',
+                  subtitle: 'Filtrez directement par thématique',
+                  onSeeAll: () => _openExplorer(),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 42,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _categories.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final cat = _categories[index];
+                      return InkWell(
+                        onTap: () =>
+                            _openExplorer(category: cat['code'] as String),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 9,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.pureWhite,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppTheme.borderLight),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                cat['icon'] as IconData,
+                                size: 16,
+                                color: AppTheme.forestGreen,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                cat['label'] as String,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.textDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // 5. Sites populaires (Grille 3 colonnes desktop / carrousel mobile)
+                const SizedBox(height: 26),
+                CasamanceSectionHeader(
+                  title: 'Sites populaires',
+                  subtitle: 'Les découvertes les plus demandées',
+                  onSeeAll: () => _openExplorer(),
+                ),
+                const SizedBox(height: 14),
+                if (_isLoading && _allSites.isEmpty)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: CircularProgressIndicator(
+                        color: AppTheme.forestGreen,
+                      ),
+                    ),
+                  )
+                else
+                  _buildAdaptiveSiteGrid(
+                    popularSites,
+                    heroPrefix: 'home_pop',
+                  ),
+
+                // 6. Les mieux notés
+                const SizedBox(height: 28),
+                CasamanceSectionHeader(
+                  title: 'Les mieux notés',
+                  subtitle: 'Plébiscités par les visiteurs',
+                  onSeeAll: () => _openExplorer(),
+                ),
+                const SizedBox(height: 14),
+                _buildAdaptiveSiteGrid(
+                  topThree,
+                  heroPrefix: 'home_top',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdaptiveSiteGrid(
+    List<Patrimoine> sites, {
+    required String heroPrefix,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        if (w < 640) {
+          return Column(
+            children: sites
+                .map(
+                  (site) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: CasamanceSiteCard(
+                      site: site,
+                      heroTagPrefix: heroPrefix,
+                      isFavorite: _favoriteIds.contains(site.id),
+                      rating: _ratingFor(site),
+                      reviewCount: _reviewCounts[site.id] ?? 0,
+                      onTap: () => _openDetail(site),
+                      onToggleFavorite: () => _toggleFavorite(site),
+                    ),
+                  ),
+                )
+                .toList(),
+          );
+        }
+
+        final cols = w >= 980 ? 3 : 2;
+        final visible = sites.take(cols == 3 ? 3 : 2).toList();
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: List.generate(visible.length, (i) {
+              final site = visible[i];
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: i > 0 ? 9 : 0,
+                    right: i < visible.length - 1 ? 9 : 0,
+                  ),
+                  child: CasamanceSiteCard(
+                    site: site,
+                    heroTagPrefix: heroPrefix,
+                    isFavorite: _favoriteIds.contains(site.id),
+                    rating: _ratingFor(site),
+                    reviewCount: _reviewCounts[site.id] ?? 0,
+                    onTap: () => _openDetail(site),
+                    onToggleFavorite: () => _toggleFavorite(site),
                   ),
                 ),
               );
             }),
           ),
-        ],
-      ],
+        );
+      },
     );
   }
 }

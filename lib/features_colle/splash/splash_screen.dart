@@ -4,7 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/site_media_helper.dart';
 import '../../core/widgets/casamance_widgets.dart';
 
-/// Écran de lancement artistique — Casamance Tourisme & Visites
+/// Écran d'accueil / bienvenue moderne et responsive (Mobile & Ordinateur)
 class SplashScreen extends StatefulWidget {
   final VoidCallback onStart;
 
@@ -18,22 +18,15 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeAnim;
-  late final Animation<Offset> _slideAnim;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 950),
+      duration: const Duration(milliseconds: 650),
     );
     _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
     _controller.forward();
   }
 
@@ -45,202 +38,172 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final isWide = size.width >= 860;
+
     return Scaffold(
-      backgroundColor: AppTheme.ivorySand,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            top: MediaQuery.of(context).size.height * 0.34,
-            child: const CasamanceAssetPhoto(
-              assetPath: SiteMediaHelper.splashRiverAsset,
-              fit: BoxFit.cover,
-            ),
-          ),
-
-          // Voile Ivoire Sable vers Vert Forêt Profond
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.32, 0.56, 0.84, 1.0],
-                colors: [
-                  AppTheme.ivorySand,
-                  AppTheme.ivorySand,
-                  AppTheme.ivorySand.withValues(alpha: 0.14),
-                  AppTheme.deepForest.withValues(alpha: 0.68),
-                  AppTheme.deepForest.withValues(alpha: 0.96),
-                ],
-              ),
-            ),
-          ),
-
-          // Courbe organique hibiscus + forêt profonde
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 150,
-            child: CustomPaint(painter: _SplashBottomCurvePainter()),
-          ),
-
-          const Positioned(
-            left: 16,
-            bottom: 108,
-            child: CasamanceHibiscusBlossom(size: 56, opacity: 0.90),
-          ),
-
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: SlideTransition(
-                  position: _slideAnim,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      const CasamanceEmblemMark(size: 98),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Casamance',
-                        textAlign: TextAlign.center,
-                        style: AppTheme.editorialTitle(
-                          fontSize: 42,
-                          color: AppTheme.deepForest,
-                        ),
-                      ),
-                      Text(
-                        'Tourisme & Visites',
-                        textAlign: TextAlign.center,
-                        style: AppTheme.editorialTitle(
-                          fontSize: 22,
-                          color: AppTheme.earthBrown,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.terracottaSoft,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: AppTheme.earthBrown.withValues(alpha: 0.25),
-                          ),
-                        ),
-                        child: Text(
-                          'Explorez. Réservez. Profitez.',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.deepForest,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'Bolongs émeraude, plages sauvages de Cap Skirring,\ncases à impluvium et traditions diola',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: AppTheme.ivorySand,
-                          height: 1.48,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: widget.onStart,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.champagneGold,
-                            foregroundColor: AppTheme.deepForest,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            elevation: 4,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Commencer',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppTheme.deepForest,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(
-                                Icons.arrow_forward_rounded,
-                                color: AppTheme.deepForest,
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
+      backgroundColor: AppTheme.offWhite,
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnim,
+          child: Center(
+            child: ConstrainedBox(
+              constraints:
+                  const BoxConstraints(maxWidth: AppTheme.maxContentWidth),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isWide ? 36 : 20,
+                  vertical: 20,
                 ),
+                child: isWide ? _buildDesktopLayout() : _buildMobileLayout(),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
-}
 
-class _SplashBottomCurvePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final hibiscusPath = Path()
-      ..moveTo(0, size.height * 0.26)
-      ..quadraticBezierTo(
-        size.width * 0.35,
-        size.height * 0.06,
-        size.width * 0.65,
-        size.height * 0.44,
-      )
-      ..lineTo(size.width, size.height * 0.34)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(
-      hibiscusPath,
-      Paint()..color = AppTheme.hibiscusRed.withValues(alpha: 0.72),
+  Widget _buildDesktopLayout() {
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 40),
+            child: _buildTextContent(alignCenter: false),
+          ),
+        ),
+        Expanded(
+          flex: 6,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: const AspectRatio(
+              aspectRatio: 4 / 3,
+              child: CasamanceAssetPhoto(
+                assetPath: SiteMediaHelper.splashRiverAsset,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
-
-    final greenPath = Path()
-      ..moveTo(0, size.height * 0.48)
-      ..quadraticBezierTo(
-        size.width * 0.35,
-        size.height * 0.68,
-        size.width * 0.72,
-        size.height * 0.30,
-      )
-      ..quadraticBezierTo(
-        size.width * 0.88,
-        size.height * 0.14,
-        size.width,
-        size.height * 0.26,
-      )
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(greenPath, Paint()..color = AppTheme.deepForest);
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        Expanded(
+          flex: 5,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: const SizedBox(
+              width: double.infinity,
+              child: CasamanceAssetPhoto(
+                assetPath: SiteMediaHelper.splashRiverAsset,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        _buildTextContent(alignCenter: true),
+      ],
+    );
+  }
+
+  Widget _buildTextContent({required bool alignCenter}) {
+    final align =
+        alignCenter ? CrossAxisAlignment.center : CrossAxisAlignment.start;
+    final textAlign = alignCenter ? TextAlign.center : TextAlign.left;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: align,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppTheme.paleGreen,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.location_on_rounded,
+                size: 14,
+                color: AppTheme.forestGreen,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Ziguinchor • Casamance, Sénégal',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.forestGreen,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          'Casamance\nTourisme & Visites',
+          textAlign: textAlign,
+          style: GoogleFonts.poppins(
+            fontSize: 32,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textDark,
+            height: 1.15,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Explorez. Réservez. Profitez.',
+          textAlign: textAlign,
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.naturalGreen,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Découvrez les sites emblématiques de la Casamance, consultez leur localisation GPS, réservez votre guide et recevez votre billet QR en toute simplicité.',
+          textAlign: textAlign,
+          style: GoogleFonts.poppins(
+            fontSize: 13.5,
+            color: AppTheme.textMuted,
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: alignCenter ? double.infinity : 260,
+          height: 50,
+          child: ElevatedButton.icon(
+            onPressed: widget.onStart,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.forestGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            icon: Text(
+              'Commencer',
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            label: const Icon(Icons.arrow_forward_rounded, size: 19),
+          ),
+        ),
+      ],
+    );
+  }
 }

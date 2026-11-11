@@ -2,15 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/models/patrimoine.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/site_media_helper.dart';
 import '../../core/widgets/casamance_widgets.dart';
 import '../../features_colle/catalogue/site_detail_screen.dart';
 import '../../main.dart';
-import '../reservation/booking_form_screen.dart';
 import '../services/favorites_service.dart';
 
-/// Album Carnet de Voyage — Sites Favoris (100% hors-ligne)
-/// Responsable : Ndeye Thiamba FAYE (Pôle 2) — DA Casamance Tourisme
+/// Écran Favoris (Hors-ligne) — Grille responsive moderne
+/// Responsable : Ndeye Thiamba FAYE (Pôle 2)
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
 
@@ -44,17 +42,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final confirmation = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.ivorySand,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        backgroundColor: AppTheme.pureWhite,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Text(
           'Retirer des favoris ?',
-          style: AppTheme.editorialTitle(
-            fontSize: 19,
-            color: AppTheme.deepForest,
+          style: GoogleFonts.poppins(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textDark,
           ),
         ),
         content: Text(
-          'Voulez-vous retirer "${site.nom}" de votre carnet de coups de cœur ?',
+          'Voulez-vous retirer "${site.nom}" de vos sites favoris ?',
           style: GoogleFonts.poppins(fontSize: 13, color: AppTheme.textMuted),
         ),
         actions: [
@@ -65,7 +64,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.hibiscusRed,
+              backgroundColor: AppTheme.errorRed,
               foregroundColor: Colors.white,
             ),
             child: const Text('Retirer'),
@@ -81,10 +80,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${site.nom} a été retiré des favoris.'),
+          content: Text('${site.nom} retiré des favoris.'),
           action: SnackBarAction(
             label: 'Annuler',
-            textColor: AppTheme.champagneGold,
+            textColor: AppTheme.accentOrange,
             onPressed: () async {
               await _favoritesService.addFavorite(site);
               await _chargerFavoris();
@@ -95,282 +94,153 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     }
   }
 
-  Widget _carteFavoriEditorial(Patrimoine site, int index) {
-    final isPanoramic = index % 3 == 0;
-    final warmTint = index.isOdd;
-    final isFree = site.tarifEntree <= 0;
+  @override
+  Widget build(BuildContext context) {
+    final isWide = MediaQuery.sizeOf(context).width >= 640;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: warmTint ? AppTheme.terracottaSoft : AppTheme.warmCream,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(isPanoramic ? 26 : 36),
-          topRight: const Radius.circular(22),
-          bottomLeft: const Radius.circular(22),
-          bottomRight: Radius.circular(isPanoramic ? 34 : 22),
-        ),
-        border: Border.all(color: AppTheme.sandBorder),
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      backgroundColor: AppTheme.offWhite,
+      body: Column(
         children: [
-          Stack(
-            children: [
-              SitePhotoView(
-                site: site,
-                width: double.infinity,
-                height: isPanoramic ? 175 : 148,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(isPanoramic ? 25 : 35),
-                  topRight: const Radius.circular(21),
-                  bottomRight: const Radius.circular(28),
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: AppTheme.pureWhite,
+              border: Border(bottom: BorderSide(color: AppTheme.borderLight)),
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: CasamanceResponsiveContainer(
+                padding: EdgeInsets.fromLTRB(
+                  isWide ? 24 : 16,
+                  14,
+                  isWide ? 24 : 16,
+                  14,
                 ),
-              ),
-              Positioned(
-                top: 12,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.deepForest.withValues(alpha: 0.88),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Text(
-                    SiteMediaHelper.labelCategorie(site.categorie),
-                    style: GoogleFonts.poppins(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.champagneGold,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: CasamanceFavoriteButton(
-                  isFavorite: true,
-                  onTap: () => _retirerFavori(site),
-                  size: 36,
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        site.nom,
-                        style: AppTheme.editorialTitle(
-                          fontSize: 19,
-                          color: AppTheme.deepForest,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.champagneGold.withValues(alpha: 0.20),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 15,
-                            color: AppTheme.champagneGold,
-                          ),
-                          const SizedBox(width: 3),
                           Text(
-                            site.noteMoyenne.toStringAsFixed(1),
+                            'Mes Favoris',
                             style: GoogleFonts.poppins(
-                              fontSize: 12,
+                              fontSize: isWide ? 24 : 21,
                               fontWeight: FontWeight.w700,
-                              color: AppTheme.deepForest,
+                              color: AppTheme.textDark,
+                            ),
+                          ),
+                          Text(
+                            '${_favoris.length} site${_favoris.length > 1 ? 's' : ''} enregistré${_favoris.length > 1 ? 's' : ''} hors-ligne',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: AppTheme.textMuted,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      size: 15,
-                      color: AppTheme.bolongTurquoise,
-                    ),
-                    const SizedBox(width: 5),
-                    Expanded(
-                      child: Text(
-                        site.localisation,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12.2,
-                          color: AppTheme.textMuted,
-                        ),
+                    IconButton(
+                      tooltip: 'Actualiser',
+                      onPressed: _chargerFavoris,
+                      icon: const Icon(
+                        Icons.refresh_rounded,
+                        color: AppTheme.forestGreen,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  isFree
-                      ? 'Accès libre • ${site.horairesOuverture}'
-                      : '${site.tarifEntree.toInt()} FCFA / pers. • ${site.horairesOuverture}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.earthBrown,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => SiteDetailScreen(site: site),
-                            ),
-                          );
-                          _chargerFavoris();
-                        },
-                        icon: const Icon(Icons.info_outline, size: 17),
-                        label: const Text('Détails'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.champagneGold,
-                          foregroundColor: AppTheme.deepForest,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => BookingFormScreen(site: site),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.calendar_month_rounded, size: 17),
-                        label: const Text('Réserver'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _vueVide() {
-    return CasamanceEmptyState(
-      icon: Icons.favorite_border_rounded,
-      title: 'Votre carnet est encore vierge',
-      subtitle:
-          'Ajoutez des sites touristiques à vos favoris depuis l\'accueil, « Explorez la Casamance » ou la fiche détaillée pour les retrouver hors-ligne.',
-      actionLabel: 'Explorer la Casamance',
-      onAction: () => MainNavigationShell.switchTab(context, 1),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.ivorySand,
-      body: Column(
-        children: [
-          // En-tête éditorial léger sur Ivoire sable
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 12, 14, 12),
-              child: Row(
-                children: [
-                  const CasamanceHibiscusBlossom(size: 26),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mes Coups de Cœur',
-                          style: AppTheme.editorialTitle(
-                            fontSize: 24,
-                            color: AppTheme.deepForest,
-                          ),
-                        ),
-                        Text(
-                          'Sélection enregistrée hors-ligne (${_favoris.length})',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: AppTheme.earthBrown,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Actualiser',
-                    icon: const Icon(
-                      Icons.refresh_rounded,
-                      color: AppTheme.deepForest,
-                    ),
-                    onPressed: _chargerFavoris,
-                  ),
-                ],
               ),
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 18),
-            child: CasamanceWovenMotifStrip(
-              height: 6,
-              color: AppTheme.earthBrown,
             ),
           ),
           Expanded(
             child: _isLoading
                 ? const Center(
                     child: CircularProgressIndicator(
-                      color: AppTheme.deepForest,
+                      color: AppTheme.forestGreen,
                     ),
                   )
                 : _favoris.isEmpty
-                    ? _vueVide()
+                    ? CasamanceEmptyState(
+                        icon: Icons.favorite_border_rounded,
+                        title: 'Aucun favori pour le moment',
+                        subtitle:
+                            'Ajoutez des sites depuis l\'accueil ou Explorer pour les retrouver même hors connexion.',
+                        actionLabel: 'Explorer la Casamance',
+                        onAction: () =>
+                            MainNavigationShell.switchTab(context, 1),
+                      )
                     : RefreshIndicator(
-                        color: AppTheme.deepForest,
+                        color: AppTheme.forestGreen,
                         onRefresh: _chargerFavoris,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
-                          itemCount: _favoris.length,
-                          itemBuilder: (context, index) =>
-                              _carteFavoriEditorial(_favoris[index], index),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final w = constraints.maxWidth;
+                            final cols = w >= 1024 ? 3 : (w >= 640 ? 2 : 1);
+                            final rowCount = (_favoris.length / cols).ceil();
+                            final hPad = w >= 640 ? 24.0 : 16.0;
+
+                            return ListView.separated(
+                              padding: EdgeInsets.fromLTRB(hPad, 18, hPad, 28),
+                              itemCount: rowCount,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 18),
+                              itemBuilder: (context, rowIndex) {
+                                return Center(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: AppTheme.maxContentWidth,
+                                    ),
+                                    child: IntrinsicHeight(
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: List.generate(cols, (col) {
+                                          final idx = rowIndex * cols + col;
+                                          if (idx >= _favoris.length) {
+                                            return const Expanded(
+                                              child: SizedBox.shrink(),
+                                            );
+                                          }
+                                          final site = _favoris[idx];
+                                          return Expanded(
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                left: col > 0 ? 9 : 0,
+                                                right: col < cols - 1 ? 9 : 0,
+                                              ),
+                                              child: CasamanceSiteCard(
+                                                site: site,
+                                                heroTagPrefix: 'fav_card',
+                                                isFavorite: true,
+                                                rating: site.noteMoyenne,
+                                                reviewCount: 0,
+                                                onToggleFavorite: () =>
+                                                    _retirerFavori(site),
+                                                onTap: () async {
+                                                  await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          SiteDetailScreen(
+                                                        site: site,
+                                                      ),
+                                                    ),
+                                                  );
+                                                  _chargerFavoris();
+                                                },
+                                              ),
+                                            ),
+                                          );
+                                        }),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
                         ),
                       ),
           ),

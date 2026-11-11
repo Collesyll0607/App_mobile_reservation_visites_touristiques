@@ -20,7 +20,39 @@ class ZiguinchorTourismeApp extends StatefulWidget {
 }
 
 class _ZiguinchorTourismeAppState extends State<ZiguinchorTourismeApp> {
-  bool _showSplash = true;
+  late bool _showSplash;
+  late int _initialTabIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    final page = (Uri.base.queryParameters['page'] ?? '').toLowerCase();
+    switch (page) {
+      case 'accueil':
+        _initialTabIndex = 0;
+        _showSplash = false;
+        break;
+      case 'explorer':
+        _initialTabIndex = 1;
+        _showSplash = false;
+        break;
+      case 'carte':
+        _initialTabIndex = 2;
+        _showSplash = false;
+        break;
+      case 'favoris':
+        _initialTabIndex = 3;
+        _showSplash = false;
+        break;
+      case 'compte':
+        _initialTabIndex = 4;
+        _showSplash = false;
+        break;
+      default:
+        _initialTabIndex = 0;
+        _showSplash = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,21 +61,23 @@ class _ZiguinchorTourismeAppState extends State<ZiguinchorTourismeApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 450),
+        duration: const Duration(milliseconds: 350),
         child: _showSplash
             ? SplashScreen(
                 onStart: () => setState(() => _showSplash = false),
               )
-            : const MainNavigationShell(),
+            : MainNavigationShell(initialIndex: _initialTabIndex),
       ),
     );
   }
 }
 
 class MainNavigationShell extends StatefulWidget {
-  const MainNavigationShell({super.key});
+  final int initialIndex;
 
-  /// Bascule d'onglet avec transmission optionnelle de filtre vers Explorer
+  const MainNavigationShell({super.key, this.initialIndex = 0});
+
+  /// Permet aux écrans enfants de changer d'onglet avec filtre optionnel vers Explorer
   static void switchTab(
     BuildContext context,
     int index, {
@@ -63,9 +97,15 @@ class MainNavigationShell extends StatefulWidget {
 }
 
 class _MainNavigationShellState extends State<MainNavigationShell> {
-  int _currentIndex = 0;
+  late int _currentIndex;
   String _explorerCategory = 'TOUS';
   String _explorerQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
 
   void _setTab(
     int index, {
@@ -101,7 +141,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
   }
 
-  static const List<Map<String, dynamic>> _destinations = [
+  static const List<Map<String, dynamic>> _navItems = [
     {
       'icon': Icons.home_outlined,
       'activeIcon': Icons.home_rounded,
@@ -115,7 +155,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     {
       'icon': Icons.map_outlined,
       'activeIcon': Icons.map_rounded,
-      'label': 'Carte',
+      'label': 'Carte GPS',
     },
     {
       'icon': Icons.favorite_border_rounded,
@@ -131,98 +171,219 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktopOrTablet = MediaQuery.sizeOf(context).width >= 900;
+
     return Scaffold(
-      backgroundColor: AppTheme.ivorySand,
-      extendBody: true,
-      body: Padding(
-        padding: const EdgeInsets.only(bottom: 78),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 240),
-          child: KeyedSubtree(
-            key: ValueKey<int>(_currentIndex),
-            child: _buildScreenForIndex(_currentIndex),
-          ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-          child: Container(
-            height: 62,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.deepForest,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: AppTheme.champagneGold.withValues(alpha: 0.25),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.deepForest.withValues(alpha: 0.28),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+      backgroundColor: AppTheme.offWhite,
+      appBar: isDesktopOrTablet
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(64),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: AppTheme.pureWhite,
+                  border: Border(
+                    bottom: BorderSide(color: AppTheme.borderLight),
+                  ),
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: List.generate(_destinations.length, (i) {
-                final item = _destinations[i];
-                final selected = i == _currentIndex;
-                return Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => _setTab(i),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? AppTheme.champagneGold.withValues(alpha: 0.18)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppTheme.maxContentWidth,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
                         children: [
-                          Icon(
-                            selected
-                                ? item['activeIcon'] as IconData
-                                : item['icon'] as IconData,
-                            size: 20,
-                            color: selected
-                                ? AppTheme.champagneGold
-                                : AppTheme.ivorySand.withValues(alpha: 0.72),
+                          InkWell(
+                            onTap: () => _setTab(0),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.paleGreen,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.park_rounded,
+                                    color: AppTheme.forestGreen,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Casamance Tourisme',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.forestGreen,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            item['label'] as String,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
-                              fontSize: 10.2,
-                              fontWeight:
-                                  selected ? FontWeight.w600 : FontWeight.w400,
-                              color: selected
-                                  ? AppTheme.champagneGold
-                                  : AppTheme.ivorySand.withValues(alpha: 0.72),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: List.generate(4, (i) {
+                                    final item = _navItems[i];
+                                    final selected = i == _currentIndex;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 4),
+                                      child: TextButton.icon(
+                                        onPressed: () => _setTab(i),
+                                        style: TextButton.styleFrom(
+                                          backgroundColor: selected
+                                              ? AppTheme.paleGreen
+                                              : Colors.transparent,
+                                          foregroundColor: selected
+                                              ? AppTheme.forestGreen
+                                              : AppTheme.textDark,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                        ),
+                                        icon: Icon(
+                                          selected
+                                              ? item['activeIcon'] as IconData
+                                              : item['icon'] as IconData,
+                                          size: 18,
+                                        ),
+                                        label: Text(
+                                          item['label'] as String,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 13,
+                                            fontWeight: selected
+                                                ? FontWeight.w600
+                                                : FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Bouton Compte
+                          ElevatedButton.icon(
+                            onPressed: () => _setTab(4),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _currentIndex == 4
+                                  ? AppTheme.forestGreen
+                                  : AppTheme.pureWhite,
+                              foregroundColor: _currentIndex == 4
+                                  ? Colors.white
+                                  : AppTheme.textDark,
+                              side: BorderSide(
+                                color: _currentIndex == 4
+                                    ? AppTheme.forestGreen
+                                    : AppTheme.borderLight,
+                              ),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            icon: Icon(
+                              _currentIndex == 4
+                                  ? Icons.person_rounded
+                                  : Icons.person_outline_rounded,
+                              size: 18,
+                            ),
+                            label: Text(
+                              'Compte',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                );
-              }),
-            ),
-          ),
+                ),
+              ),
+            )
+          : null,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: KeyedSubtree(
+          key: ValueKey<int>(_currentIndex),
+          child: _buildScreenForIndex(_currentIndex),
         ),
       ),
+      bottomNavigationBar: isDesktopOrTablet
+          ? null
+          : Container(
+              decoration: const BoxDecoration(
+                color: AppTheme.pureWhite,
+                border: Border(top: BorderSide(color: AppTheme.borderLight)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: NavigationBarTheme(
+                  data: NavigationBarThemeData(
+                    backgroundColor: AppTheme.pureWhite,
+                    indicatorColor: AppTheme.paleGreen,
+                    labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                      final selected = states.contains(WidgetState.selected);
+                      return GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight:
+                            selected ? FontWeight.w600 : FontWeight.w500,
+                        color: selected
+                            ? AppTheme.forestGreen
+                            : AppTheme.textMuted,
+                      );
+                    }),
+                    iconTheme: WidgetStateProperty.resolveWith((states) {
+                      final selected = states.contains(WidgetState.selected);
+                      return IconThemeData(
+                        color: selected
+                            ? AppTheme.forestGreen
+                            : AppTheme.textMuted,
+                        size: 22,
+                      );
+                    }),
+                  ),
+                  child: NavigationBar(
+                    height: 62,
+                    elevation: 0,
+                    selectedIndex: _currentIndex,
+                    onDestinationSelected: (i) => _setTab(i),
+                    destinations: _navItems
+                        .map(
+                          (item) => NavigationDestination(
+                            icon: Icon(item['icon'] as IconData),
+                            selectedIcon: Icon(item['activeIcon'] as IconData),
+                            label: item['label'] as String,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 }

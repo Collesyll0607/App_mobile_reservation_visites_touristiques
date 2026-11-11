@@ -1,86 +1,101 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Signature Artistique Officielle — "Casamance Tourisme & Visites"
-/// Palette éditoriale chaleureuse inspirée de la Casamance :
-/// - Vert forêt profond (#063D2E) : ancrage & profondeur
-/// - Vert émeraude (#087A5B) : végétation & fraîcheur
-/// - Turquoise bolong (#087E83) : fleuve & bolongs
-/// - Or champagne (#D9A441) : lumière & actions phares
-/// - Rouge hibiscus (#9B2948) : accent floral & caractère
-/// - Ivoire sable (#F4EBDD) : toile de fond respirante
-/// - Brun terre (#754A35) : chaleur architecturale & artisanat
+/// Identité Visuelle Officielle — "Casamance Tourisme & Visites"
+/// Palette claire, moderne et professionnelle :
+/// - Vert forêt (#14532D) : couleur principale & actions clés
+/// - Vert naturel (#2E8B57) : accents nature & localisation
+/// - Vert pâle (#E8F5E9) : badges & états doux
+/// - Blanc cassé (#F8FAF5) : fond d'écran principal
+/// - Orange accent (#F59E0B) : étoiles & mises en avant ponctuelles
+/// - Texte (#1F2937) & Gris secondaire (#6B7280)
 class AppTheme {
-  static const Color deepForest = Color(0xFF063D2E);
-  static const Color emeraldGreen = Color(0xFF087A5B);
-  static const Color bolongTurquoise = Color(0xFF087E83);
-  static const Color champagneGold = Color(0xFFD9A441);
-  static const Color hibiscusRed = Color(0xFF9B2948);
-  static const Color ivorySand = Color(0xFFF4EBDD);
-  static const Color earthBrown = Color(0xFF754A35);
-
-  // Surfaces éditoriales nuancées
-  static const Color warmCream = Color(0xFFFAF5EC);
-  static const Color cardSurface = Color(0xFFFCF8F0);
-  static const Color sandBorder = Color(0xFFE5D8C5);
-  static const Color sageSurface = Color(0xFFE7EFE8);
-  static const Color terracottaSoft = Color(0xFFF2E6DC);
-  static const Color textDark = Color(0xFF1A211D);
-  static const Color textMuted = Color(0xFF665A4E);
-  static const Color errorRed = hibiscusRed;
+  static const Color forestGreen = Color(0xFF14532D);
+  static const Color naturalGreen = Color(0xFF2E8B57);
+  static const Color paleGreen = Color(0xFFE8F5E9);
+  static const Color offWhite = Color(0xFFF8FAF5);
   static const Color pureWhite = Color(0xFFFFFFFF);
+  static const Color accentOrange = Color(0xFFF59E0B);
+  static const Color accentOrangeDark = Color(0xFFD97706);
+  static const Color textDark = Color(0xFF1F2937);
+  static const Color textMuted = Color(0xFF6B7280);
+  static const Color borderLight = Color(0xFFE5E7EB);
+  static const Color errorRed = Color(0xFFDC2626);
 
-  // Alias rétrocompatibles pour garantir l'intégrité des modules existants
-  static const Color forestGreen = deepForest;
-  static const Color naturalGreen = emeraldGreen;
-  static const Color lightGreen = sageSurface;
-  static const Color warmOrange = champagneGold;
-  static const Color warmOrangeDark = earthBrown;
-  static const Color offWhite = ivorySand;
+  // Dimensions responsive standards
+  static const double maxContentWidth = 1180.0;
+  static const double maxDetailWidth = 1040.0;
+  static const double maxFormWidth = 560.0;
+
+  static bool isDesktop(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= 960;
+
+  static bool isTablet(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return w >= 640 && w < 960;
+  }
+
+  // Alias rétrocompatibles pour préserver l'ensemble des écrans existants
+  static const Color deepForest = forestGreen;
+  static const Color deepForestSoft = naturalGreen;
+  static const Color emeraldGreen = naturalGreen;
+  static const Color bolongTurquoise = naturalGreen;
+  static const Color champagneGold = accentOrange;
+  static const Color solarGold = accentOrange;
+  static const Color warmOrange = accentOrange;
+  static const Color warmOrangeDark = accentOrangeDark;
+  static const Color hibiscusRed = errorRed;
+  static const Color lateriteRed = errorRed;
+  static const Color ivorySand = offWhite;
+  static const Color warmCream = pureWhite;
+  static const Color cardSurface = pureWhite;
+  static const Color sandBorder = borderLight;
+  static const Color sageSurface = paleGreen;
+  static const Color lightGreen = paleGreen;
+  static const Color terracottaSoft = paleGreen;
+  static const Color earthBrown = forestGreen;
   static const Color textPrimary = textDark;
   static const Color textSecondary = textMuted;
-  static const Color borderLight = sandBorder;
-  static const Color deepForestSoft = emeraldGreen;
-  static const Color solarGold = champagneGold;
-  static const Color lateriteRed = hibiscusRed;
-  static const Color primaryGreen = deepForest;
-  static const Color accentGold = champagneGold;
-  static const Color backgroundLight = ivorySand;
+  static const Color primaryGreen = forestGreen;
+  static const Color accentGold = accentOrange;
+  static const Color backgroundLight = offWhite;
 
-  /// Typographie éditoriale Playfair Display pour les grands titres & destinations
-  static TextStyle editorialTitle({
-    double fontSize = 24,
-    Color color = deepForest,
+  /// Style titre unifié en Poppins (hiérarchie lisible et contemporaine)
+  static TextStyle headingStyle({
+    double fontSize = 22,
+    Color color = textDark,
     FontWeight fontWeight = FontWeight.w700,
     double? height,
     FontStyle fontStyle = FontStyle.normal,
   }) {
-    return GoogleFonts.playfairDisplay(
+    return GoogleFonts.poppins(
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
-      height: height ?? 1.18,
+      height: height ?? 1.25,
       fontStyle: fontStyle,
-      letterSpacing: -0.2,
+      letterSpacing: -0.3,
     );
   }
 
-  /// Alias structurant Playfair Display
-  static TextStyle headingStyle({
+  /// Alias éditorial conservé, désormais unifié sur Poppins
+  static TextStyle editorialTitle({
     double fontSize = 22,
-    Color color = deepForest,
+    Color color = textDark,
     FontWeight fontWeight = FontWeight.w700,
     double? height,
+    FontStyle fontStyle = FontStyle.normal,
   }) {
-    return editorialTitle(
+    return headingStyle(
       fontSize: fontSize,
       color: color,
       fontWeight: fontWeight,
       height: height,
+      fontStyle: fontStyle,
     );
   }
 
-  /// Typographie Poppins pour les textes, prix, filtres et formulaires
+  /// Style corps de texte Poppins
   static TextStyle bodyStyle({
     double fontSize = 14,
     Color color = textDark,
@@ -97,121 +112,120 @@ class AppTheme {
     );
   }
 
-  /// Ombres profondes et subtiles façon tirage photographique
+  /// Ombres discrètes type carte de voyage moderne
   static List<BoxShadow> get softShadow => [
         BoxShadow(
-          color: earthBrown.withValues(alpha: 0.10),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 14,
+          offset: const Offset(0, 4),
         ),
         BoxShadow(
-          color: deepForest.withValues(alpha: 0.05),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
+          color: Colors.black.withValues(alpha: 0.02),
+          blurRadius: 4,
+          offset: const Offset(0, 1),
         ),
       ];
 
   static ThemeData get lightTheme {
     final baseTextTheme = GoogleFonts.poppinsTextTheme().apply(
       bodyColor: textDark,
-      displayColor: deepForest,
+      displayColor: textDark,
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: deepForest,
-        primary: deepForest,
-        secondary: emeraldGreen,
-        tertiary: champagneGold,
-        error: hibiscusRed,
-        surface: cardSurface,
+        seedColor: forestGreen,
+        primary: forestGreen,
+        secondary: naturalGreen,
+        tertiary: accentOrange,
+        error: errorRed,
+        surface: pureWhite,
       ),
-      scaffoldBackgroundColor: ivorySand,
+      scaffoldBackgroundColor: offWhite,
       textTheme: baseTextTheme.copyWith(
-        headlineLarge: editorialTitle(fontSize: 32),
-        headlineMedium: editorialTitle(fontSize: 25),
-        headlineSmall: editorialTitle(fontSize: 21),
-        titleLarge: editorialTitle(fontSize: 18),
+        headlineLarge: headingStyle(fontSize: 28),
+        headlineMedium: headingStyle(fontSize: 22),
+        headlineSmall: headingStyle(fontSize: 18),
+        titleLarge: headingStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: ivorySand,
-        foregroundColor: deepForest,
+        backgroundColor: pureWhite,
+        foregroundColor: textDark,
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
-        titleTextStyle: GoogleFonts.playfairDisplay(
-          fontSize: 21,
-          fontWeight: FontWeight.w700,
-          color: deepForest,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: GoogleFonts.poppins(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: textDark,
         ),
-        iconTheme: const IconThemeData(color: deepForest),
+        iconTheme: const IconThemeData(color: textDark),
       ),
       cardTheme: CardThemeData(
-        color: cardSurface,
+        color: pureWhite,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
-          side: const BorderSide(color: sandBorder),
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: borderLight),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: warmCream,
+        fillColor: pureWhite,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         labelStyle: GoogleFonts.poppins(color: textMuted, fontSize: 13),
-        hintStyle: GoogleFonts.poppins(
-          color: textMuted.withValues(alpha: 0.78),
-          fontSize: 13.5,
-        ),
+        hintStyle: GoogleFonts.poppins(color: textMuted, fontSize: 13.5),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: sandBorder),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: borderLight),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: sandBorder),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: borderLight),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: bolongTurquoise, width: 1.8),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: forestGreen, width: 1.6),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: deepForest,
-          foregroundColor: ivorySand,
+          backgroundColor: forestGreen,
+          foregroundColor: pureWhite,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           textStyle: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: earthBrown,
-          side: const BorderSide(color: earthBrown, width: 1.3),
+          foregroundColor: forestGreen,
+          side: const BorderSide(color: forestGreen, width: 1.2),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
           textStyle: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: deepForest,
-        contentTextStyle: GoogleFonts.poppins(color: ivorySand, fontSize: 13),
+        backgroundColor: forestGreen,
+        contentTextStyle: GoogleFonts.poppins(color: pureWhite, fontSize: 13),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

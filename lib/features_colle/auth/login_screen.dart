@@ -256,15 +256,20 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 6, 20, 28),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: AppTheme.softShadow,
-                ),
+            Center(
+              child: ConstrainedBox(
+                constraints:
+                    const BoxConstraints(maxWidth: AppTheme.maxFormWidth),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardSurface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppTheme.borderLight),
+                      boxShadow: AppTheme.softShadow,
+                    ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -384,6 +389,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
+              ),
+            ),
               ),
             ),
           ],

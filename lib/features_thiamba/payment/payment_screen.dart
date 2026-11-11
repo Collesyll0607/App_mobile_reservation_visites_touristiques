@@ -167,10 +167,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-              child: Form(
-                key: _formKey,
-                child: Column(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 580),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Carte montant à régler
@@ -440,6 +443,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ),
                   ],
                 ),
+              ),
+            ),
               ),
             ),
           ),

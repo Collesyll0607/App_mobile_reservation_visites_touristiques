@@ -10,7 +10,7 @@ class SiteMediaHelper {
   static const String heritageFooterAsset =
       'assets/images/casamance/bras_de_mer.jpg';
   static const String artisanatAsset =
-      'assets/images/casamance/artisanat_ziguinchor.jpg';
+      'assets/images/casamance/artisanat_senegal_real.jpg';
   static const String beachCapSkirringAsset =
       'assets/images/casamance/plage_cap_skirring.jpg';
   static const String beachCarabaneAsset =

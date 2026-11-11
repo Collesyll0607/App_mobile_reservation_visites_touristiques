@@ -57,8 +57,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Casamance'), findsOneWidget);
-    expect(find.text('Tourisme & Visites'), findsOneWidget);
+    expect(find.textContaining('Tourisme & Visites'), findsOneWidget);
     expect(find.text('Explorez. Réservez. Profitez.'), findsOneWidget);
     expect(find.text('Commencer'), findsOneWidget);
 
@@ -66,8 +65,12 @@ void main() {
     expect(started, isTrue);
   });
 
-  testWidgets('MainNavigationShell expose les 5 onglets éditoriaux',
+  testWidgets('MainNavigationShell adapte la navigation mobile et desktop',
       (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
     await tester.pumpWidget(
       const MaterialApp(home: MainNavigationShell()),
     );
@@ -75,14 +78,25 @@ void main() {
 
     expect(find.text('Accueil'), findsOneWidget);
     expect(find.text('Explorer'), findsOneWidget);
-    expect(find.text('Carte'), findsOneWidget);
+    expect(find.text('Carte GPS'), findsOneWidget);
     expect(find.text('Favoris'), findsOneWidget);
     expect(find.text('Compte'), findsOneWidget);
+
+    // Bascule sur largeur ordinateur (1280px)
+    tester.view.physicalSize = const Size(1280, 800);
+    await tester.pumpAndSettle();
+    expect(find.text('Casamance Tourisme'), findsWidgets);
+    expect(find.text('Explorer'), findsOneWidget);
+    expect(find.text('Carte GPS'), findsOneWidget);
   });
 
   testWidgets(
-      'SitesListScreen rend le hero Explorez la Casamance, arches et mosaïque',
+      'SitesListScreen rend en grille responsive sur ordinateur et smartphone',
       (tester) async {
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
     await tester.pumpWidget(
       const MaterialApp(
         home: SitesListScreen(initialSites: ApiConfig.sitesCasamance),
@@ -90,15 +104,21 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Explorez la'), findsOneWidget);
-    expect(find.text('Découvrir la région'), findsOneWidget);
+    expect(find.text('Explorer la Casamance'), findsOneWidget);
+    expect(find.text('Tous'), findsOneWidget);
     expect(find.text('Nature'), findsAtLeastNWidgets(1));
-    expect(find.text('Culture'), findsAtLeastNWidgets(1));
-    expect(find.text('Plages'), findsAtLeastNWidgets(1));
-    expect(find.text('Destinations à vivre'), findsOneWidget);
+    expect(find.text('Monument'), findsAtLeastNWidgets(1));
+    expect(find.text('Musée'), findsAtLeastNWidgets(1));
+    expect(find.text('Architecture'), findsAtLeastNWidgets(1));
+    expect(find.text('Artisanat'), findsAtLeastNWidgets(1));
 
-    await tester.tap(find.text('Plages').first);
+    await tester.tap(find.text('Nature').first);
     await tester.pumpAndSettle();
-    expect(find.textContaining('Cap Skirring'), findsOneWidget);
+    expect(find.textContaining('Bolongs'), findsAtLeastNWidgets(1));
+
+    // Test responsive largeur smartphone
+    tester.view.physicalSize = const Size(390, 844);
+    await tester.pumpAndSettle();
+    expect(find.text('Explorer la Casamance'), findsOneWidget);
   });
 }

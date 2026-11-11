@@ -89,14 +89,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 6, 20, 28),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: AppTheme.softShadow,
-                ),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(maxWidth: AppTheme.maxFormWidth),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardSurface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppTheme.borderLight),
+                      boxShadow: AppTheme.softShadow,
+                    ),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -257,6 +262,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ],
                   ),
                 ),
+              ),
+            ),
               ),
             ),
           ),

@@ -242,14 +242,13 @@ class _ReviewsSectionState extends State<ReviewsSection> {
         else
           ...List.generate(_reviews.length, (i) {
             final r = _reviews[i];
-            final warm = i.isOdd;
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: warm ? AppTheme.terracottaSoft : AppTheme.warmCream,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppTheme.sandBorder),
+                color: AppTheme.pureWhite,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppTheme.borderLight),
                 boxShadow: AppTheme.softShadow,
               ),
               child: Column(

@@ -545,10 +545,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         color: AppTheme.deepForest,
                         onRefresh: _chargerReservations,
                         child: ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                           itemCount: listeAffichee.length,
-                          itemBuilder: (context, index) =>
-                              _carteReservation(listeAffichee[index]),
+                          itemBuilder: (context, index) => Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 840),
+                              child: _carteReservation(listeAffichee[index]),
+                            ),
+                          ),
                         ),
                       ),
           ),

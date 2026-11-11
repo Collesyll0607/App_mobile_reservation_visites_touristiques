@@ -12,7 +12,7 @@ import '../map/map_explore_screen.dart';
 import '../reviews/reviews_section.dart';
 import '../reviews/reviews_service.dart';
 
-/// Fiche Éditoriale d'une Destination — Casamance Tourisme & Visites
+/// Fiche Détaillée d'un Site Touristique (Responsive 2 colonnes sur ordinateur / 1 sur mobile)
 /// Responsable : Collé SYLL (Pôle 1 - Module Catalogue)
 class SiteDetailScreen extends StatefulWidget {
   final Patrimoine site;
@@ -97,18 +97,18 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.ivorySand,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        backgroundColor: AppTheme.pureWhite,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Row(
           children: [
-            const Icon(Icons.share_rounded, color: AppTheme.earthBrown),
+            const Icon(Icons.share_rounded, color: AppTheme.forestGreen),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Fiche copiée pour partage',
-                style: AppTheme.editorialTitle(
-                  fontSize: 18,
-                  color: AppTheme.deepForest,
+                'Informations copiées',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -119,17 +119,13 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
           style: GoogleFonts.poppins(
             fontSize: 12.5,
             color: AppTheme.textMuted,
-            height: 1.48,
+            height: 1.5,
           ),
         ),
         actions: [
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.deepForest,
-              foregroundColor: AppTheme.ivorySand,
-            ),
-            child: const Text('Parfait'),
+            child: const Text('Fermer'),
           ),
         ],
       ),
@@ -142,11 +138,11 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
       builder: (ctx) => Dialog(
         backgroundColor: Colors.black,
         insetPadding: const EdgeInsets.all(12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: Stack(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(18),
               child: InteractiveViewer(
                 child: CasamanceAssetPhoto(
                   assetPath: assetPath,
@@ -171,6 +167,14 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
     );
   }
 
+  Future<void> _goToBooking() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => BookingFormScreen(site: widget.site)),
+    );
+    _checkFavorite();
+  }
+
   @override
   Widget build(BuildContext context) {
     final site = widget.site;
@@ -181,602 +185,589 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
       lat2: site.latitude,
       lon2: site.longitude,
     );
-    final isFree = site.tarifEntree <= 0;
+    final isWide = MediaQuery.sizeOf(context).width >= 900;
 
     return Scaffold(
-      backgroundColor: AppTheme.ivorySand,
-      body: CustomScrollView(
-        slivers: [
-          // 1. Grande galerie panoramique en courbe organique
-          SliverAppBar(
-            expandedHeight: 330,
-            pinned: true,
-            backgroundColor: AppTheme.ivorySand,
-            foregroundColor: AppTheme.deepForest,
-            leading: Padding(
-              padding: const EdgeInsets.all(8),
-              child: CircleAvatar(
-                backgroundColor: AppTheme.ivorySand.withValues(alpha: 0.90),
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_rounded,
-                    color: AppTheme.deepForest,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
+      backgroundColor: AppTheme.offWhite,
+      appBar: AppBar(
+        backgroundColor: AppTheme.pureWhite,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: AppTheme.borderLight),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.textDark),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          site.nom,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textDark,
+          ),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Partager ce site',
+            onPressed: _shareSite,
+            icon: const Icon(Icons.share_outlined, color: AppTheme.textDark),
+          ),
+          IconButton(
+            tooltip:
+                _isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris',
+            onPressed: _toggleFavorite,
+            icon: Icon(
+              _isFavorite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              color: _isFavorite ? AppTheme.errorRed : AppTheme.textDark,
             ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: CircleAvatar(
-                  backgroundColor: AppTheme.ivorySand.withValues(alpha: 0.90),
-                  child: IconButton(
-                    tooltip: 'Partager ce site',
-                    icon: const Icon(
-                      Icons.share_outlined,
-                      color: AppTheme.earthBrown,
-                    ),
-                    onPressed: _shareSite,
+          ),
+          const SizedBox(width: 6),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: CasamanceResponsiveContainer(
+          maxWidth: AppTheme.maxDetailWidth,
+          padding: EdgeInsets.fromLTRB(
+            isWide ? 24 : 16,
+            18,
+            isWide ? 24 : 16,
+            32,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Galerie photo nette rationnée (jamais étirée ni énorme)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: SizedBox(
+                  height: isWide ? 360 : 240,
+                  width: double.infinity,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      PageView.builder(
+                        controller: _galleryController,
+                        itemCount: gallery.length,
+                        onPageChanged: (idx) =>
+                            setState(() => _galleryIndex = idx),
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () => _openFullScreenPhoto(gallery[index]),
+                            child: CasamanceAssetPhoto(
+                              assetPath: gallery[index],
+                              fit: BoxFit.cover,
+                            ),
+                          );
+                        },
+                      ),
+                      Positioned(
+                        bottom: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${_galleryIndex + 1} / ${gallery.length}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11.5,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
-              Padding(
-                padding: const EdgeInsets.only(top: 8, bottom: 8, right: 12),
-                child: CircleAvatar(
-                  backgroundColor: AppTheme.ivorySand.withValues(alpha: 0.92),
-                  child: IconButton(
-                    tooltip: _isFavorite
-                        ? 'Retirer des favoris'
-                        : 'Ajouter aux favoris',
-                    icon: Icon(
-                      _isFavorite
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
-                      color: _isFavorite
-                          ? AppTheme.hibiscusRed
-                          : AppTheme.deepForest,
-                    ),
-                    onPressed: _toggleFavorite,
-                  ),
-                ),
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: ClipPath(
-                clipper: const CasamanceBolongWaveClipper(depth: 20),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    PageView.builder(
-                      controller: _galleryController,
-                      itemCount: gallery.length,
-                      onPageChanged: (idx) =>
-                          setState(() => _galleryIndex = idx),
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () => _openFullScreenPhoto(gallery[index]),
+              const SizedBox(height: 12),
+
+              // Miniatures de la galerie
+              SizedBox(
+                height: 64,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: gallery.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  itemBuilder: (context, index) {
+                    final selected = index == _galleryIndex;
+                    return GestureDetector(
+                      onTap: () {
+                        _galleryController.animateToPage(
+                          index,
+                          duration: const Duration(milliseconds: 240),
+                          curve: Curves.easeOut,
+                        );
+                      },
+                      child: Container(
+                        width: 92,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: selected
+                                ? AppTheme.forestGreen
+                                : AppTheme.borderLight,
+                            width: selected ? 2.2 : 1,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
                           child: CasamanceAssetPhoto(
                             assetPath: gallery[index],
                             fit: BoxFit.cover,
                           ),
-                        );
-                      },
-                    ),
-                    IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.black.withValues(alpha: 0.25),
-                              Colors.transparent,
-                              AppTheme.deepForest.withValues(alpha: 0.62),
-                            ],
-                          ),
                         ),
                       ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 22),
+
+              // Corps principal : 2 colonnes sur ordinateur, 1 colonne sur mobile
+              if (isWide)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 7,
+                      child: _buildMainInfoColumn(distZiguinchor),
                     ),
-                    Positioned(
-                      bottom: 24,
-                      left: 0,
-                      right: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(gallery.length, (i) {
-                          final active = i == _galleryIndex;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 220),
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            width: active ? 22 : 7,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: active
-                                  ? AppTheme.champagneGold
-                                  : Colors.white.withValues(alpha: 0.72),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          );
-                        }),
+                    const SizedBox(width: 24),
+                    Expanded(
+                      flex: 4,
+                      child: _buildDesktopBookingCard(distZiguinchor),
+                    ),
+                  ],
+                )
+              else
+                _buildMainInfoColumn(distZiguinchor),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: isWide
+          ? null
+          : SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                decoration: const BoxDecoration(
+                  color: AppTheme.pureWhite,
+                  border: Border(top: BorderSide(color: AppTheme.borderLight)),
+                ),
+                child: Row(
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tarif d\'entrée',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.5,
+                            color: AppTheme.textMuted,
+                          ),
+                        ),
+                        Text(
+                          site.tarifEntree <= 0
+                              ? 'Gratuit'
+                              : '${site.tarifEntree.toInt()} FCFA / pers.',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.forestGreen,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _goToBooking,
+                        icon: const Icon(Icons.calendar_month_rounded, size: 18),
+                        label: const Text('Réserver une visite'),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildMainInfoColumn(double distZiguinchor) {
+    final site = widget.site;
+    final isFree = site.tarifEntree <= 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Catégorie & Note réelle
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.paleGreen,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                SiteMediaHelper.labelCategorie(site.categorie),
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.forestGreen,
+                ),
+              ),
+            ),
+            const Spacer(),
+            const Icon(
+              Icons.star_rounded,
+              color: AppTheme.accentOrange,
+              size: 18,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '${_liveAverage.toStringAsFixed(1)}/5',
+              style: GoogleFonts.poppins(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textDark,
+              ),
+            ),
+            Text(
+              ' • $_reviewsCount avis',
+              style: GoogleFonts.poppins(
+                fontSize: 12.5,
+                color: AppTheme.textMuted,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          site.nom,
+          style: GoogleFonts.poppins(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textDark,
           ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            const Icon(
+              Icons.location_on_outlined,
+              size: 16,
+              color: AppTheme.naturalGreen,
+            ),
+            const SizedBox(width: 5),
+            Expanded(
+              child: Text(
+                '${site.localisation} • à ${distZiguinchor.toStringAsFixed(1)} km du centre',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: AppTheme.textMuted,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
 
-          // 2. Corps éditorial
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.earthBrown,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          SiteMediaHelper.labelCategorie(site.categorie),
-                          style: GoogleFonts.poppins(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.ivorySand,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const CasamanceHibiscusBlossom(size: 19, opacity: 0.85),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 11,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.champagneGold.withValues(alpha: 0.22),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color:
-                                AppTheme.champagneGold.withValues(alpha: 0.65),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              color: AppTheme.champagneGold,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${_liveAverage.toStringAsFixed(1)}/5',
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.deepForest,
-                              ),
-                            ),
-                            Text(
-                              ' • $_reviewsCount avis',
-                              style: GoogleFonts.poppins(
-                                fontSize: 11.5,
-                                color: AppTheme.earthBrown,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+        // Infos pratiques en grille propre
+        Row(
+          children: [
+            Expanded(
+              child: _infoBox(
+                Icons.payments_outlined,
+                isFree ? 'Gratuit' : '${site.tarifEntree.toInt()} FCFA',
+                'Tarif visite',
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _infoBox(
+                Icons.schedule_rounded,
+                site.horairesOuverture,
+                'Horaires',
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _infoBox(
+                Icons.directions_walk_rounded,
+                SiteMediaHelper.dureeEstimee(site),
+                SiteMediaHelper.accesVisite(site),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 22),
 
-                  Text(
-                    site.nom,
-                    style: AppTheme.editorialTitle(
-                      fontSize: 28,
-                      color: AppTheme.deepForest,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
+        Text(
+          'Description',
+          style: GoogleFonts.poppins(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textDark,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.pureWhite,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppTheme.borderLight),
+          ),
+          child: Text(
+            site.description,
+            style: GoogleFonts.poppins(
+              fontSize: 13.5,
+              color: AppTheme.textDark,
+              height: 1.55,
+            ),
+          ),
+        ),
 
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_rounded,
-                        size: 16,
-                        color: AppTheme.bolongTurquoise,
-                      ),
-                      const SizedBox(width: 5),
-                      Expanded(
-                        child: Text(
-                          '${site.localisation} • à ${distZiguinchor.toStringAsFixed(1)} km du centre',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12.8,
-                            color: AppTheme.earthBrown,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Mosaïque miniatures cliquables asymétriques
-                  SizedBox(
-                    height: 82,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: gallery.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
-                      itemBuilder: (context, index) {
-                        final selected = index == _galleryIndex;
-                        return GestureDetector(
-                          onTap: () {
-                            _galleryController.animateToPage(
-                              index,
-                              duration: const Duration(milliseconds: 280),
-                              curve: Curves.easeOut,
-                            );
-                          },
-                          onLongPress: () =>
-                              _openFullScreenPhoto(gallery[index]),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: index.isEven ? 114 : 84,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(index.isEven ? 16 : 36),
-                                bottom: const Radius.circular(14),
-                              ),
-                              border: Border.all(
-                                color: selected
-                                    ? AppTheme.champagneGold
-                                    : AppTheme.sandBorder,
-                                width: selected ? 2.4 : 1,
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(index.isEven ? 14 : 34),
-                                bottom: const Radius.circular(12),
-                              ),
-                              child: CasamanceAssetPhoto(
-                                assetPath: gallery[index],
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _infoTile(
-                          icon: Icons.payments_outlined,
-                          title: isFree
-                              ? 'Gratuit'
-                              : '${site.tarifEntree.toInt()} FCFA',
-                          subtitle: 'Tarif visite',
-                          accent: AppTheme.champagneGold,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _infoTile(
-                          icon: Icons.schedule_rounded,
-                          title: site.horairesOuverture,
-                          subtitle: 'Horaires',
-                          accent: AppTheme.bolongTurquoise,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _infoTile(
-                          icon: Icons.directions_walk_rounded,
-                          title: SiteMediaHelper.dureeEstimee(site),
-                          subtitle: SiteMediaHelper.accesVisite(site),
-                          accent: AppTheme.hibiscusRed,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 22),
-
-                  Text(
-                    'L’esprit du lieu',
-                    style: AppTheme.editorialTitle(
-                      fontSize: 20,
-                      color: AppTheme.deepForest,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warmCream,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.sandBorder),
-                    ),
-                    child: Text(
-                      site.description,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13.5,
-                        color: AppTheme.textDark,
-                        height: 1.58,
-                      ),
-                    ),
-                  ),
-
-                  if (site.historique.trim().isNotEmpty) ...[
-                    const SizedBox(height: 18),
-                    Text(
-                      'Histoire & Récit patrimonial',
-                      style: AppTheme.editorialTitle(
-                        fontSize: 20,
-                        color: AppTheme.earthBrown,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.terracottaSoft,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppTheme.earthBrown.withValues(alpha: 0.22),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            site.historique,
-                            style: GoogleFonts.poppins(
-                              fontSize: 13.5,
-                              color: AppTheme.textDark,
-                              height: 1.58,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          const CasamanceWovenMotifStrip(
-                            height: 6,
-                            color: AppTheme.earthBrown,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 20),
-
-                  // Localisation GPS intégrée
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.deepForest,
-                      borderRadius: BorderRadius.circular(22),
-                      boxShadow: AppTheme.softShadow,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppTheme.bolongTurquoise
-                                    .withValues(alpha: 0.25),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: const Icon(
-                                Icons.map_rounded,
-                                color: AppTheme.champagneGold,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Localisation & Itinéraire GPS',
-                                    style: AppTheme.editorialTitle(
-                                      fontSize: 16.5,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Coordonnées : ${site.latitude.toStringAsFixed(4)}, ${site.longitude.toStringAsFixed(4)}',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11.5,
-                                      color: AppTheme.ivorySand
-                                          .withValues(alpha: 0.84),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.champagneGold,
-                              side: const BorderSide(
-                                color: AppTheme.champagneGold,
-                              ),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      MapExploreScreen(initialSite: site),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.near_me_rounded, size: 18),
-                            label: const Text('Tracer l’itinéraire sur la carte'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  ReviewsSection(
-                    patrimoineId: site.id,
-                    initialAverage: site.noteMoyenne,
-                    onReviewsChanged: _loadReviewStats,
-                  ),
-                ],
+        if (site.historique.trim().isNotEmpty) ...[
+          const SizedBox(height: 18),
+          Text(
+            'Histoire & Patrimoine',
+            style: GoogleFonts.poppins(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.pureWhite,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppTheme.borderLight),
+            ),
+            child: Text(
+              site.historique,
+              style: GoogleFonts.poppins(
+                fontSize: 13.5,
+                color: AppTheme.textDark,
+                height: 1.55,
               ),
             ),
           ),
         ],
-      ),
 
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+        if (!AppTheme.isDesktop(context)) ...[
+          const SizedBox(height: 18),
+          _buildGpsCard(),
+        ],
+
+        const SizedBox(height: 24),
+        ReviewsSection(
+          patrimoineId: site.id,
+          initialAverage: site.noteMoyenne,
+          onReviewsChanged: _loadReviewStats,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopBookingCard(double distZiguinchor) {
+    final site = widget.site;
+    final isFree = site.tarifEntree <= 0;
+
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppTheme.warmCream,
-            border: const Border(top: BorderSide(color: AppTheme.sandBorder)),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.earthBrown.withValues(alpha: 0.10),
-                blurRadius: 16,
-                offset: const Offset(0, -4),
-              ),
-            ],
+            color: AppTheme.pureWhite,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.borderLight),
+            boxShadow: AppTheme.softShadow,
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Tarif d\'entrée',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      color: AppTheme.textMuted,
-                    ),
-                  ),
                   Text(
                     isFree
                         ? 'Entrée libre'
-                        : '${site.tarifEntree.toInt()} FCFA / pers.',
-                    style: AppTheme.editorialTitle(
-                      fontSize: 18,
-                      color: AppTheme.deepForest,
+                        : '${site.tarifEntree.toInt()} FCFA',
+                    style: GoogleFonts.poppins(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.forestGreen,
+                    ),
+                  ),
+                  Text(
+                    'par visiteur',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12.5,
+                      color: AppTheme.textMuted,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(width: 14),
-              Expanded(
+              const SizedBox(height: 12),
+              const Divider(color: AppTheme.borderLight),
+              const SizedBox(height: 12),
+              _summaryLine('Horaires', site.horairesOuverture),
+              _summaryLine('Durée estimée', SiteMediaHelper.dureeEstimee(site)),
+              _summaryLine('Distance', '${distZiguinchor.toStringAsFixed(1)} km'),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
                 child: ElevatedButton.icon(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => BookingFormScreen(site: site),
-                      ),
-                    );
-                    _checkFavorite();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.champagneGold,
-                    foregroundColor: AppTheme.deepForest,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                  ),
-                  icon: const Icon(Icons.calendar_month_rounded, size: 19),
-                  label: Text(
-                    'Réserver une visite',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  onPressed: _goToBooking,
+                  icon: const Icon(Icons.calendar_month_rounded, size: 18),
+                  label: const Text('Réserver une visite'),
                 ),
               ),
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        _buildGpsCard(),
+      ],
+    );
+  }
+
+  Widget _summaryLine(String k, String v) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            k,
+            style: GoogleFonts.poppins(fontSize: 12.5, color: AppTheme.textMuted),
+          ),
+          Flexible(
+            child: Text(
+              v,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.poppins(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textDark,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _infoTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color accent,
-  }) {
+  Widget _buildGpsCard() {
+    final site = widget.site;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.pureWhite,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.borderLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.map_outlined, color: AppTheme.forestGreen),
+              const SizedBox(width: 8),
+              Text(
+                'Localisation GPS',
+                style: GoogleFonts.poppins(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${site.latitude.toStringAsFixed(4)}, ${site.longitude.toStringAsFixed(4)}',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: AppTheme.textMuted,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MapExploreScreen(initialSite: site),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.near_me_rounded, size: 17),
+              label: const Text('Voir l\'itinéraire sur la carte'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoBox(IconData icon, String title, String subtitle) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.warmCream,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.sandBorder),
+        color: AppTheme.pureWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderLight),
       ),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: accent, size: 18),
-          ),
+          Icon(icon, color: AppTheme.forestGreen, size: 20),
           const SizedBox(height: 6),
           Text(
             title,
             textAlign: TextAlign.center,
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
-              fontSize: 11.2,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.deepForest,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textDark,
             ),
           ),
-          const SizedBox(height: 2),
           Text(
             subtitle,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
-              fontSize: 10,
+              fontSize: 10.5,
               color: AppTheme.textMuted,
             ),
           ),

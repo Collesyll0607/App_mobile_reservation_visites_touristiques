@@ -216,10 +216,13 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 4, 18, 28),
-              child: Form(
-                key: _formKey,
-                child: Column(
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 28),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 680),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Carte récapitulative du site sélectionné
@@ -572,15 +575,17 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       icon: const Icon(Icons.arrow_forward_rounded),
                       label: const Text('Payer et réserver →'),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
   Widget _paymentRadioTile({
     required String code,

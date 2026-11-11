@@ -256,9 +256,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
 
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 6, 18, 24),
-            child: Column(
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
+                child: Column(
               children: [
                 // Menu structuré conforme au cahier des charges
                 Container(
@@ -421,6 +424,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
             ),
           ),
         ],

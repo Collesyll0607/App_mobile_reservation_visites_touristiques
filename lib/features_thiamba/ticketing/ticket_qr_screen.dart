@@ -213,8 +213,11 @@ Présentez ce pass numérique ou ce code à votre arrivée au guichet du site to
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 4, 18, 28),
-              child: Column(
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 28),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 540),
+                  child: Column(
                 children: [
                   // Vrai billet type Boarding Pass
                   Container(
@@ -442,6 +445,8 @@ Présentez ce pass numérique ou ce code à votre arrivée au guichet du site to
                     ),
                   ),
                 ],
+              ),
+            ),
               ),
             ),
           ),
