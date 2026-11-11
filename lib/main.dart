@@ -29,7 +29,7 @@ class _ZiguinchorTourismeAppState extends State<ZiguinchorTourismeApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 420),
+        duration: const Duration(milliseconds: 450),
         child: _showSplash
             ? SplashScreen(
                 onStart: () => setState(() => _showSplash = false),
@@ -43,7 +43,7 @@ class _ZiguinchorTourismeAppState extends State<ZiguinchorTourismeApp> {
 class MainNavigationShell extends StatefulWidget {
   const MainNavigationShell({super.key});
 
-  /// Permet aux écrans enfants de changer d'onglet, avec filtre optionnel pour Explorer
+  /// Bascule d'onglet avec transmission optionnelle de filtre vers Explorer
   static void switchTab(
     BuildContext context,
     int index, {
@@ -75,12 +75,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     if (index >= 0 && index < 5) {
       setState(() {
         _currentIndex = index;
-        if (explorerCategory != null) {
-          _explorerCategory = explorerCategory;
-        }
-        if (explorerQuery != null) {
-          _explorerQuery = explorerQuery;
-        }
+        if (explorerCategory != null) _explorerCategory = explorerCategory;
+        if (explorerQuery != null) _explorerQuery = explorerQuery;
       });
     }
   }
@@ -105,88 +101,124 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
   }
 
+  static const List<Map<String, dynamic>> _destinations = [
+    {
+      'icon': Icons.home_outlined,
+      'activeIcon': Icons.home_rounded,
+      'label': 'Accueil',
+    },
+    {
+      'icon': Icons.explore_outlined,
+      'activeIcon': Icons.explore_rounded,
+      'label': 'Explorer',
+    },
+    {
+      'icon': Icons.map_outlined,
+      'activeIcon': Icons.map_rounded,
+      'label': 'Carte',
+    },
+    {
+      'icon': Icons.favorite_border_rounded,
+      'activeIcon': Icons.favorite_rounded,
+      'label': 'Favoris',
+    },
+    {
+      'icon': Icons.person_outline_rounded,
+      'activeIcon': Icons.person_rounded,
+      'label': 'Compte',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        child: KeyedSubtree(
-          key: ValueKey<int>(_currentIndex),
-          child: _buildScreenForIndex(_currentIndex),
+      backgroundColor: AppTheme.ivorySand,
+      extendBody: true,
+      body: Padding(
+        padding: const EdgeInsets.only(bottom: 78),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 240),
+          child: KeyedSubtree(
+            key: ValueKey<int>(_currentIndex),
+            child: _buildScreenForIndex(_currentIndex),
+          ),
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.pureWhite,
-          border: const Border(
-            top: BorderSide(color: AppTheme.borderLight),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 14,
-              offset: const Offset(0, -3),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: NavigationBarTheme(
-            data: NavigationBarThemeData(
-              backgroundColor: AppTheme.pureWhite,
-              indicatorColor: AppTheme.lightGreen,
-              labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                final selected = states.contains(WidgetState.selected);
-                return GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: selected
-                      ? AppTheme.forestGreen
-                      : AppTheme.textSecondary,
-                );
-              }),
-              iconTheme: WidgetStateProperty.resolveWith((states) {
-                final selected = states.contains(WidgetState.selected);
-                return IconThemeData(
-                  color: selected
-                      ? AppTheme.forestGreen
-                      : AppTheme.textSecondary,
-                  size: 23,
-                );
-              }),
-            ),
-            child: NavigationBar(
-              height: 64,
-              elevation: 0,
-              selectedIndex: _currentIndex,
-              onDestinationSelected: (i) => _setTab(i),
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home_rounded),
-                  label: 'Accueil',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.explore_outlined),
-                  selectedIcon: Icon(Icons.explore_rounded),
-                  label: 'Explorer',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.map_outlined),
-                  selectedIcon: Icon(Icons.map_rounded),
-                  label: 'Carte GPS',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.favorite_border_rounded),
-                  selectedIcon: Icon(Icons.favorite_rounded),
-                  label: 'Favoris',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline_rounded),
-                  selectedIcon: Icon(Icons.person_rounded),
-                  label: 'Compte',
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+          child: Container(
+            height: 62,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.deepForest,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: AppTheme.champagneGold.withValues(alpha: 0.25),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.deepForest.withValues(alpha: 0.28),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
               ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(_destinations.length, (i) {
+                final item = _destinations[i];
+                final selected = i == _currentIndex;
+                return Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _setTab(i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppTheme.champagneGold.withValues(alpha: 0.18)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            selected
+                                ? item['activeIcon'] as IconData
+                                : item['icon'] as IconData,
+                            size: 20,
+                            color: selected
+                                ? AppTheme.champagneGold
+                                : AppTheme.ivorySand.withValues(alpha: 0.72),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item['label'] as String,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.2,
+                              fontWeight:
+                                  selected ? FontWeight.w600 : FontWeight.w400,
+                              color: selected
+                                  ? AppTheme.champagneGold
+                                  : AppTheme.ivorySand.withValues(alpha: 0.72),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
         ),

@@ -1,7 +1,7 @@
 import '../models/patrimoine.dart';
 
 /// Associe chaque site touristique de Ziguinchor & Casamance à ses photographies
-/// locales authentiques et à ses informations pratiques d'affichage.
+/// locales authentiques (zero doublon visuel, zero espace vide) et ses métadonnées.
 class SiteMediaHelper {
   static const String heroBannerAsset =
       'assets/images/casamance/carabane_bolong.jpg';
@@ -9,12 +9,22 @@ class SiteMediaHelper {
       'assets/images/casamance/pirogue_fleuve.jpg';
   static const String heritageFooterAsset =
       'assets/images/casamance/bras_de_mer.jpg';
+  static const String artisanatAsset =
+      'assets/images/casamance/artisanat_ziguinchor.jpg';
+  static const String beachCapSkirringAsset =
+      'assets/images/casamance/plage_cap_skirring.jpg';
+  static const String beachCarabaneAsset =
+      'assets/images/casamance/plage_carabane.jpg';
+  static const String gastronomieAsset =
+      'assets/images/casamance/gastronomie_casamance.jpg';
+  static const String cultureAsset =
+      'assets/images/casamance/culture_casamance.jpg';
 
-  /// Retourne le chemin d'asset local authentique pour un site donné
+  /// Retourne le chemin d'asset local authentique principal pour un site donné
   static String primaryAssetForSite(Patrimoine site) {
     final nom = site.nom.toLowerCase();
     if (nom.contains('carabane')) {
-      return 'assets/images/casamance/carabane_bolong.jpg';
+      return beachCarabaneAsset;
     }
     if (nom.contains('impluvium') ||
         nom.contains('mlomp') ||
@@ -24,6 +34,9 @@ class SiteMediaHelper {
     }
     if (nom.contains('alliance')) {
       return 'assets/images/casamance/alliance_francaise.jpg';
+    }
+    if (nom.contains('artisan')) {
+      return artisanatAsset;
     }
     if (nom.contains('boudody') || nom.contains('port')) {
       return 'assets/images/casamance/port_ziguinchor.jpg';
@@ -40,9 +53,8 @@ class SiteMediaHelper {
         nom.contains('réserve')) {
       return 'assets/images/casamance/bolong_mangrove.jpg';
     }
-
-    if (nom.contains('artisan')) {
-      return 'assets/images/casamance/cases_mlomp.jpg';
+    if (nom.contains('plage') || nom.contains('cap skirring')) {
+      return beachCapSkirringAsset;
     }
 
     switch (site.categorie.toUpperCase()) {
@@ -53,17 +65,17 @@ class SiteMediaHelper {
       case 'MUSEE':
         return 'assets/images/casamance/memorial_joola.jpg';
       case 'CULTURE':
-        return 'assets/images/casamance/alliance_francaise.jpg';
+        return cultureAsset;
       case 'ARTISANAT':
-        return 'assets/images/casamance/cases_mlomp.jpg';
+        return artisanatAsset;
       case 'PLAGES':
-        return 'assets/images/casamance/carabane_bolong.jpg';
+        return beachCapSkirringAsset;
       default:
         return 'assets/images/casamance/bras_de_mer.jpg';
     }
   }
 
-  /// Retourne la galerie de photos locales associées au site
+  /// Retourne une galerie riche de photos authentiques propres à chaque site
   static List<String> galleryAssetsForSite(Patrimoine site) {
     final primary = primaryAssetForSite(site);
     final nom = site.nom.toLowerCase();
@@ -71,22 +83,30 @@ class SiteMediaHelper {
     if (nom.contains('carabane')) {
       return [
         primary,
+        'assets/images/casamance/carabane_bolong.jpg',
+        beachCapSkirringAsset,
         'assets/images/casamance/pirogue_fleuve.jpg',
-        'assets/images/casamance/bras_de_mer.jpg',
+      ];
+    }
+    if (nom.contains('artisan')) {
+      return [
+        primary,
+        cultureAsset,
+        'assets/images/casamance/alliance_francaise.jpg',
       ];
     }
     if (nom.contains('impluvium') || nom.contains('mlomp')) {
       return [
         primary,
+        cultureAsset,
         'assets/images/casamance/foret_casamance.jpg',
-        'assets/images/casamance/alliance_francaise.jpg',
       ];
     }
     if (nom.contains('boudody') || nom.contains('port')) {
       return [
         primary,
+        gastronomieAsset,
         'assets/images/casamance/pirogue_fleuve.jpg',
-        'assets/images/casamance/bolong_mangrove.jpg',
       ];
     }
     if (nom.contains('joola')) {
@@ -99,8 +119,8 @@ class SiteMediaHelper {
     if (nom.contains('alliance')) {
       return [
         primary,
+        cultureAsset,
         'assets/images/casamance/cathedrale_ziguinchor.jpg',
-        'assets/images/casamance/port_ziguinchor.jpg',
       ];
     }
     return [
@@ -108,6 +128,52 @@ class SiteMediaHelper {
       'assets/images/casamance/bolong_mangrove.jpg',
       'assets/images/casamance/pirogue_fleuve.jpg',
     ];
+  }
+
+  /// Indique si un site correspond à l'une des catégories éditoriales de la page Explorer
+  static bool matchesExplorerTheme(Patrimoine site, String themeCode) {
+    final nom = site.nom.toLowerCase();
+    final desc = site.description.toLowerCase();
+    final cat = site.categorie.toUpperCase();
+
+    switch (themeCode.toUpperCase()) {
+      case 'TOUS':
+        return true;
+      case 'NATURE':
+        return cat == 'NATURE' ||
+            nom.contains('bolong') ||
+            nom.contains('carabane') ||
+            nom.contains('port');
+      case 'CULTURE':
+        return cat == 'CULTURE' ||
+            cat == 'ARTISANAT' ||
+            nom.contains('alliance') ||
+            nom.contains('mlomp');
+      case 'PLAGES':
+        return cat == 'PLAGES' ||
+            nom.contains('carabane') ||
+            nom.contains('bolong') ||
+            desc.contains('plage');
+      case 'ARTISANAT':
+        return cat == 'ARTISANAT' ||
+            cat == 'ARCHITECTURE' ||
+            nom.contains('artisan') ||
+            nom.contains('mlomp');
+      case 'PATRIMOINE':
+        return cat == 'MONUMENT' ||
+            cat == 'MUSEE' ||
+            cat == 'ARCHITECTURE' ||
+            nom.contains('cathédrale') ||
+            nom.contains('joola') ||
+            nom.contains('carabane');
+      case 'GASTRONOMIE':
+        return nom.contains('port') ||
+            nom.contains('boudody') ||
+            nom.contains('carabane') ||
+            nom.contains('bolong');
+      default:
+        return cat == themeCode.toUpperCase();
+    }
   }
 
   /// Durée conseillée de visite selon le type de site
@@ -131,15 +197,15 @@ class SiteMediaHelper {
     return 'Accès route & ville';
   }
 
-  /// Libellé lisible des catégories
+  /// Libellé éditorial des catégories
   static String labelCategorie(String categorie) {
     switch (categorie.toUpperCase()) {
       case 'MONUMENT':
-        return 'Monuments';
+        return 'Patrimoine';
       case 'NATURE':
         return 'Nature';
       case 'MUSEE':
-        return 'Musées';
+        return 'Mémoire & Musée';
       case 'ARCHITECTURE':
         return 'Architecture';
       case 'CULTURE':
@@ -148,6 +214,8 @@ class SiteMediaHelper {
         return 'Artisanat';
       case 'PLAGES':
         return 'Plages';
+      case 'GASTRONOMIE':
+        return 'Gastronomie';
       default:
         return 'Découverte';
     }

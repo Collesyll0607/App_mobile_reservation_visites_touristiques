@@ -5,7 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../auth/auth_service.dart';
 import 'reviews_service.dart';
 
-/// Section Avis & Évaluations affichée dans la fiche détail d'un site
+/// Section Avis & Évaluations affichée dans la fiche éditoriale d'un site
 /// Responsable : Collé SYLL (Pôle 1 - Module Avis & Notes)
 class ReviewsSection extends StatefulWidget {
   final int patrimoineId;
@@ -64,16 +64,15 @@ class _ReviewsSectionState extends State<ReviewsSection> {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
-              backgroundColor: AppTheme.pureWhite,
+              backgroundColor: AppTheme.ivorySand,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(22),
               ),
               title: Text(
                 'Partager votre avis',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.forestGreen,
+                style: AppTheme.editorialTitle(
+                  fontSize: 20,
+                  color: AppTheme.deepForest,
                 ),
               ),
               content: SingleChildScrollView(
@@ -92,7 +91,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                       'Note de la visite',
                       style: GoogleFonts.poppins(
                         fontSize: 12.5,
-                        color: AppTheme.textSecondary,
+                        color: AppTheme.textMuted,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -107,7 +106,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                             starIndex <= selectedStars
                                 ? Icons.star_rounded
                                 : Icons.star_outline_rounded,
-                            color: AppTheme.warmOrange,
+                            color: AppTheme.champagneGold,
                             size: 32,
                           ),
                         );
@@ -132,8 +131,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.forestGreen,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.deepForest,
+                    foregroundColor: AppTheme.ivorySand,
                   ),
                   onPressed: () async {
                     if (commentCtrl.text.trim().isEmpty) return;
@@ -171,10 +170,9 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                 children: [
                   Text(
                     'Avis des visiteurs',
-                    style: GoogleFonts.poppins(
-                      fontSize: 17.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                    style: AppTheme.editorialTitle(
+                      fontSize: 20,
+                      color: AppTheme.deepForest,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -182,7 +180,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     children: [
                       const Icon(
                         Icons.star_rounded,
-                        color: AppTheme.warmOrange,
+                        color: AppTheme.champagneGold,
                         size: 18,
                       ),
                       const SizedBox(width: 4),
@@ -191,7 +189,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                         style: GoogleFonts.poppins(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.earthBrown,
                         ),
                       ),
                     ],
@@ -204,12 +202,12 @@ class _ReviewsSectionState extends State<ReviewsSection> {
               icon: const Icon(Icons.rate_review_outlined, size: 17),
               label: const Text('Donner un avis'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.forestGreen,
-                side: const BorderSide(color: AppTheme.forestGreen),
+                foregroundColor: AppTheme.earthBrown,
+                side: const BorderSide(color: AppTheme.earthBrown),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                 textStyle: GoogleFonts.poppins(
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -221,7 +219,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
           const Center(
             child: Padding(
               padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(color: AppTheme.forestGreen),
+              child: CircularProgressIndicator(color: AppTheme.deepForest),
             ),
           )
         else if (_reviews.isEmpty)
@@ -229,29 +227,29 @@ class _ReviewsSectionState extends State<ReviewsSection> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.lightGreen.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppTheme.naturalGreen.withValues(alpha: 0.2),
-              ),
+              color: AppTheme.warmCream,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppTheme.sandBorder),
             ),
             child: Text(
               'Aucun avis pour le moment. Soyez le premier à partager votre découverte !',
               style: GoogleFonts.poppins(
                 fontSize: 13,
-                color: AppTheme.textSecondary,
+                color: AppTheme.textMuted,
               ),
             ),
           )
         else
-          ..._reviews.map(
-            (r) => Container(
+          ...List.generate(_reviews.length, (i) {
+            final r = _reviews[i];
+            final warm = i.isOdd;
+            return Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: AppTheme.pureWhite,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.borderLight),
+                color: warm ? AppTheme.terracottaSoft : AppTheme.warmCream,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppTheme.sandBorder),
                 boxShadow: AppTheme.softShadow,
               ),
               child: Column(
@@ -261,13 +259,13 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: AppTheme.lightGreen,
+                        backgroundColor: AppTheme.deepForest,
                         child: Text(
                           r.auteur.isNotEmpty
                               ? r.auteur[0].toUpperCase()
                               : 'V',
-                          style: GoogleFonts.poppins(
-                            color: AppTheme.forestGreen,
+                          style: GoogleFonts.playfairDisplay(
+                            color: AppTheme.champagneGold,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -282,14 +280,14 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                               style: GoogleFonts.poppins(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.textPrimary,
+                                color: AppTheme.deepForest,
                               ),
                             ),
                             Text(
                               'Publié le ${r.datePublication}',
                               style: GoogleFonts.poppins(
                                 fontSize: 11,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textMuted,
                               ),
                             ),
                           ],
@@ -303,7 +301,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                                 ? Icons.star_rounded
                                 : Icons.star_outline_rounded,
                             size: 16,
-                            color: AppTheme.warmOrange,
+                            color: AppTheme.champagneGold,
                           ),
                         ),
                       ),
@@ -314,14 +312,14 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     r.commentaire,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
-                      color: AppTheme.textPrimary,
-                      height: 1.45,
+                      color: AppTheme.textDark,
+                      height: 1.48,
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
+            );
+          }),
       ],
     );
   }

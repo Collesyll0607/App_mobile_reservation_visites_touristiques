@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:reservation_visites_touristiques/core/config/api_config.dart';
 import 'package:reservation_visites_touristiques/core/models/patrimoine.dart';
+import 'package:reservation_visites_touristiques/features_colle/catalogue/sites_list_screen.dart';
 import 'package:reservation_visites_touristiques/features_colle/splash/splash_screen.dart';
 import 'package:reservation_visites_touristiques/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -55,7 +57,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Tourisme & Visites'), findsOneWidget);
+    expect(find.text('Casamance'), findsOneWidget);
+    expect(find.text('Tourisme & Visites'), findsOneWidget);
     expect(find.text('Explorez. Réservez. Profitez.'), findsOneWidget);
     expect(find.text('Commencer'), findsOneWidget);
 
@@ -63,7 +66,7 @@ void main() {
     expect(started, isTrue);
   });
 
-  testWidgets('MainNavigationShell expose les 5 onglets demandés',
+  testWidgets('MainNavigationShell expose les 5 onglets éditoriaux',
       (tester) async {
     await tester.pumpWidget(
       const MaterialApp(home: MainNavigationShell()),
@@ -72,8 +75,30 @@ void main() {
 
     expect(find.text('Accueil'), findsOneWidget);
     expect(find.text('Explorer'), findsOneWidget);
-    expect(find.text('Carte GPS'), findsOneWidget);
+    expect(find.text('Carte'), findsOneWidget);
     expect(find.text('Favoris'), findsOneWidget);
     expect(find.text('Compte'), findsOneWidget);
+  });
+
+  testWidgets(
+      'SitesListScreen rend le hero Explorez la Casamance, arches et mosaïque',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: SitesListScreen(initialSites: ApiConfig.sitesCasamance),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Explorez la'), findsOneWidget);
+    expect(find.text('Découvrir la région'), findsOneWidget);
+    expect(find.text('Nature'), findsAtLeastNWidgets(1));
+    expect(find.text('Culture'), findsAtLeastNWidgets(1));
+    expect(find.text('Plages'), findsAtLeastNWidgets(1));
+    expect(find.text('Destinations à vivre'), findsOneWidget);
+
+    await tester.tap(find.text('Plages').first);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Cap Skirring'), findsOneWidget);
   });
 }

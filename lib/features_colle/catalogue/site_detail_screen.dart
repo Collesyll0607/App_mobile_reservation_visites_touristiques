@@ -12,7 +12,7 @@ import '../map/map_explore_screen.dart';
 import '../reviews/reviews_section.dart';
 import '../reviews/reviews_service.dart';
 
-/// Écran Détail Immersif d'un Site Touristique — Casamance Tourisme & Visites
+/// Fiche Éditoriale d'une Destination — Casamance Tourisme & Visites
 /// Responsable : Collé SYLL (Pôle 1 - Module Catalogue)
 class SiteDetailScreen extends StatefulWidget {
   final Patrimoine site;
@@ -97,19 +97,18 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.pureWhite,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppTheme.ivorySand,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Row(
           children: [
-            const Icon(Icons.share_rounded, color: AppTheme.forestGreen),
+            const Icon(Icons.share_rounded, color: AppTheme.earthBrown),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'Fiche copiée pour partage',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+                style: AppTheme.editorialTitle(
+                  fontSize: 18,
+                  color: AppTheme.deepForest,
                 ),
               ),
             ),
@@ -118,17 +117,17 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
         content: Text(
           shareText,
           style: GoogleFonts.poppins(
-            fontSize: 13,
-            color: AppTheme.textSecondary,
-            height: 1.45,
+            fontSize: 12.5,
+            color: AppTheme.textMuted,
+            height: 1.48,
           ),
         ),
         actions: [
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.forestGreen,
-              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.deepForest,
+              foregroundColor: AppTheme.ivorySand,
             ),
             child: const Text('Parfait'),
           ),
@@ -143,11 +142,11 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
       builder: (ctx) => Dialog(
         backgroundColor: Colors.black,
         insetPadding: const EdgeInsets.all(12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         child: Stack(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(22),
               child: InteractiveViewer(
                 child: CasamanceAssetPhoto(
                   assetPath: assetPath,
@@ -185,21 +184,24 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
     final isFree = site.tarifEntree <= 0;
 
     return Scaffold(
-      backgroundColor: AppTheme.offWhite,
+      backgroundColor: AppTheme.ivorySand,
       body: CustomScrollView(
         slivers: [
-          // 1. Galerie photographique immersive en-tête
+          // 1. Grande galerie panoramique en courbe organique
           SliverAppBar(
-            expandedHeight: 300,
+            expandedHeight: 330,
             pinned: true,
-            backgroundColor: AppTheme.forestGreen,
-            foregroundColor: Colors.white,
+            backgroundColor: AppTheme.ivorySand,
+            foregroundColor: AppTheme.deepForest,
             leading: Padding(
               padding: const EdgeInsets.all(8),
               child: CircleAvatar(
-                backgroundColor: Colors.black.withValues(alpha: 0.45),
+                backgroundColor: AppTheme.ivorySand.withValues(alpha: 0.90),
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: AppTheme.deepForest,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -208,10 +210,13 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: CircleAvatar(
-                  backgroundColor: Colors.black.withValues(alpha: 0.45),
+                  backgroundColor: AppTheme.ivorySand.withValues(alpha: 0.90),
                   child: IconButton(
                     tooltip: 'Partager ce site',
-                    icon: const Icon(Icons.share_outlined, color: Colors.white),
+                    icon: const Icon(
+                      Icons.share_outlined,
+                      color: AppTheme.earthBrown,
+                    ),
                     onPressed: _shareSite,
                   ),
                 ),
@@ -220,7 +225,7 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 8, bottom: 8, right: 12),
                 child: CircleAvatar(
-                  backgroundColor: Colors.white.withValues(alpha: 0.92),
+                  backgroundColor: AppTheme.ivorySand.withValues(alpha: 0.92),
                   child: IconButton(
                     tooltip: _isFavorite
                         ? 'Retirer des favoris'
@@ -229,8 +234,9 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                       _isFavorite
                           ? Icons.favorite_rounded
                           : Icons.favorite_border_rounded,
-                      color:
-                          _isFavorite ? AppTheme.errorRed : AppTheme.forestGreen,
+                      color: _isFavorite
+                          ? AppTheme.hibiscusRed
+                          : AppTheme.deepForest,
                     ),
                     onPressed: _toggleFavorite,
                   ),
@@ -238,75 +244,77 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  PageView.builder(
-                    controller: _galleryController,
-                    itemCount: gallery.length,
-                    onPageChanged: (idx) =>
-                        setState(() => _galleryIndex = idx),
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () => _openFullScreenPhoto(gallery[index]),
-                        child: CasamanceAssetPhoto(
-                          assetPath: gallery[index],
-                          fit: BoxFit.cover,
-                        ),
-                      );
-                    },
-                  ),
-                  IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withValues(alpha: 0.30),
-                            Colors.transparent,
-                            AppTheme.forestGreen.withValues(alpha: 0.65),
-                          ],
+              background: ClipPath(
+                clipper: const CasamanceBolongWaveClipper(depth: 20),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    PageView.builder(
+                      controller: _galleryController,
+                      itemCount: gallery.length,
+                      onPageChanged: (idx) =>
+                          setState(() => _galleryIndex = idx),
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () => _openFullScreenPhoto(gallery[index]),
+                          child: CasamanceAssetPhoto(
+                            assetPath: gallery[index],
+                            fit: BoxFit.cover,
+                          ),
+                        );
+                      },
+                    ),
+                    IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.25),
+                              Colors.transparent,
+                              AppTheme.deepForest.withValues(alpha: 0.62),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: 14,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(gallery.length, (i) {
-                        final active = i == _galleryIndex;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          width: active ? 20 : 7,
-                          height: 7,
-                          decoration: BoxDecoration(
-                            color: active
-                                ? AppTheme.warmOrange
-                                : Colors.white.withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        );
-                      }),
+                    Positioned(
+                      bottom: 24,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(gallery.length, (i) {
+                          final active = i == _galleryIndex;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 220),
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: active ? 22 : 7,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: active
+                                  ? AppTheme.champagneGold
+                                  : Colors.white.withValues(alpha: 0.72),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          );
+                        }),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
 
-          // 2. Fiche détaillée
+          // 2. Corps éditorial
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Catégorie & note avec nombre réel d'avis
                   Row(
                     children: [
                       Container(
@@ -315,34 +323,40 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.lightGreen,
+                          color: AppTheme.earthBrown,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           SiteMediaHelper.labelCategorie(site.categorie),
                           style: GoogleFonts.poppins(
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.forestGreen,
+                            color: AppTheme.ivorySand,
                           ),
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      const CasamanceHibiscusBlossom(size: 19, opacity: 0.85),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
+                          horizontal: 11,
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.warmOrange.withValues(alpha: 0.14),
+                          color: AppTheme.champagneGold.withValues(alpha: 0.22),
                           borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color:
+                                AppTheme.champagneGold.withValues(alpha: 0.65),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
                               Icons.star_rounded,
-                              color: AppTheme.warmOrange,
+                              color: AppTheme.champagneGold,
                               size: 18,
                             ),
                             const SizedBox(width: 4),
@@ -351,14 +365,14 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: AppTheme.textPrimary,
+                                color: AppTheme.deepForest,
                               ),
                             ),
                             Text(
                               ' • $_reviewsCount avis',
                               style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: AppTheme.textSecondary,
+                                fontSize: 11.5,
+                                color: AppTheme.earthBrown,
                               ),
                             ),
                           ],
@@ -368,33 +382,29 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Nom complet du site
                   Text(
                     site.nom,
-                    style: GoogleFonts.poppins(
-                      fontSize: 23,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
-                      height: 1.22,
+                    style: AppTheme.editorialTitle(
+                      fontSize: 28,
+                      color: AppTheme.deepForest,
                     ),
                   ),
                   const SizedBox(height: 6),
 
-                  // Adresse & localisation
                   Row(
                     children: [
                       const Icon(
                         Icons.location_on_rounded,
-                        size: 17,
-                        color: AppTheme.naturalGreen,
+                        size: 16,
+                        color: AppTheme.bolongTurquoise,
                       ),
                       const SizedBox(width: 5),
                       Expanded(
                         child: Text(
                           '${site.localisation} • à ${distZiguinchor.toStringAsFixed(1)} km du centre',
                           style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: AppTheme.textSecondary,
+                            fontSize: 12.8,
+                            color: AppTheme.earthBrown,
                           ),
                         ),
                       ),
@@ -402,9 +412,9 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Miniatures de la galerie
+                  // Mosaïque miniatures cliquables asymétriques
                   SizedBox(
-                    height: 68,
+                    height: 82,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: gallery.length,
@@ -421,22 +431,30 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                           },
                           onLongPress: () =>
                               _openFullScreenPhoto(gallery[index]),
-                          child: Container(
-                            width: 96,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: index.isEven ? 114 : 84,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(index.isEven ? 16 : 36),
+                                bottom: const Radius.circular(14),
+                              ),
                               border: Border.all(
                                 color: selected
-                                    ? AppTheme.warmOrange
-                                    : AppTheme.borderLight,
-                                width: selected ? 2.2 : 1,
+                                    ? AppTheme.champagneGold
+                                    : AppTheme.sandBorder,
+                                width: selected ? 2.4 : 1,
                               ),
                             ),
-                            child: CasamanceAssetPhoto(
-                              assetPath: gallery[index],
-                              width: 96,
-                              height: 68,
-                              borderRadius: BorderRadius.circular(10),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(index.isEven ? 14 : 34),
+                                bottom: const Radius.circular(12),
+                              ),
+                              child: CasamanceAssetPhoto(
+                                assetPath: gallery[index],
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                         );
@@ -445,7 +463,6 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  // Informations pratiques (Tarifs, Horaires, Durée)
                   Row(
                     children: [
                       Expanded(
@@ -455,6 +472,7 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                               ? 'Gratuit'
                               : '${site.tarifEntree.toInt()} FCFA',
                           subtitle: 'Tarif visite',
+                          accent: AppTheme.champagneGold,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -463,6 +481,7 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                           icon: Icons.schedule_rounded,
                           title: site.horairesOuverture,
                           subtitle: 'Horaires',
+                          accent: AppTheme.bolongTurquoise,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -471,36 +490,35 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                           icon: Icons.directions_walk_rounded,
                           title: SiteMediaHelper.dureeEstimee(site),
                           subtitle: SiteMediaHelper.accesVisite(site),
+                          accent: AppTheme.hibiscusRed,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 22),
 
-                  // Description détaillée
                   Text(
-                    'Présentation du site',
-                    style: GoogleFonts.poppins(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                    'L’esprit du lieu',
+                    style: AppTheme.editorialTitle(
+                      fontSize: 20,
+                      color: AppTheme.deepForest,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(15),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.pureWhite,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.borderLight),
+                      color: AppTheme.warmCream,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppTheme.sandBorder),
                     ),
                     child: Text(
                       site.description,
                       style: GoogleFonts.poppins(
                         fontSize: 13.5,
-                        color: AppTheme.textPrimary,
-                        height: 1.55,
+                        color: AppTheme.textDark,
+                        height: 1.58,
                       ),
                     ),
                   ),
@@ -508,44 +526,52 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                   if (site.historique.trim().isNotEmpty) ...[
                     const SizedBox(height: 18),
                     Text(
-                      'Histoire & Patrimoine',
-                      style: GoogleFonts.poppins(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                      'Histoire & Récit patrimonial',
+                      style: AppTheme.editorialTitle(
+                        fontSize: 20,
+                        color: AppTheme.earthBrown,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(15),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppTheme.lightGreen.withValues(alpha: 0.65),
-                        borderRadius: BorderRadius.circular(16),
+                        color: AppTheme.terracottaSoft,
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: AppTheme.naturalGreen.withValues(alpha: 0.22),
+                          color: AppTheme.earthBrown.withValues(alpha: 0.22),
                         ),
                       ),
-                      child: Text(
-                        site.historique,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13.5,
-                          color: AppTheme.textPrimary,
-                          height: 1.55,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            site.historique,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13.5,
+                              color: AppTheme.textDark,
+                              height: 1.58,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const CasamanceWovenMotifStrip(
+                            height: 6,
+                            color: AppTheme.earthBrown,
+                          ),
+                        ],
                       ),
                     ),
                   ],
 
                   const SizedBox(height: 20),
 
-                  // Carte & accès GPS intégré
+                  // Localisation GPS intégrée
                   Container(
-                    padding: const EdgeInsets.all(15),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.pureWhite,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppTheme.borderLight),
+                      color: AppTheme.deepForest,
+                      borderRadius: BorderRadius.circular(22),
                       boxShadow: AppTheme.softShadow,
                     ),
                     child: Column(
@@ -556,12 +582,13 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppTheme.lightGreen,
-                                borderRadius: BorderRadius.circular(12),
+                                color: AppTheme.bolongTurquoise
+                                    .withValues(alpha: 0.25),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                               child: const Icon(
                                 Icons.map_rounded,
-                                color: AppTheme.forestGreen,
+                                color: AppTheme.champagneGold,
                                 size: 22,
                               ),
                             ),
@@ -572,17 +599,17 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                                 children: [
                                   Text(
                                     'Localisation & Itinéraire GPS',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppTheme.textPrimary,
+                                    style: AppTheme.editorialTitle(
+                                      fontSize: 16.5,
+                                      color: Colors.white,
                                     ),
                                   ),
                                   Text(
-                                    'GPS : ${site.latitude.toStringAsFixed(4)}, ${site.longitude.toStringAsFixed(4)}',
+                                    'Coordonnées : ${site.latitude.toStringAsFixed(4)}, ${site.longitude.toStringAsFixed(4)}',
                                     style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: AppTheme.textSecondary,
+                                      fontSize: 11.5,
+                                      color: AppTheme.ivorySand
+                                          .withValues(alpha: 0.84),
                                     ),
                                   ),
                                 ],
@@ -594,6 +621,12 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.champagneGold,
+                              side: const BorderSide(
+                                color: AppTheme.champagneGold,
+                              ),
+                            ),
                             onPressed: () {
                               Navigator.push(
                                 context,
@@ -604,7 +637,7 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                               );
                             },
                             icon: const Icon(Icons.near_me_rounded, size: 18),
-                            label: const Text('Voir sur la carte GPS'),
+                            label: const Text('Tracer l’itinéraire sur la carte'),
                           ),
                         ),
                       ],
@@ -613,7 +646,6 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Section Avis & notes
                   ReviewsSection(
                     patrimoineId: site.id,
                     initialAverage: site.noteMoyenne,
@@ -626,19 +658,18 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
         ],
       ),
 
-      // Barre inférieure fixe avec tarif & bouton "Réserver une visite"
       bottomNavigationBar: SafeArea(
         top: false,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
           decoration: BoxDecoration(
-            color: AppTheme.pureWhite,
-            border: const Border(top: BorderSide(color: AppTheme.borderLight)),
+            color: AppTheme.warmCream,
+            border: const Border(top: BorderSide(color: AppTheme.sandBorder)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 12,
-                offset: const Offset(0, -3),
+                color: AppTheme.earthBrown.withValues(alpha: 0.10),
+                blurRadius: 16,
+                offset: const Offset(0, -4),
               ),
             ],
           ),
@@ -651,18 +682,17 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                   Text(
                     'Tarif d\'entrée',
                     style: GoogleFonts.poppins(
-                      fontSize: 11.5,
-                      color: AppTheme.textSecondary,
+                      fontSize: 11,
+                      color: AppTheme.textMuted,
                     ),
                   ),
                   Text(
                     isFree
                         ? 'Entrée libre'
                         : '${site.tarifEntree.toInt()} FCFA / pers.',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.forestGreen,
+                    style: AppTheme.editorialTitle(
+                      fontSize: 18,
+                      color: AppTheme.deepForest,
                     ),
                   ),
                 ],
@@ -680,11 +710,11 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
                     _checkFavorite();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.warmOrange,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.champagneGold,
+                    foregroundColor: AppTheme.deepForest,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(28),
                     ),
                   ),
                   icon: const Icon(Icons.calendar_month_rounded, size: 19),
@@ -708,23 +738,24 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
     required IconData icon,
     required String title,
     required String subtitle,
+    required Color accent,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.pureWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderLight),
+        color: AppTheme.warmCream,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.sandBorder),
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: AppTheme.lightGreen,
+              color: accent.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: AppTheme.forestGreen, size: 19),
+            child: Icon(icon, color: accent, size: 18),
           ),
           const SizedBox(height: 6),
           Text(
@@ -733,9 +764,9 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
-              fontSize: 11.5,
+              fontSize: 11.2,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: AppTheme.deepForest,
             ),
           ),
           const SizedBox(height: 2),
@@ -746,7 +777,7 @@ class _SiteDetailScreenState extends State<SiteDetailScreen> {
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
               fontSize: 10,
-              color: AppTheme.textSecondary,
+              color: AppTheme.textMuted,
             ),
           ),
         ],

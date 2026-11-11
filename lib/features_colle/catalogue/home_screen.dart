@@ -13,7 +13,7 @@ import '../reviews/reviews_service.dart';
 import 'patrimoine_service.dart';
 import 'site_detail_screen.dart';
 
-/// Écran d'Accueil Principal — Casamance Tourisme & Visites
+/// Écran d'Accueil Magazine — Casamance Tourisme & Visites
 /// Responsable : Collé SYLL (Pôle 1 - Module Catalogue & API)
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,66 +37,66 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _apiErrorMessage;
   int _heroIndex = 0;
 
-  final List<Map<String, dynamic>> _categories = const [
+  final List<Map<String, dynamic>> _themeArches = const [
     {
       'code': 'NATURE',
       'label': 'Nature',
-      'icon': Icons.eco_rounded,
-      'color': AppTheme.naturalGreen,
-    },
-    {
-      'code': 'MONUMENT',
-      'label': 'Monuments',
-      'icon': Icons.account_balance_rounded,
-      'color': AppTheme.forestGreen,
-    },
-    {
-      'code': 'MUSEE',
-      'label': 'Musées',
-      'icon': Icons.museum_rounded,
-      'color': AppTheme.warmOrangeDark,
-    },
-    {
-      'code': 'ARCHITECTURE',
-      'label': 'Architecture',
-      'icon': Icons.holiday_village_rounded,
-      'color': AppTheme.forestGreen,
+      'asset': 'assets/images/casamance/bolong_mangrove.jpg',
+      'icon': Icons.eco_outlined,
     },
     {
       'code': 'CULTURE',
       'label': 'Culture',
-      'icon': Icons.theater_comedy_rounded,
-      'color': AppTheme.naturalGreen,
+      'asset': SiteMediaHelper.cultureAsset,
+      'icon': Icons.theater_comedy_outlined,
+    },
+    {
+      'code': 'PLAGES',
+      'label': 'Plages',
+      'asset': SiteMediaHelper.beachCapSkirringAsset,
+      'icon': Icons.beach_access_outlined,
     },
     {
       'code': 'ARTISANAT',
       'label': 'Artisanat',
-      'icon': Icons.handyman_rounded,
-      'color': AppTheme.warmOrangeDark,
+      'asset': SiteMediaHelper.artisanatAsset,
+      'icon': Icons.handyman_outlined,
+    },
+    {
+      'code': 'PATRIMOINE',
+      'label': 'Patrimoine',
+      'asset': 'assets/images/casamance/cases_mlomp.jpg',
+      'icon': Icons.account_balance_outlined,
+    },
+    {
+      'code': 'GASTRONOMIE',
+      'label': 'Gastronomie',
+      'asset': SiteMediaHelper.gastronomieAsset,
+      'icon': Icons.restaurant_outlined,
     },
   ];
 
   final List<Map<String, String>> _ziguinchorSlides = const [
     {
       'asset': 'assets/images/casamance/port_ziguinchor.jpg',
-      'badge': 'Ziguinchor • Destination Phare',
+      'badge': 'ZIGUINCHOR • PORT DE BOUDODY',
       'title': 'Vivez la magie de Ziguinchor & du fleuve Casamance',
       'subtitle':
-          'Des quais animés de Boudody aux bolongs sauvages, explorez chaque trésor.',
+          'Des quais colorés aux mangroves émeraude, explorez le sud du Sénégal.',
     },
     {
-      'asset': SiteMediaHelper.heroBannerAsset,
-      'badge': 'Patrimoine & Îles',
-      'title': 'Île de Carabane & mémoire vivante',
+      'asset': SiteMediaHelper.beachCarabaneAsset,
+      'badge': 'ESCALE INSULAIRE • CARABANE',
+      'title': 'Cocotiers, comptoirs historiques et plages sauvages',
       'subtitle':
-          'Embarquez en pirogue vers l’un des joyaux historiques du sud.',
+          'Embarquez en pirogue traditionnelle vers les joyaux du fleuve.',
     },
     {
-      'asset': 'assets/images/casamance/cases_mlomp.jpg',
-      'badge': 'Savoir-faire Diola',
-      'title': 'Cases traditionnelles & villages d’art',
+      'asset': SiteMediaHelper.artisanatAsset,
+      'badge': 'SANTHIABA • ARTISANAT DIOLA',
+      'title': 'Sculptures, vannerie et teintures indigo',
       'subtitle':
-          'Rencontrez les guides et gardiens du patrimoine casamançais.',
+          'Rencontrez les maîtres artisans au cœur de Ziguinchor.',
     },
   ];
 
@@ -196,6 +196,25 @@ class _HomeScreenState extends State<HomeScreen> {
   double _ratingFor(Patrimoine site) =>
       _liveRatings[site.id] ?? site.noteMoyenne;
 
+  Patrimoine _withRating(Patrimoine site) {
+    final r = _ratingFor(site);
+    if (r == site.noteMoyenne) return site;
+    return Patrimoine(
+      id: site.id,
+      nom: site.nom,
+      description: site.description,
+      historique: site.historique,
+      categorie: site.categorie,
+      localisation: site.localisation,
+      latitude: site.latitude,
+      longitude: site.longitude,
+      tarifEntree: site.tarifEntree,
+      horairesOuverture: site.horairesOuverture,
+      imageUrl: site.imageUrl,
+      noteMoyenne: r,
+    );
+  }
+
   Future<void> _openDetail(Patrimoine site) async {
     await Navigator.push(
       context,
@@ -216,40 +235,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final popularSites = _allSites.take(5).toList();
-
+    final popularSites = _allSites.take(5).map(_withRating).toList();
     final mustVisitSites = _allSites.where((s) {
       final n = s.nom.toLowerCase();
       return n.contains('carabane') ||
-          n.contains('joola') ||
           n.contains('mlomp') ||
-          n.contains('bolong') ||
-          n.contains('alliance');
+          n.contains('artisan') ||
+          n.contains('joola');
     }).toList();
-    final incontournables =
-        mustVisitSites.isNotEmpty ? mustVisitSites : _allSites.take(3).toList();
+    final incontournables = (mustVisitSites.isNotEmpty
+            ? mustVisitSites
+            : _allSites.take(3).toList())
+        .map(_withRating)
+        .toList();
 
-    final topRated = [..._allSites]
-      ..sort((a, b) => _ratingFor(b).compareTo(_ratingFor(a)));
+    final topRated = ([..._allSites]
+          ..sort((a, b) => _ratingFor(b).compareTo(_ratingFor(a))))
+        .map(_withRating)
+        .toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.offWhite,
+      backgroundColor: AppTheme.ivorySand,
       body: RefreshIndicator(
-        color: AppTheme.forestGreen,
+        color: AppTheme.deepForest,
+        backgroundColor: AppTheme.ivorySand,
         onRefresh: _refreshAll,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // 1. Zone supérieure : Logo, salutation, billets et accès profil
+            // 1. Zone supérieure légère sur Ivoire sable
             SliverToBoxAdapter(
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                   child: Row(
                     children: [
-                      const CasamanceEmblemMark(size: 46),
-                      const SizedBox(width: 12),
+                      const CasamanceEmblemMark(size: 44),
+                      const SizedBox(width: 11),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,32 +280,31 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text(
                               _userFirstName != null &&
                                       _userFirstName!.isNotEmpty
-                                  ? 'Bonjour $_userFirstName'
-                                  : 'Bienvenue en Casamance',
+                                  ? 'Bonjour $_userFirstName,'
+                                  : 'Bienvenue en Casamance,',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
-                                fontSize: 16.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textPrimary,
+                              style: AppTheme.editorialTitle(
+                                fontSize: 19,
+                                color: AppTheme.deepForest,
                               ),
                             ),
                             Row(
                               children: [
                                 const Icon(
                                   Icons.location_on_rounded,
-                                  size: 13.5,
-                                  color: AppTheme.warmOrange,
+                                  size: 13,
+                                  color: AppTheme.hibiscusRed,
                                 ),
                                 const SizedBox(width: 3),
                                 Expanded(
                                   child: Text(
-                                    'Ziguinchor, Sénégal',
+                                    'Ziguinchor, perle du sud sénégalais',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: AppTheme.textSecondary,
+                                      fontSize: 11.5,
+                                      color: AppTheme.earthBrown,
                                     ),
                                   ),
                                 ),
@@ -292,11 +314,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Accès rapide Mes Réservations / Billets QR
                       Material(
-                        color: AppTheme.lightGreen,
-                        borderRadius: BorderRadius.circular(14),
+                        color: AppTheme.terracottaSoft,
+                        shape: const CircleBorder(),
                         child: InkWell(
+                          customBorder: const CircleBorder(),
                           onTap: () {
                             Navigator.push(
                               context,
@@ -305,33 +327,35 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-                          borderRadius: BorderRadius.circular(14),
-                          child: const Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Icon(
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppTheme.sandBorder),
+                            ),
+                            child: const Icon(
                               Icons.confirmation_number_outlined,
-                              color: AppTheme.forestGreen,
-                              size: 21,
+                              color: AppTheme.earthBrown,
+                              size: 20,
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Accès rapide Profil / Compte
                       Material(
-                        color: AppTheme.forestGreen,
-                        borderRadius: BorderRadius.circular(14),
+                        color: AppTheme.deepForest,
+                        shape: const CircleBorder(),
                         child: InkWell(
+                          customBorder: const CircleBorder(),
                           onTap: () => MainNavigationShell.switchTab(context, 4),
-                          borderRadius: BorderRadius.circular(14),
-                          child: Padding(
+                          child: Container(
                             padding: const EdgeInsets.all(10),
                             child: Icon(
                               _userFirstName != null
                                   ? Icons.person_rounded
                                   : Icons.person_outline_rounded,
-                              color: Colors.white,
-                              size: 21,
+                              color: AppTheme.champagneGold,
+                              size: 20,
                             ),
                           ),
                         ),
@@ -342,14 +366,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // 2. Grande bannière photographique mettant en valeur Ziguinchor
+            // 2. Bannière photographique Ziguinchor + Barre de recherche chevauchante
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Column(
                   children: [
                     SizedBox(
-                      height: 205,
+                      height: 230,
                       child: PageView.builder(
                         controller: _heroController,
                         itemCount: _ziguinchorSlides.length,
@@ -358,168 +382,189 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemBuilder: (context, index) {
                           final slide = _ziguinchorSlides[index];
                           return ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                CasamanceAssetPhoto(
-                                  assetPath: slide['asset']!,
-                                  fit: BoxFit.cover,
-                                ),
-                                DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.black.withValues(alpha: 0.14),
-                                        AppTheme.forestGreen
-                                            .withValues(alpha: 0.88),
+                            borderRadius: BorderRadius.circular(28),
+                            child: ClipPath(
+                              clipper:
+                                  const CasamanceBolongWaveClipper(depth: 16),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  CasamanceAssetPhoto(
+                                    assetPath: slide['asset']!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                  DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.black.withValues(alpha: 0.14),
+                                          AppTheme.deepForest
+                                              .withValues(alpha: 0.88),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      18,
+                                      20,
+                                      38,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.champagneGold,
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          child: Text(
+                                            slide['badge']!,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 9.8,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppTheme.deepForest,
+                                            ),
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        Text(
+                                          slide['title']!,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTheme.editorialTitle(
+                                            fontSize: 21,
+                                            color: Colors.white,
+                                            height: 1.15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          slide['subtitle']!,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 11.8,
+                                            color: AppTheme.ivorySand
+                                                .withValues(alpha: 0.92),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(18),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.warmOrange,
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                        ),
-                                        child: Text(
-                                          slide['badge']!,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 10.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        slide['title']!,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 17.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                          height: 1.22,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        slide['subtitle']!,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
-                                          color: Colors.white
-                                              .withValues(alpha: 0.90),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           );
                         },
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(_ziguinchorSlides.length, (i) {
-                        final active = i == _heroIndex;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 220),
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          width: active ? 20 : 7,
-                          height: 7,
+                    // Barre de recherche flottante verre dépoli
+                    Transform.translate(
+                      offset: const Offset(0, -22),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Container(
                           decoration: BoxDecoration(
-                            color: active
-                                ? AppTheme.forestGreen
-                                : AppTheme.naturalGreen.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(6),
+                            color: AppTheme.warmCream.withValues(alpha: 0.96),
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(
+                              color: AppTheme.sandBorder,
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    AppTheme.deepForest.withValues(alpha: 0.13),
+                                blurRadius: 18,
+                                offset: const Offset(0, 7),
+                              ),
+                            ],
                           ),
-                        );
-                      }),
+                          child: TextField(
+                            controller: _searchController,
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: (value) =>
+                                _openExplorer(query: value),
+                            style: GoogleFonts.poppins(
+                              fontSize: 13.5,
+                              color: AppTheme.deepForest,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Rechercher une plage, un bolong...',
+                              prefixIcon: const Icon(
+                                Icons.search_rounded,
+                                color: AppTheme.earthBrown,
+                              ),
+                              suffixIcon: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: Material(
+                                  color: AppTheme.deepForest,
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: InkWell(
+                                    onTap: () => _openExplorer(
+                                      query: _searchController.text,
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: Icon(
+                                        Icons.arrow_forward_rounded,
+                                        color: AppTheme.champagneGold,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              filled: false,
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Transform.translate(
+                      offset: const Offset(0, -10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(_ziguinchorSlides.length, (i) {
+                          final active = i == _heroIndex;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 220),
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: active ? 22 : 7,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: active
+                                  ? AppTheme.hibiscusRed
+                                  : AppTheme.earthBrown.withValues(alpha: 0.28),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          );
+                        }),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
 
-            // 3. Barre de recherche moderne
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.pureWhite,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: AppTheme.borderLight),
-                    boxShadow: AppTheme.softShadow,
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: (value) => _openExplorer(query: value),
-                    style: GoogleFonts.poppins(
-                      fontSize: 13.5,
-                      color: AppTheme.textPrimary,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Rechercher un site, une île, un musée...',
-                      prefixIcon: const Icon(
-                        Icons.search_rounded,
-                        color: AppTheme.forestGreen,
-                      ),
-                      suffixIcon: Padding(
-                        padding: const EdgeInsets.all(6),
-                        child: Material(
-                          color: AppTheme.warmOrange,
-                          borderRadius: BorderRadius.circular(12),
-                          child: InkWell(
-                            onTap: () => _openExplorer(
-                              query: _searchController.text,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            child: const Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Icon(
-                                Icons.arrow_forward_rounded,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Bannière d'erreur explicite si le backend est indisponible
             if (_apiErrorMessage != null)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                   child: CasamanceApiErrorBanner(
                     message: _apiErrorMessage!,
                     onRetry: _loadSites,
@@ -527,91 +572,47 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-            // 4. Section « Explorer par catégorie »
+            // 3. Arches Photographiques « Explorer par catégorie »
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
+                padding: const EdgeInsets.fromLTRB(18, 6, 18, 10),
                 child: CasamanceSectionHeader(
                   title: 'Explorer par catégorie',
-                  subtitle: 'Patrimoine classé de Ziguinchor & Casamance',
+                  subtitle: 'Choisissez votre ambiance casamançaise',
                   onSeeAll: () => _openExplorer(category: 'TOUS'),
                 ),
               ),
             ),
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 92,
+                height: 112,
                 child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                   scrollDirection: Axis.horizontal,
-                  itemCount: _categories.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  itemCount: _themeArches.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 11),
                   itemBuilder: (context, index) {
-                    final cat = _categories[index];
-                    return SizedBox(
-                      width: 88,
-                      child: Material(
-                        color: AppTheme.pureWhite,
-                        borderRadius: BorderRadius.circular(18),
-                        child: InkWell(
-                          onTap: () => _openExplorer(
-                            category: cat['code'] as String,
-                          ),
-                          borderRadius: BorderRadius.circular(18),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: AppTheme.borderLight),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.lightGreen,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    cat['icon'] as IconData,
-                                    color: cat['color'] as Color,
-                                    size: 21,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  cat['label'] as String,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                    final t = _themeArches[index];
+                    return CasamanceArchCategoryTile(
+                      label: t['label'] as String,
+                      assetPath: t['asset'] as String,
+                      icon: t['icon'] as IconData,
+                      selected: index == 0,
+                      onTap: () =>
+                          _openExplorer(category: t['code'] as String),
                     );
                   },
                 ),
               ),
             ),
 
-            // 5. Section « Sites populaires »
+            // 4. « Sites populaires » — Cartes portrait plein cadre
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 22, 16, 12),
+                padding: const EdgeInsets.fromLTRB(18, 20, 18, 12),
                 child: CasamanceSectionHeader(
                   title: 'Sites populaires',
-                  subtitle: 'Les visites les plus appréciées du moment',
+                  subtitle: 'Les escapades les plus demandées',
                   onSeeAll: () => _openExplorer(category: 'TOUS'),
                 ),
               ),
@@ -619,15 +620,15 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: _isLoading && _allSites.isEmpty
                   ? const SizedBox(
-                      height: 240,
+                      height: 260,
                       child: Center(
                         child: CircularProgressIndicator(
-                          color: AppTheme.forestGreen,
+                          color: AppTheme.deepForest,
                         ),
                       ),
                     )
                   : SizedBox(
-                      height: 278,
+                      height: 294,
                       child: ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         scrollDirection: Axis.horizontal,
@@ -637,7 +638,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           final site = popularSites[index];
                           return CasamanceFeaturedSiteCard(
                             site: site,
+                            heroTagPrefix: 'site_photo_pop',
                             isFavorite: _favoriteIds.contains(site.id),
+                            reviewCount: _reviewCounts[site.id] ?? 0,
                             onTap: () => _openDetail(site),
                             onToggleFavorite: () => _toggleFavorite(site),
                           );
@@ -646,204 +649,57 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
             ),
 
-            // 6. Section « Les incontournables de la Casamance »
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                child: CasamanceSectionHeader(
-                  title: 'Les incontournables de la Casamance',
-                  subtitle: 'Des étapes emblématiques à ne pas manquer',
-                  onSeeAll: () => _openExplorer(category: 'TOUS'),
+            // 5. « Les incontournables de la Casamance » — Collage Éditorial Asymétrique
+            if (incontournables.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 24, 18, 12),
+                  child: CasamanceSectionHeader(
+                    title: 'Les incontournables',
+                    subtitle: 'Trésors architecturaux, îles & artisanat vivant',
+                    onSeeAll: () => _openExplorer(category: 'PATRIMOINE'),
+                  ),
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList.separated(
-                itemCount: incontournables.take(3).length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final site = incontournables[index];
-                  final rating = _ratingFor(site);
-                  final count = _reviewCounts[site.id] ?? 0;
-                  final isFav = _favoriteIds.contains(site.id);
-
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.pureWhite,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppTheme.borderLight),
-                      boxShadow: AppTheme.softShadow,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(18),
-                      child: InkWell(
-                        onTap: () => _openDetail(site),
-                        borderRadius: BorderRadius.circular(18),
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Row(
-                            children: [
-                              SitePhotoView(
-                                site: site,
-                                width: 96,
-                                height: 96,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.lightGreen,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: Text(
-                                            SiteMediaHelper.labelCategorie(
-                                                site.categorie),
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 10.5,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppTheme.forestGreen,
-                                            ),
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        const Icon(
-                                          Icons.star_rounded,
-                                          size: 15,
-                                          color: AppTheme.warmOrange,
-                                        ),
-                                        const SizedBox(width: 2),
-                                        Text(
-                                          rating.toStringAsFixed(1),
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppTheme.textPrimary,
-                                          ),
-                                        ),
-                                        if (count > 0)
-                                          Text(
-                                            ' ($count)',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 11,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      site.nom,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppTheme.textPrimary,
-                                        height: 1.25,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.schedule_rounded,
-                                          size: 13,
-                                          color: AppTheme.naturalGreen,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Expanded(
-                                          child: Text(
-                                            SiteMediaHelper.dureeEstimee(site),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 11.5,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                          ),
-                                        ),
-                                        IconButton(
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          onPressed: () =>
-                                              _toggleFavorite(site),
-                                          icon: Icon(
-                                            isFav
-                                                ? Icons.favorite_rounded
-                                                : Icons.favorite_border_rounded,
-                                            size: 20,
-                                            color: isFav
-                                                ? AppTheme.errorRed
-                                                : AppTheme.textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _MustVisitAsymmetricCollage(
+                    sites: incontournables,
+                    favoriteIds: _favoriteIds,
+                    onTapSite: _openDetail,
+                    onToggleFavorite: _toggleFavorite,
+                  ),
+                ),
               ),
-            ),
+            ],
 
-            // 7. Section « Les mieux notés »
+            // 6. « Les mieux notés »
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                padding: const EdgeInsets.fromLTRB(18, 24, 18, 12),
                 child: CasamanceSectionHeader(
                   title: 'Les mieux notés',
-                  subtitle: 'Classés selon les avis des voyageurs',
+                  subtitle: 'Plébiscités par nos voyageurs',
                   onSeeAll: () => _openExplorer(category: 'TOUS'),
                 ),
               ),
             ),
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 278,
+                height: 294,
                 child: ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   scrollDirection: Axis.horizontal,
                   itemCount: topRated.take(5).length,
                   separatorBuilder: (_, __) => const SizedBox(width: 14),
                   itemBuilder: (context, index) {
                     final site = topRated[index];
                     return CasamanceFeaturedSiteCard(
-                      site: site.noteMoyenne == _ratingFor(site)
-                          ? site
-                          : Patrimoine(
-                              id: site.id,
-                              nom: site.nom,
-                              description: site.description,
-                              historique: site.historique,
-                              categorie: site.categorie,
-                              localisation: site.localisation,
-                              latitude: site.latitude,
-                              longitude: site.longitude,
-                              tarifEntree: site.tarifEntree,
-                              horairesOuverture: site.horairesOuverture,
-                              imageUrl: site.imageUrl,
-                              noteMoyenne: _ratingFor(site),
-                            ),
+                      site: site,
+                      heroTagPrefix: 'site_photo_top',
                       isFavorite: _favoriteIds.contains(site.id),
+                      reviewCount: _reviewCounts[site.id] ?? 0,
                       onTap: () => _openDetail(site),
                       onToggleFavorite: () => _toggleFavorite(site),
                     );
@@ -851,10 +707,218 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 28)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Composition asymétrique pour « Les incontournables » sur l'accueil
+class _MustVisitAsymmetricCollage extends StatelessWidget {
+  final List<Patrimoine> sites;
+  final Set<int> favoriteIds;
+  final ValueChanged<Patrimoine> onTapSite;
+  final ValueChanged<Patrimoine> onToggleFavorite;
+
+  const _MustVisitAsymmetricCollage({
+    required this.sites,
+    required this.favoriteIds,
+    required this.onTapSite,
+    required this.onToggleFavorite,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = sites.first;
+    final secondary = sites.skip(1).take(2).toList();
+
+    return Column(
+      children: [
+        // Grande carte panoramique éditoriale avec motif tissé diola
+        SizedBox(
+          height: 184,
+          child: CasamanceInteractiveCard(
+            onTap: () => onTapSite(primary),
+            borderRadius: BorderRadius.circular(24),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                SitePhotoView(site: primary, fit: BoxFit.cover),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        AppTheme.earthBrown.withValues(alpha: 0.90),
+                        AppTheme.deepForest.withValues(alpha: 0.45),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: CasamanceFavoriteButton(
+                    isFavorite: favoriteIds.contains(primary.id),
+                    onTap: () => onToggleFavorite(primary),
+                    size: 34,
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 60,
+                  bottom: 18,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.champagneGold,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'COUP DE CŒUR CASAMANCE',
+                          style: GoogleFonts.poppins(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.deepForest,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        primary.nom,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTheme.editorialTitle(
+                          fontSize: 19,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${primary.localisation} • ${SiteMediaHelper.dureeEstimee(primary)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          color: AppTheme.ivorySand.withValues(alpha: 0.92),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: CasamanceWovenMotifStrip(
+                    height: 6,
+                    color: AppTheme.champagneGold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (secondary.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: List.generate(secondary.length, (idx) {
+              final s = secondary[idx];
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: idx == 0 && secondary.length > 1 ? 6 : 0,
+                    left: idx == 1 ? 6 : 0,
+                  ),
+                  child: SizedBox(
+                    height: 148,
+                    child: CasamanceInteractiveCard(
+                      onTap: () => onTapSite(s),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          SitePhotoView(site: s, fit: BoxFit.cover),
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  AppTheme.deepForest.withValues(alpha: 0.88),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: CasamanceFavoriteButton(
+                              isFavorite: favoriteIds.contains(s.id),
+                              onTap: () => onToggleFavorite(s),
+                              size: 30,
+                            ),
+                          ),
+                          Positioned(
+                            left: 10,
+                            right: 10,
+                            bottom: 10,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  s.nom,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTheme.editorialTitle(
+                                    fontSize: 13.5,
+                                    color: Colors.white,
+                                    height: 1.15,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.star_rounded,
+                                      size: 13,
+                                      color: AppTheme.champagneGold,
+                                    ),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      s.noteMoyenne.toStringAsFixed(1),
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.champagneGold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ],
     );
   }
 }

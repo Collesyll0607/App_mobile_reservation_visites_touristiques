@@ -4,14 +4,14 @@ import '../../core/models/patrimoine.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/site_media_helper.dart';
 
-/// Affiche une photographie locale authentique pour un site touristique donné,
-/// avec gestion de fallback élégant.
+/// Affiche une photographie locale authentique pour un site touristique donné.
 class SitePhotoView extends StatelessWidget {
   final Patrimoine site;
   final double? width;
   final double? height;
   final BorderRadius? borderRadius;
   final BoxFit fit;
+  final AlignmentGeometry alignment;
 
   const SitePhotoView({
     super.key,
@@ -20,6 +20,7 @@ class SitePhotoView extends StatelessWidget {
     this.height,
     this.borderRadius,
     this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
   });
 
   @override
@@ -30,10 +31,10 @@ class SitePhotoView extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
+      alignment: alignment,
       errorBuilder: (_, __, ___) => _PlaceholderCasamance(
         width: width,
         height: height,
-        titre: site.nom,
       ),
     );
 
@@ -44,13 +45,14 @@ class SitePhotoView extends StatelessWidget {
   }
 }
 
-/// Affiche une image depuis un chemin d'asset spécifique avec fallback élégant.
+/// Affiche une photographie locale depuis un chemin d'asset spécifique.
 class CasamanceAssetPhoto extends StatelessWidget {
   final String assetPath;
   final double? width;
   final double? height;
   final BorderRadius? borderRadius;
   final BoxFit fit;
+  final AlignmentGeometry alignment;
 
   const CasamanceAssetPhoto({
     super.key,
@@ -59,6 +61,7 @@ class CasamanceAssetPhoto extends StatelessWidget {
     this.height,
     this.borderRadius,
     this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
   });
 
   @override
@@ -68,6 +71,7 @@ class CasamanceAssetPhoto extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
+      alignment: alignment,
       errorBuilder: (_, __, ___) => _PlaceholderCasamance(
         width: width,
         height: height,
@@ -84,9 +88,8 @@ class CasamanceAssetPhoto extends StatelessWidget {
 class _PlaceholderCasamance extends StatelessWidget {
   final double? width;
   final double? height;
-  final String? titre;
 
-  const _PlaceholderCasamance({this.width, this.height, this.titre});
+  const _PlaceholderCasamance({this.width, this.height});
 
   @override
   Widget build(BuildContext context) {
@@ -97,13 +100,13 @@ class _PlaceholderCasamance extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppTheme.forestGreen, AppTheme.naturalGreen],
+          colors: [AppTheme.deepForest, AppTheme.bolongTurquoise],
         ),
       ),
       child: Center(
         child: Icon(
           Icons.landscape_outlined,
-          color: AppTheme.offWhite.withValues(alpha: 0.85),
+          color: AppTheme.ivorySand.withValues(alpha: 0.85),
           size: 36,
         ),
       ),
@@ -111,7 +114,262 @@ class _PlaceholderCasamance extends StatelessWidget {
   }
 }
 
-/// En-tête organique vert forêt (#14532D -> #2E8B57) pour les écrans principaux
+/// Enveloppe animée discrète : micro-zoom photographique et élévation au survol / toucher
+class CasamanceInteractiveCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final BorderRadius borderRadius;
+
+  const CasamanceInteractiveCard({
+    super.key,
+    required this.child,
+    required this.onTap,
+    this.borderRadius = const BorderRadius.all(Radius.circular(24)),
+  });
+
+  @override
+  State<CasamanceInteractiveCard> createState() =>
+      _CasamanceInteractiveCardState();
+}
+
+class _CasamanceInteractiveCardState extends State<CasamanceInteractiveCard> {
+  bool _hovered = false;
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final double scale = _pressed ? 0.985 : (_hovered ? 1.018 : 1.0);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTap: widget.onTap,
+        child: AnimatedScale(
+          scale: scale,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          child: ClipRRect(
+            borderRadius: widget.borderRadius,
+            child: widget.child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Apparition progressive et fluide d'une section à l'affichage
+class CasamanceReveal extends StatefulWidget {
+  final Widget child;
+  final int delayMs;
+
+  const CasamanceReveal({
+    super.key,
+    required this.child,
+    this.delayMs = 60,
+  });
+
+  @override
+  State<CasamanceReveal> createState() => _CasamanceRevealState();
+}
+
+class _CasamanceRevealState extends State<CasamanceReveal>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.045),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    if (widget.delayMs <= 0) {
+      _controller.forward();
+    } else {
+      Future.delayed(Duration(milliseconds: widget.delayMs), () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(position: _slide, child: widget.child),
+    );
+  }
+}
+
+/// Découpe organique évoquant les méandres des bolongs de Casamance
+class CasamanceBolongWaveClipper extends CustomClipper<Path> {
+  final double depth;
+
+  const CasamanceBolongWaveClipper({this.depth = 24});
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - depth);
+    path.quadraticBezierTo(
+      size.width * 0.28,
+      size.height,
+      size.width * 0.62,
+      size.height - depth * 0.65,
+    );
+    path.quadraticBezierTo(
+      size.width * 0.86,
+      size.height - depth * 1.15,
+      size.width,
+      size.height - depth * 0.35,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CasamanceBolongWaveClipper oldClipper) =>
+      oldClipper.depth != depth;
+}
+
+/// Fleur d'hibiscus stylisée vectorielle (accent floral subtil sans surcharge)
+class CasamanceHibiscusBlossom extends StatelessWidget {
+  final double size;
+  final double opacity;
+  final Color petalColor;
+  final Color coreColor;
+
+  const CasamanceHibiscusBlossom({
+    super.key,
+    this.size = 26,
+    this.opacity = 1.0,
+    this.petalColor = AppTheme.hibiscusRed,
+    this.coreColor = AppTheme.champagneGold,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: opacity,
+      child: CustomPaint(
+        size: Size(size, size),
+        painter: _HibiscusPainter(
+          petalColor: petalColor,
+          coreColor: coreColor,
+        ),
+      ),
+    );
+  }
+}
+
+class _HibiscusPainter extends CustomPainter {
+  final Color petalColor;
+  final Color coreColor;
+
+  _HibiscusPainter({required this.petalColor, required this.coreColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width * 0.28;
+    final paint = Paint()..color = petalColor;
+
+    for (int i = 0; i < 5; i++) {
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate((i * 72) * 3.14159265 / 180);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(0, -radius * 0.95),
+          width: radius * 1.35,
+          height: radius * 1.65,
+        ),
+        paint,
+      );
+      canvas.restore();
+    }
+
+    canvas.drawCircle(center, size.width * 0.11, Paint()..color = coreColor);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HibiscusPainter oldDelegate) =>
+      oldDelegate.petalColor != petalColor ||
+      oldDelegate.coreColor != coreColor;
+}
+
+/// Bandeau géométrique inspiré des pagnes tissés diola
+class CasamanceWovenMotifStrip extends StatelessWidget {
+  final double height;
+  final Color color;
+
+  const CasamanceWovenMotifStrip({
+    super.key,
+    this.height = 8,
+    this.color = AppTheme.champagneGold,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(double.infinity, height),
+      painter: _WovenMotifPainter(color: color),
+    );
+  }
+}
+
+class _WovenMotifPainter extends CustomPainter {
+  final Color color;
+
+  _WovenMotifPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.35)
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+
+    const double step = 14;
+    for (double x = 0; x < size.width; x += step) {
+      final path = Path()
+        ..moveTo(x, size.height / 2)
+        ..lineTo(x + step / 2, 1)
+        ..lineTo(x + step, size.height / 2)
+        ..lineTo(x + step / 2, size.height - 1)
+        ..close();
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _WovenMotifPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
+/// En-tête secondaire équilibré (évite les énormes bandeaux verts uniformes)
 class CasamanceCurvedHeader extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -125,7 +383,7 @@ class CasamanceCurvedHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipPath(
-      clipper: _BottomWaveClipper(),
+      clipper: const CasamanceBolongWaveClipper(depth: 20),
       child: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
@@ -133,37 +391,27 @@ class CasamanceCurvedHeader extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppTheme.forestGreen,
-              AppTheme.naturalGreen,
+              AppTheme.deepForest,
+              AppTheme.emeraldGreen,
+              AppTheme.bolongTurquoise,
             ],
           ),
         ),
         child: Stack(
           children: [
-            Positioned(
-              right: -24,
-              top: -12,
-              child: Icon(
-                Icons.eco,
-                size: 120,
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-            Positioned(
-              left: -18,
-              bottom: 8,
-              child: Icon(
-                Icons.park_outlined,
-                size: 92,
-                color: AppTheme.warmOrange.withValues(alpha: 0.12),
+            const Positioned(
+              right: -10,
+              top: 4,
+              child: CasamanceHibiscusBlossom(
+                size: 86,
+                opacity: 0.14,
+                petalColor: AppTheme.champagneGold,
+                coreColor: AppTheme.ivorySand,
               ),
             ),
             SafeArea(
               bottom: false,
-              child: Padding(
-                padding: padding,
-                child: child,
-              ),
+              child: Padding(padding: padding, child: child),
             ),
           ],
         ),
@@ -172,33 +420,7 @@ class CasamanceCurvedHeader extends StatelessWidget {
   }
 }
 
-class _BottomWaveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.lineTo(0, size.height - 20);
-    path.quadraticBezierTo(
-      size.width * 0.30,
-      size.height,
-      size.width * 0.62,
-      size.height - 14,
-    );
-    path.quadraticBezierTo(
-      size.width * 0.86,
-      size.height - 24,
-      size.width,
-      size.height - 6,
-    );
-    path.lineTo(size.width, 0);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
-}
-
-/// Emblème vectoriel inspiré du Fromager sacré & du soleil de Casamance
+/// Emblème du Fromager sacré & du soleil couchant de Casamance
 class CasamanceEmblemMark extends StatelessWidget {
   final double size;
   final bool darkBackground;
@@ -217,17 +439,17 @@ class CasamanceEmblemMark extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: darkBackground
-            ? AppTheme.pureWhite.withValues(alpha: 0.14)
-            : AppTheme.lightGreen,
+            ? AppTheme.ivorySand.withValues(alpha: 0.14)
+            : AppTheme.warmCream,
         border: Border.all(
-          color: AppTheme.warmOrange,
-          width: 2.5,
+          color: AppTheme.champagneGold,
+          width: 2.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.16),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
+            color: AppTheme.earthBrown.withValues(alpha: 0.18),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -238,10 +460,10 @@ class CasamanceEmblemMark extends StatelessWidget {
             top: size * 0.16,
             right: size * 0.21,
             child: Container(
-              width: size * 0.23,
-              height: size * 0.23,
+              width: size * 0.22,
+              height: size * 0.22,
               decoration: const BoxDecoration(
-                color: AppTheme.warmOrange,
+                color: AppTheme.champagneGold,
                 shape: BoxShape.circle,
               ),
             ),
@@ -249,20 +471,167 @@ class CasamanceEmblemMark extends StatelessWidget {
           Icon(
             Icons.park_rounded,
             size: size * 0.54,
-            color: darkBackground ? Colors.white : AppTheme.forestGreen,
+            color: darkBackground ? AppTheme.ivorySand : AppTheme.deepForest,
           ),
           Positioned(
             bottom: size * 0.15,
             child: Container(
-              width: size * 0.50,
-              height: 4,
+              width: size * 0.48,
+              height: 3.5,
               decoration: BoxDecoration(
-                color: AppTheme.naturalGreen,
+                color: AppTheme.bolongTurquoise,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Tuile de catégorie en forme d'arche architecturale avec photographie réelle
+class CasamanceArchCategoryTile extends StatelessWidget {
+  final String label;
+  final String assetPath;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const CasamanceArchCategoryTile({
+    super.key,
+    required this.label,
+    required this.assetPath,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+        width: 84,
+        transform: Matrix4.translationValues(0, selected ? -3 : 0, 0),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 240),
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(42),
+                  bottom: Radius.circular(18),
+                ),
+                border: Border.all(
+                  color: selected
+                      ? AppTheme.champagneGold
+                      : AppTheme.sandBorder,
+                  width: selected ? 2.4 : 1.0,
+                ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: AppTheme.champagneGold.withValues(alpha: 0.35),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ]
+                    : [
+                        BoxShadow(
+                          color: AppTheme.earthBrown.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(40),
+                  bottom: Radius.circular(16),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CasamanceAssetPhoto(
+                      assetPath: assetPath,
+                      fit: BoxFit.cover,
+                    ),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: selected
+                              ? [
+                                  AppTheme.deepForest.withValues(alpha: 0.12),
+                                  AppTheme.deepForest.withValues(alpha: 0.88),
+                                ]
+                              : [
+                                  Colors.black.withValues(alpha: 0.10),
+                                  AppTheme.earthBrown.withValues(alpha: 0.84),
+                                ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 6,
+                      right: 6,
+                      bottom: 9,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            icon,
+                            size: 14,
+                            color: selected
+                                ? AppTheme.champagneGold
+                                : AppTheme.ivorySand,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 12.2,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (selected) ...[
+              Positioned(
+                top: -2,
+                right: -2,
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: AppTheme.hibiscusRed,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.ivorySand, width: 2),
+                  ),
+                ),
+              ),
+              const Positioned(
+                bottom: -6,
+                left: -6,
+                child: CasamanceHibiscusBlossom(size: 24),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -294,10 +663,9 @@ class CasamanceSectionHeader extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: GoogleFonts.poppins(
-                  fontSize: 17.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+                style: AppTheme.editorialTitle(
+                  fontSize: 21,
+                  color: AppTheme.deepForest,
                 ),
               ),
               if (subtitle != null) ...[
@@ -305,8 +673,8 @@ class CasamanceSectionHeader extends StatelessWidget {
                 Text(
                   subtitle!,
                   style: GoogleFonts.poppins(
-                    fontSize: 12.2,
-                    color: AppTheme.textSecondary,
+                    fontSize: 12,
+                    color: AppTheme.textMuted,
                   ),
                 ),
               ],
@@ -317,7 +685,7 @@ class CasamanceSectionHeader extends StatelessWidget {
           TextButton.icon(
             onPressed: onSeeAll,
             style: TextButton.styleFrom(
-              foregroundColor: AppTheme.forestGreen,
+              foregroundColor: AppTheme.earthBrown,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -327,13 +695,13 @@ class CasamanceSectionHeader extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.naturalGreen,
+                color: AppTheme.earthBrown,
               ),
             ),
             label: const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 13,
-              color: AppTheme.naturalGreen,
+              Icons.arrow_forward_rounded,
+              size: 14,
+              color: AppTheme.hibiscusRed,
             ),
           ),
       ],
@@ -358,10 +726,10 @@ class CasamanceApiErrorBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF3C7),
-        borderRadius: BorderRadius.circular(14),
+        color: const Color(0xFFFAF0E4),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.warmOrange.withValues(alpha: 0.45),
+          color: AppTheme.hibiscusRed.withValues(alpha: 0.35),
         ),
       ),
       child: Row(
@@ -369,7 +737,7 @@ class CasamanceApiErrorBanner extends StatelessWidget {
         children: [
           const Icon(
             Icons.wifi_off_rounded,
-            color: AppTheme.warmOrangeDark,
+            color: AppTheme.hibiscusRed,
             size: 20,
           ),
           const SizedBox(width: 10),
@@ -378,7 +746,7 @@ class CasamanceApiErrorBanner extends StatelessWidget {
               message,
               style: GoogleFonts.poppins(
                 fontSize: 12,
-                color: AppTheme.textPrimary,
+                color: AppTheme.textDark,
                 height: 1.35,
               ),
             ),
@@ -387,7 +755,7 @@ class CasamanceApiErrorBanner extends StatelessWidget {
           TextButton(
             onPressed: onRetry,
             style: TextButton.styleFrom(
-              backgroundColor: AppTheme.warmOrange,
+              backgroundColor: AppTheme.hibiscusRed,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               minimumSize: Size.zero,
@@ -409,7 +777,7 @@ class CasamanceApiErrorBanner extends StatelessWidget {
   }
 }
 
-/// État vide réutilisable et élégant
+/// État vide raffiné
 class CasamanceEmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -435,22 +803,24 @@ class CasamanceEmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 78,
-              height: 78,
-              decoration: const BoxDecoration(
-                color: AppTheme.lightGreen,
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppTheme.terracottaSoft,
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppTheme.champagneGold.withValues(alpha: 0.6),
+                ),
               ),
-              child: Icon(icon, size: 38, color: AppTheme.forestGreen),
+              child: Icon(icon, size: 36, color: AppTheme.earthBrown),
             ),
             const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+              style: AppTheme.editorialTitle(
+                fontSize: 20,
+                color: AppTheme.deepForest,
               ),
             ),
             const SizedBox(height: 6),
@@ -459,7 +829,7 @@ class CasamanceEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 13,
-                color: AppTheme.textSecondary,
+                color: AppTheme.textMuted,
                 height: 1.45,
               ),
             ),
@@ -468,8 +838,8 @@ class CasamanceEmptyState extends StatelessWidget {
               ElevatedButton(
                 onPressed: onAction,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.forestGreen,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppTheme.deepForest,
+                  foregroundColor: AppTheme.ivorySand,
                 ),
                 child: Text(actionLabel!),
               ),
@@ -481,7 +851,7 @@ class CasamanceEmptyState extends StatelessWidget {
   }
 }
 
-/// Bouton cœur Favoris uniforme avec animation discrète
+/// Bouton cœur Favoris raffiné avec animation fluide
 class CasamanceFavoriteButton extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback onTap;
@@ -505,23 +875,23 @@ class CasamanceFavoriteButton extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: AppTheme.pureWhite.withValues(alpha: 0.94),
+            color: AppTheme.ivorySand.withValues(alpha: 0.92),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
+                color: Colors.black.withValues(alpha: 0.14),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 180),
+            duration: const Duration(milliseconds: 200),
             child: Icon(
               isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
               key: ValueKey(isFavorite),
               size: size * 0.54,
-              color: isFavorite ? AppTheme.errorRed : AppTheme.textPrimary,
+              color: isFavorite ? AppTheme.hibiscusRed : AppTheme.deepForest,
             ),
           ),
         ),
@@ -530,13 +900,16 @@ class CasamanceFavoriteButton extends StatelessWidget {
   }
 }
 
-/// Carte horizontale compacte pour les sections de l'écran d'accueil
+/// Grande carte photographique verticale éditoriale (Hero portrait / carrousel)
 class CasamanceFeaturedSiteCard extends StatelessWidget {
   final Patrimoine site;
   final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onToggleFavorite;
   final double width;
+  final double height;
+  final int reviewCount;
+  final String heroTagPrefix;
 
   const CasamanceFeaturedSiteCard({
     super.key,
@@ -545,207 +918,180 @@ class CasamanceFeaturedSiteCard extends StatelessWidget {
     required this.onTap,
     required this.onToggleFavorite,
     this.width = 236,
+    this.height = 292,
+    this.reviewCount = 0,
+    this.heroTagPrefix = 'site_photo_home',
   });
 
   @override
   Widget build(BuildContext context) {
     final isFree = site.tarifEntree <= 0;
     final priceLabel =
-        isFree ? 'Gratuit' : '${site.tarifEntree.toStringAsFixed(0)} FCFA';
+        isFree ? 'Accès libre' : '${site.tarifEntree.toStringAsFixed(0)} FCFA';
 
-    return Container(
+    return SizedBox(
       width: width,
-      decoration: BoxDecoration(
-        color: AppTheme.pureWhite,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.borderLight),
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  Hero(
-                    tag: 'site_photo_home_${site.id}',
-                    child: SitePhotoView(
-                      site: site,
-                      width: width,
-                      height: 142,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withValues(alpha: 0.14),
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.36),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.lightGreen.withValues(alpha: 0.94),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        SiteMediaHelper.labelCategorie(site.categorie),
-                        style: GoogleFonts.poppins(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.forestGreen,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: CasamanceFavoriteButton(
-                      isFavorite: isFavorite,
-                      onTap: onToggleFavorite,
-                      size: 34,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 8,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.58),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            color: AppTheme.warmOrange,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            site.noteMoyenne.toStringAsFixed(1),
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+      height: height,
+      child: CasamanceInteractiveCard(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Hero(
+              tag: '${heroTagPrefix}_${site.id}',
+              child: SitePhotoView(site: site, fit: BoxFit.cover),
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.42, 1.0],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.20),
+                    Colors.transparent,
+                    AppTheme.deepForest.withValues(alpha: 0.92),
+                  ],
+                ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            // Ruban note Or champagne en haut à gauche
+            Positioned(
+              top: 0,
+              left: 14,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(9, 10, 9, 11),
+                decoration: const BoxDecoration(
+                  color: AppTheme.champagneGold,
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(10),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: AppTheme.deepForest,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      site.noteMoyenne.toStringAsFixed(1),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.deepForest,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: CasamanceFavoriteButton(
+                isFavorite: isFavorite,
+                onTap: onToggleFavorite,
+                size: 36,
+              ),
+            ),
+            Positioned(
+              left: 14,
+              right: 14,
+              bottom: 14,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.bolongTurquoise.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      SiteMediaHelper.labelCategorie(site.categorie),
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    site.nom,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.editorialTitle(
+                      fontSize: 17,
+                      color: Colors.white,
+                      height: 1.18,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
                     children: [
-                      Text(
-                        site.nom,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
-                          height: 1.25,
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 13,
+                        color: AppTheme.champagneGold,
+                      ),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          site.localisation,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: AppTheme.ivorySand.withValues(alpha: 0.90),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 13.5,
-                            color: AppTheme.naturalGreen,
-                          ),
-                          const SizedBox(width: 3),
-                          Expanded(
-                            child: Text(
-                              site.localisation,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
-                                fontSize: 11.5,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            priceLabel,
-                            style: GoogleFonts.poppins(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w700,
-                              color: isFree
-                                  ? AppTheme.naturalGreen
-                                  : AppTheme.forestGreen,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 9,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.lightGreen,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              'Découvrir',
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.forestGreen,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 11,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.ivorySand,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          priceLabel,
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.deepForest,
+                          ),
+                        ),
+                      ),
+                      if (reviewCount > 0)
+                        Text(
+                          '$reviewCount avis',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: AppTheme.ivorySand.withValues(alpha: 0.85),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -774,9 +1120,7 @@ class WaveBrandBadge extends StatelessWidget {
           ),
         ],
       ),
-      child: CustomPaint(
-        painter: _WavePenguinPainter(),
-      ),
+      child: CustomPaint(painter: _WavePenguinPainter()),
     );
   }
 }
@@ -851,13 +1195,19 @@ class OrangeMoneyBrandBadge extends StatelessWidget {
           children: [
             Transform.translate(
               offset: Offset(-size * 0.11, -size * 0.06),
-              child: Icon(Icons.north_east,
-                  color: Colors.black87, size: size * 0.44),
+              child: Icon(
+                Icons.north_east,
+                color: Colors.black87,
+                size: size * 0.44,
+              ),
             ),
             Transform.translate(
               offset: Offset(size * 0.11, size * 0.08),
-              child: Icon(Icons.south_west,
-                  color: Colors.white, size: size * 0.44),
+              child: Icon(
+                Icons.south_west,
+                color: Colors.white,
+                size: size * 0.44,
+              ),
             ),
           ],
         ),
