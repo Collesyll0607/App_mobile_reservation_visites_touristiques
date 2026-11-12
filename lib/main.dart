@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/theme/app_theme.dart';
+import 'features_colle/auth/auth_service.dart';
 import 'features_colle/auth/login_screen.dart';
 import 'features_colle/catalogue/home_screen.dart';
 import 'features_colle/catalogue/sites_list_screen.dart';
 import 'features_colle/map/map_explore_screen.dart';
-import 'features_colle/splash/splash_screen.dart';
 import 'features_thiamba/favorites/favorites_screen.dart';
+import 'features_thiamba/my_bookings/my_bookings_screen.dart';
 
 void main() {
   runApp(const ZiguinchorTourismeApp());
@@ -20,7 +21,6 @@ class ZiguinchorTourismeApp extends StatefulWidget {
 }
 
 class _ZiguinchorTourismeAppState extends State<ZiguinchorTourismeApp> {
-  late bool _showSplash;
   late int _initialTabIndex;
 
   @override
@@ -28,29 +28,25 @@ class _ZiguinchorTourismeAppState extends State<ZiguinchorTourismeApp> {
     super.initState();
     final page = (Uri.base.queryParameters['page'] ?? '').toLowerCase();
     switch (page) {
-      case 'accueil':
-        _initialTabIndex = 0;
-        _showSplash = false;
-        break;
       case 'explorer':
-        _initialTabIndex = 1;
-        _showSplash = false;
+        _initialTabIndex = MainNavigationShell.tabExplorer;
         break;
       case 'carte':
-        _initialTabIndex = 2;
-        _showSplash = false;
+        _initialTabIndex = MainNavigationShell.tabCarte;
+        break;
+      case 'reservations':
+        _initialTabIndex = MainNavigationShell.tabReservations;
         break;
       case 'favoris':
-        _initialTabIndex = 3;
-        _showSplash = false;
+        _initialTabIndex = MainNavigationShell.tabFavoris;
         break;
       case 'compte':
-        _initialTabIndex = 4;
-        _showSplash = false;
+      case 'connexion':
+      case 'profil':
+        _initialTabIndex = MainNavigationShell.tabCompte;
         break;
       default:
-        _initialTabIndex = 0;
-        _showSplash = true;
+        _initialTabIndex = MainNavigationShell.tabAccueil;
     }
   }
 
@@ -60,35 +56,37 @@ class _ZiguinchorTourismeAppState extends State<ZiguinchorTourismeApp> {
       title: 'Casamance Tourisme & Visites',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 350),
-        child: _showSplash
-            ? SplashScreen(
-                onStart: () => setState(() => _showSplash = false),
-              )
-            : MainNavigationShell(initialIndex: _initialTabIndex),
-      ),
+      home: MainNavigationShell(initialIndex: _initialTabIndex),
     );
   }
 }
 
 class MainNavigationShell extends StatefulWidget {
+  static const int tabAccueil = 0;
+  static const int tabExplorer = 1;
+  static const int tabCarte = 2;
+  static const int tabReservations = 3;
+  static const int tabFavoris = 4;
+  static const int tabCompte = 5;
+
   final int initialIndex;
 
-  const MainNavigationShell({super.key, this.initialIndex = 0});
+  const MainNavigationShell({super.key, this.initialIndex = tabAccueil});
 
-  /// Permet aux écrans enfants de changer d'onglet avec filtre optionnel vers Explorer
+  /// Permet aux écrans enfants de changer d'onglet avec filtres optionnels vers Explorer
   static void switchTab(
     BuildContext context,
     int index, {
     String? explorerCategory,
     String? explorerQuery,
+    String? explorerLocation,
   }) {
     final state = context.findAncestorStateOfType<_MainNavigationShellState>();
     state?._setTab(
       index,
       explorerCategory: explorerCategory,
       explorerQuery: explorerQuery,
+      explorerLocation: explorerLocation,
     );
   }
 
@@ -100,231 +98,325 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   late int _currentIndex;
   String _explorerCategory = 'TOUS';
   String _explorerQuery = '';
+  String _explorerLocation = 'TOUTES';
+  String? _userFirstName;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _refreshAuthState();
+  }
+
+  Future<void> _refreshAuthState() async {
+    final user = await AuthService.getCurrentUser();
+    if (!mounted) return;
+    setState(() {
+      _userFirstName = user?.nomComplet.trim().split(' ').first;
+    });
   }
 
   void _setTab(
     int index, {
     String? explorerCategory,
     String? explorerQuery,
+    String? explorerLocation,
   }) {
-    if (index >= 0 && index < 5) {
+    if (index >= 0 && index <= 5) {
       setState(() {
         _currentIndex = index;
         if (explorerCategory != null) _explorerCategory = explorerCategory;
         if (explorerQuery != null) _explorerQuery = explorerQuery;
+        if (explorerLocation != null) _explorerLocation = explorerLocation;
       });
+      _refreshAuthState();
     }
   }
 
   Widget _buildScreenForIndex(int index) {
     switch (index) {
-      case 0:
+      case MainNavigationShell.tabAccueil:
         return const HomeScreen();
-      case 1:
+      case MainNavigationShell.tabExplorer:
         return SitesListScreen(
           initialCategory: _explorerCategory,
           initialQuery: _explorerQuery,
+          initialLocation: _explorerLocation,
         );
-      case 2:
+      case MainNavigationShell.tabCarte:
         return const MapExploreScreen();
-      case 3:
+      case MainNavigationShell.tabReservations:
+        return const MyBookingsScreen();
+      case MainNavigationShell.tabFavoris:
         return const FavoritesScreen();
-      case 4:
+      case MainNavigationShell.tabCompte:
         return const LoginScreen();
       default:
         return const HomeScreen();
     }
   }
 
-  static const List<Map<String, dynamic>> _navItems = [
+  static const List<Map<String, dynamic>> _desktopLinks = [
     {
+      'index': MainNavigationShell.tabAccueil,
       'icon': Icons.home_outlined,
       'activeIcon': Icons.home_rounded,
       'label': 'Accueil',
     },
     {
+      'index': MainNavigationShell.tabExplorer,
       'icon': Icons.explore_outlined,
       'activeIcon': Icons.explore_rounded,
       'label': 'Explorer',
     },
     {
+      'index': MainNavigationShell.tabCarte,
       'icon': Icons.map_outlined,
       'activeIcon': Icons.map_rounded,
       'label': 'Carte GPS',
     },
     {
+      'index': MainNavigationShell.tabReservations,
+      'icon': Icons.confirmation_number_outlined,
+      'activeIcon': Icons.confirmation_number_rounded,
+      'label': 'Réservations',
+    },
+    {
+      'index': MainNavigationShell.tabFavoris,
+      'icon': Icons.favorite_border_rounded,
+      'activeIcon': Icons.favorite_rounded,
+      'label': 'Favoris',
+    },
+  ];
+
+  static const List<Map<String, dynamic>> _mobileBottomTabs = [
+    {
+      'index': MainNavigationShell.tabAccueil,
+      'icon': Icons.home_outlined,
+      'activeIcon': Icons.home_rounded,
+      'label': 'Accueil',
+    },
+    {
+      'index': MainNavigationShell.tabExplorer,
+      'icon': Icons.explore_outlined,
+      'activeIcon': Icons.explore_rounded,
+      'label': 'Explorer',
+    },
+    {
+      'index': MainNavigationShell.tabCarte,
+      'icon': Icons.map_outlined,
+      'activeIcon': Icons.map_rounded,
+      'label': 'Carte GPS',
+    },
+    {
+      'index': MainNavigationShell.tabFavoris,
       'icon': Icons.favorite_border_rounded,
       'activeIcon': Icons.favorite_rounded,
       'label': 'Favoris',
     },
     {
+      'index': MainNavigationShell.tabCompte,
       'icon': Icons.person_outline_rounded,
       'activeIcon': Icons.person_rounded,
       'label': 'Compte',
     },
   ];
 
+  int get _mobileSelectedIdx {
+    for (int i = 0; i < _mobileBottomTabs.length; i++) {
+      if (_mobileBottomTabs[i]['index'] == _currentIndex) return i;
+    }
+    return 0;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDesktopOrTablet = MediaQuery.sizeOf(context).width >= 900;
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktop = width >= 980;
+    final accountLabel = _userFirstName != null && _userFirstName!.isNotEmpty
+        ? 'Profil ($_userFirstName)'
+        : 'Connexion';
 
     return Scaffold(
       backgroundColor: AppTheme.offWhite,
-      appBar: isDesktopOrTablet
-          ? PreferredSize(
-              preferredSize: const Size.fromHeight(64),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: AppTheme.pureWhite,
-                  border: Border(
-                    bottom: BorderSide(color: AppTheme.borderLight),
-                  ),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(isDesktop ? 68 : 58),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: AppTheme.pureWhite,
+            border: Border(
+              bottom: BorderSide(color: AppTheme.borderLight),
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: AppTheme.maxContentWidth,
                 ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: AppTheme.maxContentWidth,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          InkWell(
-                            onTap: () => _setTab(0),
-                            borderRadius: BorderRadius.circular(10),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: isDesktop ? 24 : 14),
+                  child: Row(
+                    children: [
+                      // Logo Casamance Tourisme & Visites
+                      InkWell(
+                        onTap: () => _setTab(MainNavigationShell.tabAccueil),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: isDesktop ? 38 : 34,
+                              height: isDesktop ? 38 : 34,
+                              decoration: BoxDecoration(
+                                color: AppTheme.forestGreen,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.park_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.paleGreen,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(
-                                    Icons.park_rounded,
-                                    color: AppTheme.forestGreen,
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
                                 Text(
-                                  'Casamance Tourisme',
+                                  'Casamance',
                                   style: GoogleFonts.poppins(
-                                    fontSize: 15.5,
+                                    fontSize: isDesktop ? 15 : 14,
                                     fontWeight: FontWeight.w700,
                                     color: AppTheme.forestGreen,
+                                    height: 1.05,
+                                  ),
+                                ),
+                                Text(
+                                  'Tourisme & Visites',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: isDesktop ? 11 : 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.naturalGreen,
+                                    height: 1.1,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: List.generate(4, (i) {
-                                    final item = _navItems[i];
-                                    final selected = i == _currentIndex;
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 4),
-                                      child: TextButton.icon(
-                                        onPressed: () => _setTab(i),
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: selected
-                                              ? AppTheme.paleGreen
-                                              : Colors.transparent,
-                                          foregroundColor: selected
-                                              ? AppTheme.forestGreen
-                                              : AppTheme.textDark,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 10,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
+                          ],
+                        ),
+                      ),
+                      if (isDesktop) ...[
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: _desktopLinks.map((item) {
+                                  final idx = item['index'] as int;
+                                  final selected = _currentIndex == idx;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 4),
+                                    child: TextButton.icon(
+                                      onPressed: () => _setTab(idx),
+                                      style: TextButton.styleFrom(
+                                        backgroundColor: selected
+                                            ? AppTheme.paleGreen
+                                            : Colors.transparent,
+                                        foregroundColor: selected
+                                            ? AppTheme.forestGreen
+                                            : AppTheme.textDark,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 10,
                                         ),
-                                        icon: Icon(
-                                          selected
-                                              ? item['activeIcon'] as IconData
-                                              : item['icon'] as IconData,
-                                          size: 18,
-                                        ),
-                                        label: Text(
-                                          item['label'] as String,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            fontWeight: selected
-                                                ? FontWeight.w600
-                                                : FontWeight.w500,
-                                          ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
                                         ),
                                       ),
-                                    );
-                                  }),
-                                ),
+                                      icon: Icon(
+                                        selected
+                                            ? item['activeIcon'] as IconData
+                                            : item['icon'] as IconData,
+                                        size: 17,
+                                      ),
+                                      label: Text(
+                                        item['label'] as String,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13,
+                                          fontWeight: selected
+                                              ? FontWeight.w600
+                                              : FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          // Bouton Compte
-                          ElevatedButton.icon(
-                            onPressed: () => _setTab(4),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _currentIndex == 4
-                                  ? AppTheme.forestGreen
-                                  : AppTheme.pureWhite,
-                              foregroundColor: _currentIndex == 4
-                                  ? Colors.white
-                                  : AppTheme.textDark,
-                              side: BorderSide(
-                                color: _currentIndex == 4
-                                    ? AppTheme.forestGreen
-                                    : AppTheme.borderLight,
-                              ),
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 10,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton.icon(
+                          onPressed: () =>
+                              _setTab(MainNavigationShell.tabCompte),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                _currentIndex == MainNavigationShell.tabCompte
+                                    ? AppTheme.naturalGreen
+                                    : AppTheme.forestGreen,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 10,
                             ),
-                            icon: Icon(
-                              _currentIndex == 4
-                                  ? Icons.person_rounded
-                                  : Icons.person_outline_rounded,
-                              size: 18,
-                            ),
-                            label: Text(
-                              'Compte',
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(22),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                          icon: Icon(
+                            _userFirstName != null
+                                ? Icons.person_rounded
+                                : Icons.login_rounded,
+                            size: 17,
+                          ),
+                          label: Text(
+                            accountLabel,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ] else ...[
+                        const Spacer(),
+                        IconButton(
+                          tooltip: 'Mes réservations',
+                          onPressed: () =>
+                              _setTab(MainNavigationShell.tabReservations),
+                          icon: Icon(
+                            _currentIndex ==
+                                    MainNavigationShell.tabReservations
+                                ? Icons.confirmation_number_rounded
+                                : Icons.confirmation_number_outlined,
+                            color: AppTheme.forestGreen,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
-            )
-          : null,
+            ),
+          ),
+        ),
+      ),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         child: KeyedSubtree(
@@ -332,7 +424,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           child: _buildScreenForIndex(_currentIndex),
         ),
       ),
-      bottomNavigationBar: isDesktopOrTablet
+      bottomNavigationBar: isDesktop
           ? null
           : Container(
               decoration: const BoxDecoration(
@@ -369,9 +461,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   child: NavigationBar(
                     height: 62,
                     elevation: 0,
-                    selectedIndex: _currentIndex,
-                    onDestinationSelected: (i) => _setTab(i),
-                    destinations: _navItems
+                    selectedIndex: _mobileSelectedIdx,
+                    onDestinationSelected: (i) {
+                      final targetIndex = _mobileBottomTabs[i]['index'] as int;
+                      _setTab(targetIndex);
+                    },
+                    destinations: _mobileBottomTabs
                         .map(
                           (item) => NavigationDestination(
                             icon: Icon(item['icon'] as IconData),

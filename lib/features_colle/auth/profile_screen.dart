@@ -290,7 +290,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         icon: Icons.favorite_border_rounded,
                         title: 'Mes favoris',
                         subtitle: 'Sites enregistrés hors-ligne',
-                        onTap: () => MainNavigationShell.switchTab(context, 3),
+                        onTap: () => MainNavigationShell.switchTab(
+                          context,
+                          MainNavigationShell.tabFavoris,
+                        ),
                       ),
                       _divider(),
                       _menuItem(

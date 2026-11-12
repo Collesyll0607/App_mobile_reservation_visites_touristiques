@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/models/patrimoine.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/site_media_helper.dart';
 import '../../core/widgets/casamance_widgets.dart';
 import '../../features_thiamba/services/favorites_service.dart';
 import '../reviews/reviews_service.dart';
@@ -15,12 +16,14 @@ class SitesListScreen extends StatefulWidget {
   final List<Patrimoine>? initialSites;
   final String initialCategory;
   final String initialQuery;
+  final String initialLocation;
 
   const SitesListScreen({
     super.key,
     this.initialSites,
     this.initialCategory = 'TOUS',
     this.initialQuery = '',
+    this.initialLocation = 'TOUTES',
   });
 
   @override
@@ -40,6 +43,7 @@ class _SitesListScreenState extends State<SitesListScreen> {
   String? _errorMessage;
   late String _selectedCategory;
   late String _searchQuery;
+  late String _selectedLocation;
   String _sortBy = 'NOTE';
   bool _freeOnly = false;
 
@@ -47,17 +51,23 @@ class _SitesListScreenState extends State<SitesListScreen> {
     {'code': 'TOUS', 'label': 'Tous', 'icon': Icons.apps_rounded},
     {'code': 'NATURE', 'label': 'Nature', 'icon': Icons.eco_outlined},
     {
-      'code': 'MONUMENT',
-      'label': 'Monument',
+      'code': 'PATRIMOINE',
+      'label': 'Patrimoine',
       'icon': Icons.account_balance_outlined
     },
-    {'code': 'MUSEE', 'label': 'Musée', 'icon': Icons.museum_outlined},
     {
       'code': 'ARCHITECTURE',
       'label': 'Architecture',
       'icon': Icons.holiday_village_outlined
     },
+    {'code': 'MUSEE', 'label': 'Musées', 'icon': Icons.museum_outlined},
+    {'code': 'PLAGES', 'label': 'Plages', 'icon': Icons.beach_access_outlined},
     {'code': 'ARTISANAT', 'label': 'Artisanat', 'icon': Icons.handyman_outlined},
+    {
+      'code': 'CULTURE',
+      'label': 'Culture',
+      'icon': Icons.theater_comedy_outlined
+    },
   ];
 
   @override
@@ -65,13 +75,15 @@ class _SitesListScreenState extends State<SitesListScreen> {
     super.initState();
     _selectedCategory = _normalizeFilter(widget.initialCategory);
     _searchQuery = widget.initialQuery;
+    _selectedLocation = widget.initialLocation;
     _searchController = TextEditingController(text: widget.initialQuery);
     _initData();
   }
 
   String _normalizeFilter(String raw) {
     final up = raw.toUpperCase();
-    if (up == 'CULTURE') return 'MONUMENT';
+    if (up == 'MONUMENT') return 'PATRIMOINE';
+    if (up == 'MUSEES' || up == 'MUSÉES' || up == 'MUSÉE') return 'MUSEE';
     return up;
   }
 
@@ -86,6 +98,9 @@ class _SitesListScreenState extends State<SitesListScreen> {
     if (widget.initialQuery != oldWidget.initialQuery) {
       _searchController.text = widget.initialQuery;
       setState(() => _searchQuery = widget.initialQuery);
+    }
+    if (widget.initialLocation != oldWidget.initialLocation) {
+      setState(() => _selectedLocation = widget.initialLocation);
     }
   }
 
@@ -179,24 +194,26 @@ class _SitesListScreenState extends State<SitesListScreen> {
       _reviewRatings[site.id] ?? site.noteMoyenne;
 
   bool _matchesCategory(Patrimoine site, String filterCode) {
-    if (filterCode == 'TOUS') return true;
-    final cat = site.categorie.toUpperCase();
-    if (filterCode == 'MONUMENT') {
-      return cat == 'MONUMENT' || cat == 'CULTURE';
-    }
-    return cat == filterCode;
+    return SiteMediaHelper.matchesExplorerTheme(site, filterCode);
   }
 
   List<Patrimoine> get _filteredSites {
+    final loc = _selectedLocation.trim().toLowerCase();
     final list = _sites.where((site) {
       final matchesCat = _matchesCategory(site, _selectedCategory);
       final matchesFree = !_freeOnly || site.tarifEntree <= 0;
+      final matchesLoc = _selectedLocation == 'TOUTES' ||
+          loc.isEmpty ||
+          site.localisation.toLowerCase().contains(loc) ||
+          site.nom.toLowerCase().contains(loc) ||
+          site.description.toLowerCase().contains(loc);
       final q = _searchQuery.trim().toLowerCase();
       final matchesSearch = q.isEmpty ||
           site.nom.toLowerCase().contains(q) ||
           site.localisation.toLowerCase().contains(q) ||
-          site.description.toLowerCase().contains(q);
-      return matchesCat && matchesFree && matchesSearch;
+          site.description.toLowerCase().contains(q) ||
+          site.categorie.toLowerCase().contains(q);
+      return matchesCat && matchesFree && matchesLoc && matchesSearch;
     }).toList();
 
     if (_sortBy == 'PRIX_ASC') {
@@ -553,6 +570,57 @@ class _SitesListScreenState extends State<SitesListScreen> {
                         },
                       ),
                     ),
+                    if (_selectedLocation != 'TOUTES') ...[
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.paleGreen,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: AppTheme.naturalGreen
+                                    .withValues(alpha: 0.35),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.location_on_rounded,
+                                  size: 14,
+                                  color: AppTheme.forestGreen,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Lieu : $_selectedLocation',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.forestGreen,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                InkWell(
+                                  onTap: () => setState(
+                                      () => _selectedLocation = 'TOUTES'),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: const Icon(
+                                    Icons.close_rounded,
+                                    size: 15,
+                                    color: AppTheme.forestGreen,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -598,6 +666,7 @@ class _SitesListScreenState extends State<SitesListScreen> {
                                   _searchController.clear();
                                   setState(() {
                                     _selectedCategory = 'TOUS';
+                                    _selectedLocation = 'TOUTES';
                                     _searchQuery = '';
                                     _freeOnly = false;
                                   });
@@ -645,9 +714,10 @@ class _SitesListScreenState extends State<SitesListScreen> {
                                             return Expanded(
                                               child: Padding(
                                                 padding: EdgeInsets.only(
-                                                  left: col > 0 ? 9 : 0,
-                                                  right:
-                                                      col < cols - 1 ? 9 : 0,
+                                                  left: 18.0 * col / cols,
+                                                  right: 18.0 *
+                                                      (cols - 1 - col) /
+                                                      cols,
                                                 ),
                                                 child: CasamanceSiteCard(
                                                   site: site,

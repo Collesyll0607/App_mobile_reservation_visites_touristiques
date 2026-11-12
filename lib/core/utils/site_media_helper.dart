@@ -4,9 +4,13 @@ import '../models/patrimoine.dart';
 /// locales authentiques (zero doublon visuel, zero espace vide) et ses métadonnées.
 class SiteMediaHelper {
   static const String heroBannerAsset =
-      'assets/images/casamance/carabane_bolong.jpg';
+      'assets/images/casamance/plage_carabane.jpg';
+  static const String heroPiroguePanorama =
+      'assets/images/casamance/carabane_pirogue_panorama.jpg';
+  static const String heroZiguinchorPanorama =
+      'assets/images/casamance/ziguinchor_panoramique.jpg';
   static const String splashRiverAsset =
-      'assets/images/casamance/pirogue_fleuve.jpg';
+      'assets/images/casamance/plage_carabane.jpg';
   static const String heritageFooterAsset =
       'assets/images/casamance/bras_de_mer.jpg';
   static const String artisanatAsset =
@@ -130,7 +134,7 @@ class SiteMediaHelper {
     ];
   }
 
-  /// Indique si un site correspond à l'une des catégories éditoriales de la page Explorer
+  /// Indique si un site correspond à l'une des 7 catégories de découverte
   static bool matchesExplorerTheme(Patrimoine site, String themeCode) {
     final nom = site.nom.toLowerCase();
     final desc = site.description.toLowerCase();
@@ -142,13 +146,25 @@ class SiteMediaHelper {
       case 'NATURE':
         return cat == 'NATURE' ||
             nom.contains('bolong') ||
-            nom.contains('carabane') ||
             nom.contains('port');
-      case 'CULTURE':
-        return cat == 'CULTURE' ||
-            cat == 'ARTISANAT' ||
+      case 'PATRIMOINE':
+      case 'MONUMENT':
+        return cat == 'MONUMENT' ||
+            cat == 'MUSEE' ||
+            cat == 'ARCHITECTURE' ||
+            nom.contains('cathédrale') ||
+            nom.contains('carabane');
+      case 'ARCHITECTURE':
+        return cat == 'ARCHITECTURE' ||
+            nom.contains('case') ||
+            nom.contains('mlomp') ||
             nom.contains('alliance') ||
-            nom.contains('mlomp');
+            nom.contains('cathédrale');
+      case 'MUSEE':
+      case 'MUSEES':
+        return cat == 'MUSEE' ||
+            nom.contains('joola') ||
+            nom.contains('musée');
       case 'PLAGES':
         return cat == 'PLAGES' ||
             nom.contains('carabane') ||
@@ -156,21 +172,13 @@ class SiteMediaHelper {
             desc.contains('plage');
       case 'ARTISANAT':
         return cat == 'ARTISANAT' ||
-            cat == 'ARCHITECTURE' ||
             nom.contains('artisan') ||
             nom.contains('mlomp');
-      case 'PATRIMOINE':
-        return cat == 'MONUMENT' ||
-            cat == 'MUSEE' ||
-            cat == 'ARCHITECTURE' ||
-            nom.contains('cathédrale') ||
-            nom.contains('joola') ||
-            nom.contains('carabane');
-      case 'GASTRONOMIE':
-        return nom.contains('port') ||
-            nom.contains('boudody') ||
-            nom.contains('carabane') ||
-            nom.contains('bolong');
+      case 'CULTURE':
+        return cat == 'CULTURE' ||
+            cat == 'ARTISANAT' ||
+            nom.contains('alliance') ||
+            nom.contains('mlomp');
       default:
         return cat == themeCode.toUpperCase();
     }
