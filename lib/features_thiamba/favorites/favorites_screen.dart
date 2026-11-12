@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/models/patrimoine.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/casamance_widgets.dart';
@@ -7,7 +6,9 @@ import '../../features_colle/catalogue/site_detail_screen.dart';
 import '../../main.dart';
 import '../services/favorites_service.dart';
 
-/// Écran Favoris (Hors-ligne) — Grille responsive moderne
+/// Écran Favoris (Hors-ligne) — Design System v2
+/// Typographie Fraunces/Plus Jakarta Sans, grilles responsive,
+/// animations fluides et dark-aware.
 /// Responsable : Ndeye Thiamba FAYE (Pôle 2)
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -39,33 +40,50 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Future<void> _retirerFavori(Patrimoine site) async {
+    final surface = AppTheme.surfaceOf(context);
+    final textCol = AppTheme.textOf(context);
+    final mutedCol = AppTheme.mutedOf(context);
+
     final confirmation = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.pureWhite,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        backgroundColor: surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
+        ),
         title: Text(
           'Retirer des favoris ?',
-          style: GoogleFonts.poppins(
-            fontSize: 17,
+          style: AppTheme.headingStyle(
+            fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: AppTheme.textDark,
+            color: textCol,
           ),
         ),
         content: Text(
           'Voulez-vous retirer "${site.nom}" de vos sites favoris ?',
-          style: GoogleFonts.poppins(fontSize: 13, color: AppTheme.textMuted),
+          style: AppTheme.bodyStyle(fontSize: 13.5, color: mutedCol),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
+            child: Text(
+              'Annuler',
+              style: AppTheme.bodyStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: mutedCol,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorRed,
               foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+              ),
             ),
             child: const Text('Retirer'),
           ),
@@ -80,10 +98,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+          ),
+          backgroundColor: AppTheme.forestGreen,
           content: Text('${site.nom} retiré des favoris.'),
           action: SnackBarAction(
             label: 'Annuler',
-            textColor: AppTheme.accentOrange,
+            textColor: AppTheme.ocreGold,
             onPressed: () async {
               await _favoritesService.addFavorite(site);
               await _chargerFavoris();
@@ -97,25 +121,38 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.sizeOf(context).width >= 640;
+    final surface = AppTheme.surfaceOf(context);
+    final background = AppTheme.backgroundOf(context);
+    final border = AppTheme.borderOf(context);
+    final textCol = AppTheme.textOf(context);
+    final mutedCol = AppTheme.mutedOf(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.offWhite,
+      backgroundColor: background,
       body: Column(
         children: [
+          // ── EN-TÊTE ÉPURÉ ──
           Container(
             width: double.infinity,
-            decoration: const BoxDecoration(
-              color: AppTheme.pureWhite,
-              border: Border(bottom: BorderSide(color: AppTheme.borderLight)),
+            decoration: BoxDecoration(
+              color: surface,
+              border: Border(bottom: BorderSide(color: border)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: SafeArea(
               bottom: false,
               child: CasamanceResponsiveContainer(
                 padding: EdgeInsets.fromLTRB(
                   isWide ? 24 : 16,
-                  14,
+                  16,
                   isWide ? 24 : 16,
-                  14,
+                  16,
                 ),
                 child: Row(
                   children: [
@@ -125,17 +162,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         children: [
                           Text(
                             'Mes Favoris',
-                            style: GoogleFonts.poppins(
-                              fontSize: isWide ? 24 : 21,
+                            style: AppTheme.headingStyle(
+                              fontSize: isWide ? 26 : 22,
                               fontWeight: FontWeight.w700,
-                              color: AppTheme.textDark,
+                              color: textCol,
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             '${_favoris.length} site${_favoris.length > 1 ? 's' : ''} enregistré${_favoris.length > 1 ? 's' : ''} hors-ligne',
-                            style: GoogleFonts.poppins(
+                            style: AppTheme.bodyStyle(
                               fontSize: 13,
-                              color: AppTheme.textMuted,
+                              color: mutedCol,
                             ),
                           ),
                         ],
@@ -154,6 +192,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               ),
             ),
           ),
+
+          // ── GRILLE OU ÉTAT VIDE ──
           Expanded(
             child: _isLoading
                 ? const Center(
@@ -173,6 +213,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       )
                     : RefreshIndicator(
                         color: AppTheme.forestGreen,
+                        backgroundColor: surface,
                         onRefresh: _chargerFavoris,
                         child: LayoutBuilder(
                           builder: (context, constraints) {
@@ -182,7 +223,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             final hPad = w >= 640 ? 24.0 : 16.0;
 
                             return ListView.separated(
-                              padding: EdgeInsets.fromLTRB(hPad, 18, hPad, 28),
+                              padding: EdgeInsets.fromLTRB(hPad, 20, hPad, 32),
                               itemCount: rowCount,
                               separatorBuilder: (_, __) =>
                                   const SizedBox(height: 18),
@@ -207,8 +248,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                           return Expanded(
                                             child: Padding(
                                               padding: EdgeInsets.only(
-                                                left: col > 0 ? 9 : 0,
-                                                right: col < cols - 1 ? 9 : 0,
+                                                left: 18.0 * col / cols,
+                                                right: 18.0 * (cols - 1 - col) / cols,
                                               ),
                                               child: CasamanceSiteCard(
                                                 site: site,
