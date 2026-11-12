@@ -62,10 +62,15 @@ class SitePhotoView extends StatelessWidget {
       ),
     );
 
-    if (borderRadius != null) {
-      return ClipRRect(borderRadius: borderRadius!, child: image);
-    }
-    return image;
+    final content = borderRadius != null
+        ? ClipRRect(borderRadius: borderRadius!, child: image)
+        : image;
+
+    return Semantics(
+      image: true,
+      label: 'Photographie du site ${site.nom}, ${site.localisation}',
+      child: content,
+    );
   }
 }
 
@@ -916,3 +921,181 @@ class OrangeMoneyBrandBadge extends StatelessWidget {
     );
   }
 }
+
+/// Carte squelette animée (Skeleton loader) pour chargements fluides sans saut visuel
+class CasamanceSkeletonCard extends StatefulWidget {
+  const CasamanceSkeletonCard({super.key});
+
+  @override
+  State<CasamanceSkeletonCard> createState() => _CasamanceSkeletonCardState();
+}
+
+class _CasamanceSkeletonCardState extends State<CasamanceSkeletonCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = AppTheme.surfaceOf(context);
+    final border = AppTheme.borderOf(context);
+    final isDark = AppTheme.isDark(context);
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final shimmerColor = Color.lerp(
+          isDark ? const Color(0xFF1A2E25) : const Color(0xFFEBE6DC),
+          isDark ? const Color(0xFF254235) : const Color(0xFFF5F1E9),
+          _controller.value,
+        )!;
+        return Container(
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
+            border: Border.all(color: border),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 10,
+                child: ColoredBox(color: shimmerColor),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 15,
+                      width: 170,
+                      decoration: BoxDecoration(
+                        color: shimmerColor,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 12,
+                      width: 120,
+                      decoration: BoxDecoration(
+                        color: shimmerColor,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      height: 12,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: shimmerColor,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      height: 36,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: shimmerColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Badge de statut normalisé à fort contraste (Confirmée, En attente, Annulée, Gratuit)
+class CasamanceStatusBadge extends StatelessWidget {
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final IconData? icon;
+
+  const CasamanceStatusBadge({
+    super.key,
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    this.icon,
+  });
+
+  factory CasamanceStatusBadge.fromStatus(String status) {
+    final s = status.toUpperCase();
+    if (s.contains('CONFIRM') || s.contains('VALIDE') || s.contains('PAY')) {
+      return const CasamanceStatusBadge(
+        label: 'Confirmée',
+        backgroundColor: Color(0xFFDCFCE7),
+        foregroundColor: Color(0xFF14532D),
+        icon: Icons.check_circle_rounded,
+      );
+    }
+    if (s.contains('ANNUL') || s.contains('REFUS')) {
+      return const CasamanceStatusBadge(
+        label: 'Annulée',
+        backgroundColor: Color(0xFFFEE2E2),
+        foregroundColor: Color(0xFF991B1B),
+        icon: Icons.cancel_rounded,
+      );
+    }
+    return const CasamanceStatusBadge(
+      label: 'En attente',
+      backgroundColor: Color(0xFFFEF3C7),
+      foregroundColor: Color(0xFF92400E),
+      icon: Icons.schedule_rounded,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: foregroundColor),
+            const SizedBox(width: 5),
+          ],
+          Text(
+            label,
+            style: AppTheme.bodyStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: foregroundColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

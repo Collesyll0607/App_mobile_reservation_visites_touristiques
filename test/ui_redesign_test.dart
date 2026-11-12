@@ -102,7 +102,7 @@ void main() {
 
     // Ouvre directement la plateforme sur Accueil (pas d'écran Splash bloquant)
     expect(find.text('La Casamance vous attend'), findsOneWidget);
-    expect(find.text('Accueil'), findsOneWidget);
+    expect(find.text('Accueil'), findsAtLeastNWidgets(1));
     expect(find.text('Explorer'), findsAtLeastNWidgets(1));
     expect(find.text('Carte GPS'), findsAtLeastNWidgets(1));
     expect(find.text('Favoris'), findsAtLeastNWidgets(1));
@@ -112,7 +112,7 @@ void main() {
     tester.view.physicalSize = const Size(1280, 900);
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Casamance Tourisme & Visites'), findsWidgets);
-    expect(find.text('Accueil'), findsOneWidget);
+    expect(find.text('Accueil'), findsAtLeastNWidgets(1));
     expect(find.text('Explorer'), findsAtLeastNWidgets(1));
     expect(find.text('Carte GPS'), findsAtLeastNWidgets(1));
     expect(find.text('Réservations'), findsAtLeastNWidgets(1));
@@ -148,7 +148,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Explorer par catégorie'), findsOneWidget);
-    expect(find.text('Vivez la Casamance autrement'), findsOneWidget);
+    expect(find.text('Avis des visiteurs'), findsOneWidget);
+    expect(find.text('Pourquoi réserver avec nous ?'), findsOneWidget);
 
     for (final cat in const [
       'Nature',

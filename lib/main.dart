@@ -52,11 +52,18 @@ class _ZiguinchorTourismeAppState extends State<ZiguinchorTourismeApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Casamance Tourisme & Visites',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: MainNavigationShell(initialIndex: _initialTabIndex),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppTheme.themeModeNotifier,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'Casamance Tourisme & Visites',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: mode,
+          home: MainNavigationShell(initialIndex: _initialTabIndex),
+        );
+      },
     );
   }
 }
