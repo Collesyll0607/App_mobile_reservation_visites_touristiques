@@ -10,12 +10,15 @@ import '../reviews/reviews_service.dart';
 import 'patrimoine_service.dart';
 import 'site_detail_screen.dart';
 
-/// Page d'Accueil — Plateforme haut de gamme Casamance Tourisme & Visites.
-/// - Hero immersif avec carrousel plein écran et navigation par miniatures
-/// - Barre de recherche flottante élégante (site/mot-clé, catégorie, localisation, date)
-/// - Sections : « Incontournables » (avec skeleton loader), « Par catégorie »,
-///   « Avis des visiteurs récents », « Pourquoi réserver avec nous » et footer complet.
-/// Conforme au Design System (Fraunces + Plus Jakarta Sans, mode clair/sombre).
+/// Page d'Accueil — Direction Artistique : AFRICAN TROPICAL LUXURY TRAVEL
+/// - Hero Section spectaculaire 75% viewport avec composition asymétrique
+/// - Titre Playfair Display : « Là où la nature rencontre l'authenticité. »
+/// - Badge éditorial « Sénégal • Casamance »
+/// - Panneau de recherche flottant compact & harmonieux
+/// - Section « Des lieux qui méritent le détour » en grille asymétrique magazine
+/// - Section « L'âme de la Casamance » (Nature, Patrimoine, Culture, Artisanat, Architecture, Fleuves & Plages)
+/// - Engagements d'exception & Footer complet
+/// Responsable : Collé SYLL (Pôle 1 - Module Catalogue)
 class HomeScreen extends StatefulWidget {
   final List<Patrimoine>? initialSites;
 
@@ -39,98 +42,87 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _errorMessage;
 
   String _selectedCategory = 'TOUS';
-  String _selectedLocation = 'TOUTES';
+  final String _selectedLocation = 'TOUTES';
   DateTime? _selectedDate;
   int _heroIndex = 0;
 
   static const List<Map<String, String>> _heroPanoramas = [
     {
-      'asset': SiteMediaHelper.heroBannerAsset,
-      'label': 'Plage de Carabane',
-      'location': 'Île de Carabane · Embouchure du Fleuve',
+      'asset': 'assets/images/casamance/carabane_pirogue_panorama.jpg',
+      'label': 'Bolongs & Pirogues d\'or',
+      'location': 'Île de Carabane • Embouchure du Fleuve',
+      'highlightSite': 'Île de Carabane',
+      'highlightDist': 'Traversée en pirogue artisanale',
     },
     {
-      'asset': SiteMediaHelper.heroPiroguePanorama,
-      'label': 'Bolongs & Pirogues',
-      'location': 'Estuaire de Casamance · Mangroves',
+      'asset': 'assets/images/casamance/bolong_mangrove.jpg',
+      'label': 'Labyrinthe végétal des Bolongs',
+      'location': 'Estuaire de Casamance • Forêt de Palétuviers',
+      'highlightSite': 'Bolongs de Casamance',
+      'highlightDist': 'Sanctuaire d\'oiseaux migrateurs',
     },
     {
-      'asset': SiteMediaHelper.heroZiguinchorPanorama,
+      'asset': 'assets/images/casamance/ziguinchor_panoramique.jpg',
       'label': 'Rives de Ziguinchor',
-      'location': 'Corniche Fluviale · Pont Émile Badiane',
+      'location': 'Corniche Fluviale • Pont Émile Badiane',
+      'highlightSite': 'Port de Boudody',
+      'highlightDist': 'Marché vivant des pêcheurs',
     },
   ];
 
   static const List<Map<String, String>> _heroCategories = [
-    {'code': 'TOUS', 'label': 'Toutes les catégories'},
+    {'code': 'TOUS', 'label': 'Toutes les expériences'},
     {'code': 'NATURE', 'label': 'Nature & Mangroves'},
     {'code': 'PATRIMOINE', 'label': 'Patrimoine historique'},
     {'code': 'ARCHITECTURE', 'label': 'Architecture diola'},
     {'code': 'MUSEES', 'label': 'Musées & Mémoire'},
     {'code': 'PLAGES', 'label': 'Plages & Îles'},
-    {'code': 'ARTISANAT', 'label': 'Artisanat & Métiers'},
+    {'code': 'ARTISANAT', 'label': 'Artisanat d\'art'},
     {'code': 'CULTURE', 'label': 'Culture & Traditions'},
   ];
 
-  static const List<Map<String, String>> _heroLocations = [
-    {'code': 'TOUTES', 'label': 'Toute la Casamance'},
-    {'code': 'Ziguinchor', 'label': 'Ziguinchor Ville'},
-    {'code': 'Escale', 'label': 'Quartier Escale'},
-    {'code': 'Boudody', 'label': 'Port de Boudody'},
-    {'code': 'Santhiaba', 'label': 'Santhiaba'},
-    {'code': 'Mlomp', 'label': 'Mlomp / Oussouye'},
-    {'code': 'Carabane', 'label': 'Île de Carabane'},
-  ];
-
-  static const List<_CategoryCardSpec> _categoryCards = [
-    _CategoryCardSpec(
+  static const List<_PillarSpec> _casamancePillars = [
+    _PillarSpec(
       code: 'NATURE',
-      label: 'Nature',
-      subtitle: 'Bolongs & mangroves',
+      title: 'Nature & Mangroves',
+      subtitle: 'Forêts luxuriantes, bolongs silencieux et réserve d\'oiseaux.',
       asset: 'assets/images/casamance/bolong_mangrove.jpg',
       icon: Icons.forest_rounded,
     ),
-    _CategoryCardSpec(
+    _PillarSpec(
       code: 'PATRIMOINE',
-      label: 'Patrimoine',
-      subtitle: 'Histoire & mémoire',
+      title: 'Patrimoine & Histoire',
+      subtitle: 'Comptoirs fluviaux coloniaux et sanctuaires historiques.',
       asset: 'assets/images/casamance/cathedrale_ziguinchor.jpg',
       icon: Icons.account_balance_rounded,
     ),
-    _CategoryCardSpec(
+    _PillarSpec(
       code: 'ARCHITECTURE',
-      label: 'Architecture',
-      subtitle: 'Cases à impluvium',
+      title: 'Architecture Diola',
+      subtitle: 'Cases à impluvium séculaires et cases à étages en banco.',
       asset: 'assets/images/casamance/cases_mlomp.jpg',
       icon: Icons.villa_rounded,
     ),
-    _CategoryCardSpec(
+    _PillarSpec(
       code: 'MUSEES',
-      label: 'Musées',
-      subtitle: 'Récits & souvenirs',
+      title: 'Mémoire & Musées',
+      subtitle: 'Mémorial Le Joola et transmission des récits casamançais.',
       asset: 'assets/images/casamance/memorial_joola.jpg',
       icon: Icons.museum_rounded,
     ),
-    _CategoryCardSpec(
+    _PillarSpec(
       code: 'PLAGES',
-      label: 'Plages',
-      subtitle: 'Côtes & îles',
+      title: 'Fleuves & Plages Sauvages',
+      subtitle: 'Sables dorés bordés de cocotiers et baignades atlantiques.',
       asset: SiteMediaHelper.beachCapSkirringAsset,
       icon: Icons.beach_access_rounded,
     ),
-    _CategoryCardSpec(
+    _PillarSpec(
       code: 'ARTISANAT',
-      label: 'Artisanat',
-      subtitle: 'Savoir-faire locaux',
+      title: 'Artisanat & Savoir-faire',
+      subtitle: 'Sculpture sur bois précieux, vannerie et poterie traditionnelle.',
       asset: SiteMediaHelper.artisanatAsset,
-      icon: Icons.palette_rounded,
-    ),
-    _CategoryCardSpec(
-      code: 'CULTURE',
-      label: 'Culture',
-      subtitle: 'Arts & traditions',
-      asset: SiteMediaHelper.cultureAsset,
-      icon: Icons.theater_comedy_rounded,
+      icon: Icons.handyman_rounded,
     ),
   ];
 
@@ -225,10 +217,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+        ),
+        backgroundColor: AppTheme.emeraldGreen,
         content: Text(
           isNow
-              ? '${site.nom} ajouté aux favoris'
-              : '${site.nom} retiré des favoris',
+              ? '${site.nom} ajouté à vos favoris'
+              : '${site.nom} retiré de vos favoris',
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -250,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (targetContext != null) {
       Scrollable.ensureVisible(
         targetContext,
-        duration: const Duration(milliseconds: 550),
+        duration: const Duration(milliseconds: 650),
         curve: Curves.easeOutCubic,
       );
     }
@@ -271,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      helpText: 'Sélectionner la date de visite souhaitée',
+      helpText: 'Date de visite souhaitée',
       cancelText: 'Annuler',
       confirmText: 'Choisir',
     );
@@ -291,29 +289,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final bool isDesktop = width >= 960;
-    final horizontalPad = width >= 1040 ? 32.0 : (width >= 640 ? 24.0 : 16.0);
+    final size = MediaQuery.sizeOf(context);
+    final width = size.width;
+    final bool isDesktop = width >= 980;
+    final horizontalPad = width >= 1140 ? 40.0 : (width >= 640 ? 24.0 : 16.0);
     final bg = AppTheme.backgroundOf(context);
 
     return Scaffold(
       backgroundColor: bg,
       body: RefreshIndicator(
-        color: AppTheme.forestGreen,
+        color: AppTheme.emeraldGreen,
         onRefresh: _loadSites,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. HERO IMMERSIF PLEIN ÉCRAN AVEC CARROUSEL & RECHERCHE FLOTTANTE
-              _buildHeroSection(width, isDesktop, horizontalPad),
+              // ── 1. HERO SECTION : L'ÉLÉMENT CENTRAL (75-80% VIEWPORT) ──
+              _buildHeroSection(size, isDesktop, horizontalPad),
+
+              // ── 2. BARRE DE RECHERCHE FLOTTANTE HARMONIEUSE ──
+              _buildFloatingSearchBlock(isDesktop, horizontalPad),
 
               if (_errorMessage != null)
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPad,
-                    18,
+                    16,
                     horizontalPad,
                     0,
                   ),
@@ -329,87 +331,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-              // 2. DESTINATIONS POPULAIRES : INCONTOURNABLES
-              Container(
-                key: _incontournablesKey,
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPad,
-                  isDesktop ? 48 : 32,
-                  horizontalPad,
-                  isDesktop ? 44 : 28,
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: AppTheme.maxContentWidth,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CasamanceSectionHeader(
-                          title: 'Explorez les incontournables de la Casamance',
-                          subtitle:
-                              'Les sites naturels, historiques et culturels les plus appréciés de Ziguinchor et de sa région',
-                          actionLabel: _sites.isEmpty
-                              ? 'Tout voir'
-                              : 'Tout voir (${_sites.length})',
-                          onSeeAll: () =>
-                              _launchExplorerSearch(resetFilters: true),
-                        ),
-                        const SizedBox(height: 22),
-                        _buildPopularSitesGrid(width),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              // ── 3. DESTINATIONS : « DES LIEUX QUI MÉRITENT LE DÉTOUR » ──
+              _buildMagazineDestinationsSection(horizontalPad, isDesktop),
 
-              // 3. EXPLORER PAR CATÉGORIE
-              Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceOf(context),
-                  border: Border(
-                    top: BorderSide(color: AppTheme.borderOf(context)),
-                    bottom: BorderSide(color: AppTheme.borderOf(context)),
-                  ),
-                ),
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPad,
-                  isDesktop ? 44 : 32,
-                  horizontalPad,
-                  isDesktop ? 48 : 36,
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: AppTheme.maxContentWidth,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CasamanceSectionHeader(
-                          title: 'Explorer par catégorie',
-                          subtitle:
-                              'Choisissez une thématique pour filtrer les merveilles de la Casamance',
-                          actionLabel: 'Toutes les visites',
-                          onSeeAll: () =>
-                              _launchExplorerSearch(resetFilters: true),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildCategoriesShowcase(width),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              // ── 4. L'ÂME DE LA CASAMANCE (6 PILIERS D'EXCEPTION) ──
+              _buildSoulOfCasamanceSection(horizontalPad, isDesktop),
 
-              // 4. AVIS DES VISITEURS RÉCENTS
+              // ── 5. AVIS DES VOYAGEURS D'EXCEPTION ──
               _buildReviewsSection(horizontalPad, isDesktop),
 
-              // 5. POURQUOI RÉSERVER AVEC NOUS (ENGAGEMENTS QUALITÉ)
-              _buildWhyBookWithUs(horizontalPad, isDesktop),
+              // ── 6. L'ENGAGEMENT CASAMANCE TOURISME ──
+              _buildLuxuryPledgesSection(horizontalPad, isDesktop),
 
-              // 6. FOOTER COMPLET & ÉLÉGANT
+              // ── 7. FOOTER COMPLET & ÉPURÉ ──
               _buildFooter(horizontalPad, isDesktop),
             ],
           ),
@@ -418,19 +352,29 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // 1. HERO SECTION SPECTACULAIRE (75% VIEWPORT DESKTOP)
+  // ════════════════════════════════════════════════════════════════════════════
+
   Widget _buildHeroSection(
-    double width,
+    Size screenSize,
     bool isDesktop,
     double horizontalPad,
   ) {
+    final heroHeight = isDesktop
+        ? (screenSize.height * 0.76).clamp(580.0, 780.0)
+        : (screenSize.height * 0.72).clamp(540.0, 680.0);
     final activeHero = _heroPanoramas[_heroIndex];
 
-    return Stack(
-      children: [
-        // Photographie panoramique avec transition douce
-        Positioned.fill(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 600),
+    return SizedBox(
+      height: heroHeight,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // ── Photographie panoramique immersive & lumineuse ──
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 700),
             child: Image.asset(
               activeHero['asset']!,
               key: ValueKey<String>(activeHero['asset']!),
@@ -440,196 +384,172 @@ class _HomeScreenState extends State<HomeScreen> {
               alignment: Alignment.center,
             ),
           ),
-        ),
 
-        // Dégradé latéral gauche (lisibilité maximale du texte sur l'image)
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                stops: const [0.0, 0.48, 0.90],
-                colors: [
-                  Colors.black.withValues(alpha: isDesktop ? 0.52 : 0.46),
-                  Colors.black.withValues(alpha: isDesktop ? 0.24 : 0.32),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-
-        // Dégradé vertical (fondu subtil vers la navbar et le bas)
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.65, 1.0],
-                colors: [
-                  Colors.black.withValues(alpha: 0.12),
-                  Colors.transparent,
-                  AppTheme.forestGreen.withValues(alpha: 0.40),
-                ],
-              ),
-            ),
-          ),
-        ),
-
-        // Contenu éditorial + Barre de recherche flottante
-        ConstrainedBox(
-          constraints: BoxConstraints(minHeight: isDesktop ? 540 : 470),
-          child: Center(
-            child: ConstrainedBox(
-              constraints:
-                  const BoxConstraints(maxWidth: AppTheme.maxContentWidth),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPad,
-                  isDesktop ? 54 : 32,
-                  horizontalPad,
-                  isDesktop ? 44 : 32,
+          // ── Filtre de clarté & dégradé éditorial asymétrique ──
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  stops: const [0.0, 0.52, 0.95],
+                  colors: [
+                    Colors.black.withValues(alpha: isDesktop ? 0.68 : 0.58),
+                    Colors.black.withValues(alpha: isDesktop ? 0.28 : 0.35),
+                    Colors.black.withValues(alpha: 0.10),
+                  ],
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+            ),
+          ),
+
+          // Dégradé bas doux vers le sable chaud
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.70, 1.0],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.15),
+                    Colors.transparent,
+                    AppTheme.deepForest.withValues(alpha: 0.45),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ── Composition Asymétrique : Contenu à gauche, respiration à droite ──
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: AppTheme.maxContentWidth),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPad,
+                  vertical: 24,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Badge géographique en verre dépoli
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.22),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.45),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    // BLOC GAUCHE ÉDITORIAL
+                    Expanded(
+                      flex: isDesktop ? 6 : 10,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.location_on_rounded,
-                            size: 14,
-                            color: AppTheme.ocreGold,
+                          // Badge « Sénégal • Casamance »
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.4),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 10,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  size: 14,
+                                  color: AppTheme.goldenSand,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'SÉNÉGAL • CASAMANCE',
+                                  style: AppTheme.bodyStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 7),
-                          Flexible(
+                          const SizedBox(height: 12),
+
+                          // Grand titre en Playfair Display
+                          Text(
+                            'Là où la nature rencontre l\'authenticité.',
+                            style: AppTheme.headingStyle(
+                              fontSize: isDesktop ? 54 : (screenSize.width >= 600 ? 34 : 28),
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              height: 1.12,
+                            ).copyWith(
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.45),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: isDesktop ? 16 : 10),
+
+                          // Courte description évocatrice
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 580),
                             child: Text(
-                              activeHero['location']!,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              'Découvrez les trésors cachés de la Casamance, entre fleuves majestueux, patrimoine séculaire et traditions vivantes.',
                               style: AppTheme.bodyStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                fontSize: isDesktop ? 17 : 13.5,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withValues(alpha: 0.95),
+                                height: 1.45,
+                              ).copyWith(
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withValues(alpha: 0.35),
+                                    blurRadius: 12,
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 18),
+                          SizedBox(height: isDesktop ? 28 : 18),
 
-                    // Titre principal en Fraunces
-                    Text(
-                      'La Casamance vous attend',
-                      style: AppTheme.headingStyle(
-                        fontSize: isDesktop ? 50 : (width >= 600 ? 36 : 30),
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        height: 1.1,
-                      ).copyWith(
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withValues(alpha: 0.38),
-                            blurRadius: 18,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Sous-titre
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 720),
-                      child: Text(
-                        'Explorez ses merveilles, vivez sa culture et découvrez des lieux inoubliables.',
-                        style: AppTheme.bodyStyle(
-                          fontSize: isDesktop ? 17 : 14.5,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white.withValues(alpha: 0.95),
-                          height: 1.5,
-                        ).copyWith(
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 10,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 26),
-
-                    // Barre de recherche flottante élégante (site, catégorie, lieu, date)
-                    _HeroSearchCard(
-                      isDesktop: isDesktop,
-                      searchController: _searchController,
-                      selectedCategory: _selectedCategory,
-                      selectedLocation: _selectedLocation,
-                      selectedDate: _selectedDate,
-                      categories: _heroCategories,
-                      locations: _heroLocations,
-                      onCategoryChanged: (val) =>
-                          setState(() => _selectedCategory = val),
-                      onLocationChanged: (val) =>
-                          setState(() => _selectedLocation = val),
-                      onPickDate: _pickDate,
-                      onClearDate: () => setState(() => _selectedDate = null),
-                      onSubmit: () => _launchExplorerSearch(),
-                    ),
-                    const SizedBox(height: 22),
-
-                    // Boutons CTA + Miniatures du carrousel panoramique
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Wrap(
-                            spacing: 12,
-                            runSpacing: 10,
+                          // Boutons d'action éditoriaux
+                          Wrap(
+                            spacing: 14,
+                            runSpacing: 12,
                             children: [
                               ElevatedButton.icon(
                                 onPressed: () =>
                                     _launchExplorerSearch(resetFilters: true),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.ocreGold,
+                                  backgroundColor: AppTheme.emeraldGreen,
                                   foregroundColor: Colors.white,
-                                  elevation: 2,
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 22,
-                                    vertical: 14,
+                                    horizontal: 26,
+                                    vertical: 16,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppTheme.radius12,
-                                    ),
+                                    borderRadius: BorderRadius.circular(30),
                                   ),
+                                  elevation: 6,
+                                  shadowColor:
+                                      AppTheme.emeraldGreen.withValues(alpha: 0.45),
                                 ),
-                                icon: const Icon(
-                                  Icons.explore_rounded,
-                                  size: 18,
-                                ),
+                                icon: const Icon(Icons.explore_rounded, size: 18),
                                 label: Text(
-                                  'Explorer les destinations',
+                                  'Explorer la Casamance',
                                   style: AppTheme.bodyStyle(
-                                    fontSize: 13.5,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w700,
                                     color: Colors.white,
                                   ),
@@ -640,19 +560,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: Colors.white,
                                   backgroundColor:
-                                      Colors.white.withValues(alpha: 0.18),
+                                      Colors.white.withValues(alpha: 0.14),
                                   side: BorderSide(
-                                    color: Colors.white.withValues(alpha: 0.75),
-                                    width: 1.3,
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    width: 1.4,
                                   ),
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 14,
+                                    horizontal: 22,
+                                    vertical: 16,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppTheme.radius12,
-                                    ),
+                                    borderRadius: BorderRadius.circular(30),
                                   ),
                                 ),
                                 icon: const Icon(
@@ -660,9 +578,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   size: 17,
                                 ),
                                 label: Text(
-                                  'Découvrir les incontournables',
+                                  'Les incontournables',
                                   style: AppTheme.bodyStyle(
-                                    fontSize: 13.5,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white,
                                   ),
@@ -670,20 +588,310 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
-                        ),
-                        if (width >= 960) ...[
-                          const SizedBox(width: 16),
-                          _HeroPanoramaSwitcher(
-                            panoramas: _heroPanoramas,
-                            selectedIndex: _heroIndex,
-                            onSelected: (index) =>
-                                setState(() => _heroIndex = index),
-                          ),
                         ],
-                      ],
+                      ),
                     ),
+
+                    // BLOC DROIT : Carte flottante destination mise en avant (Desktop uniquement)
+                    if (isDesktop) ...[
+                      const SizedBox(width: 32),
+                      Expanded(
+                        flex: 4,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: _HeroDestinationSpotlightCard(
+                            title: activeHero['highlightSite']!,
+                            subtitle: activeHero['location']!,
+                            detail: activeHero['highlightDist']!,
+                            panoramas: _heroPanoramas,
+                            currentIndex: _heroIndex,
+                            onSelectPanorama: (i) =>
+                                setState(() => _heroIndex = i),
+                            onTap: () =>
+                                _launchExplorerSearch(resetFilters: true),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // 2. PANNEAU DE RECHERCHE FLOTTANT COMPACT & HARMONIEUX
+  // ════════════════════════════════════════════════════════════════════════════
+
+  Widget _buildFloatingSearchBlock(bool isDesktop, double horizontalPad) {
+    return Transform.translate(
+      offset: Offset(0, isDesktop ? -32 : -20),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1080),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPad),
+            child: Container(
+              padding: EdgeInsets.all(isDesktop ? 12 : 16),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceOf(context),
+                borderRadius: BorderRadius.circular(AppTheme.radius24),
+                border: Border.all(color: AppTheme.borderOf(context), width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: isDesktop
+                  ? _buildDesktopSearchRow()
+                  : _buildMobileSearchStack(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopSearchRow() {
+    final textCol = AppTheme.textOf(context);
+    final mutedCol = AppTheme.mutedOf(context);
+
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          // 1. Destination
+          Expanded(
+            flex: 3,
+            child: TextField(
+              controller: _searchController,
+              onSubmitted: (_) => _launchExplorerSearch(),
+              style: AppTheme.bodyStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: textCol,
+              ),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(
+                  Icons.place_outlined,
+                  color: AppTheme.emeraldGreen,
+                  size: 20,
+                ),
+                hintText: 'Destination, lieu (ex: Carabane, Boudody...)',
+                hintStyle: AppTheme.bodyStyle(fontSize: 13, color: mutedCol),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                filled: false,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              ),
+            ),
+          ),
+          _searchDivider(),
+
+          // 2. Catégorie
+          Expanded(
+            flex: 2,
+            child: _dropdownField(
+              icon: Icons.category_outlined,
+              label: 'Expérience',
+              value: _selectedCategory,
+              items: _heroCategories,
+              onChanged: (v) => setState(() => _selectedCategory = v),
+            ),
+          ),
+          _searchDivider(),
+
+          // 3. Date de visite
+          Expanded(
+            flex: 2,
+            child: InkWell(
+              onTap: _pickDate,
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_month_outlined,
+                      color: AppTheme.emeraldGreen,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Date de visite',
+                            style: AppTheme.bodyStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: mutedCol,
+                            ),
+                          ),
+                          Text(
+                            _selectedDate != null
+                                ? '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}'
+                                : 'Indifférente',
+                            style: AppTheme.bodyStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: textCol,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_selectedDate != null)
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 16),
+                        color: mutedCol,
+                        onPressed: () => setState(() => _selectedDate = null),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // 4. Bouton de Recherche Luxury
+          SizedBox(
+            height: 48,
+            child: ElevatedButton.icon(
+              onPressed: () => _launchExplorerSearch(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.emeraldGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
+                ),
+                elevation: 0,
+              ),
+              icon: const Icon(Icons.search_rounded, size: 18),
+              label: Text(
+                'Rechercher',
+                style: AppTheme.bodyStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileSearchStack() {
+    final textCol = AppTheme.textOf(context);
+    final mutedCol = AppTheme.mutedOf(context);
+
+    return Column(
+      children: [
+        TextField(
+          controller: _searchController,
+          onSubmitted: (_) => _launchExplorerSearch(),
+          style: AppTheme.bodyStyle(fontSize: 14, color: textCol),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              color: AppTheme.emeraldGreen,
+              size: 20,
+            ),
+            hintText: 'Rechercher un site, village...',
+            hintStyle: AppTheme.bodyStyle(fontSize: 13.5, color: mutedCol),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+              borderSide: BorderSide(color: AppTheme.borderOf(context)),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _dropdownField(
+                icon: Icons.category_outlined,
+                label: 'Catégorie',
+                value: _selectedCategory,
+                items: _heroCategories,
+                onChanged: (v) => setState(() => _selectedCategory = v),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: InkWell(
+                onTap: _pickDate,
+                child: Container(
+                  height: 46,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    border: Border.all(color: AppTheme.borderOf(context)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 16,
+                        color: AppTheme.emeraldGreen,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _selectedDate != null
+                              ? '${_selectedDate!.day}/${_selectedDate!.month}'
+                              : 'Date',
+                          style: AppTheme.bodyStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: textCol,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          height: 46,
+          child: ElevatedButton.icon(
+            onPressed: () => _launchExplorerSearch(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.emeraldGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+              ),
+            ),
+            icon: const Icon(Icons.search_rounded, size: 18),
+            label: Text(
+              'Trouver une visite',
+              style: AppTheme.bodyStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
               ),
             ),
           ),
@@ -692,175 +900,345 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildPopularSitesGrid(double width) {
-    final int cols =
-        width >= 1140 ? 4 : (width >= 860 ? 3 : (width >= 580 ? 2 : 1));
+  Widget _searchDivider() {
+    return VerticalDivider(
+      width: 20,
+      thickness: 1,
+      indent: 6,
+      endIndent: 6,
+      color: AppTheme.borderOf(context),
+    );
+  }
 
-    // Skeleton loader animé en cas de chargement
-    if (_isLoading) {
-      return Column(
-        children: List.generate(2, (rowIndex) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: rowIndex == 0 ? 18 : 0),
+  Widget _dropdownField({
+    required IconData icon,
+    required String label,
+    required String value,
+    required List<Map<String, String>> items,
+    required ValueChanged<String> onChanged,
+  }) {
+    final textCol = AppTheme.textOf(context);
+    final mutedCol = AppTheme.mutedOf(context);
+
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: value,
+        isExpanded: true,
+        icon: Icon(Icons.keyboard_arrow_down_rounded, color: mutedCol, size: 18),
+        items: items.map((it) {
+          return DropdownMenuItem<String>(
+            value: it['code']!,
             child: Row(
-              children: List.generate(cols, (col) {
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left: 16.0 * col / cols,
-                      right: 16.0 * (cols - 1 - col) / cols,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16, color: AppTheme.emeraldGreen),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    it['label']!,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.bodyStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: textCol,
                     ),
-                    child: const CasamanceSkeletonCard(),
                   ),
-                );
-              }),
+                ),
+              ],
             ),
           );
-        }),
-      );
+        }).toList(),
+        onChanged: (val) {
+          if (val != null) onChanged(val);
+        },
+      ),
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // 3. SECTION DESTINATIONS : « DES LIEUX QUI MÉRITENT LE DÉTOUR » (MAGAZINE)
+  // ════════════════════════════════════════════════════════════════════════════
+
+  Widget _buildMagazineDestinationsSection(
+    double horizontalPad,
+    bool isDesktop,
+  ) {
+    return Container(
+      key: _incontournablesKey,
+      padding: EdgeInsets.fromLTRB(
+        horizontalPad,
+        isDesktop ? 36 : 24,
+        horizontalPad,
+        isDesktop ? 48 : 32,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppTheme.maxContentWidth),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Titre et chapô éditorial
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'DESTINATIONS D\'EXCEPTION',
+                          style: AppTheme.bodyStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.terracotta,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Des lieux qui méritent le détour',
+                          style: AppTheme.headingStyle(
+                            fontSize: isDesktop ? 34 : 26,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textOf(context),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Une sélection minutieuse de joyaux naturels, architecturaux et historiques de la région.',
+                          style: AppTheme.bodyStyle(
+                            fontSize: 14,
+                            color: AppTheme.mutedOf(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isDesktop)
+                    TextButton.icon(
+                      onPressed: () =>
+                          _launchExplorerSearch(resetFilters: true),
+                      icon: const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 16,
+                        color: AppTheme.emeraldGreen,
+                      ),
+                      label: Text(
+                        'Voir le catalogue (${_sites.length})',
+                        style: AppTheme.bodyStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.emeraldGreen,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 28),
+
+              // Grille éditoriale asymétrique
+              _buildAsymmetricGrid(isDesktop),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAsymmetricGrid(bool isDesktop) {
+    if (_isLoading) {
+      return const CasamanceSkeletonCard();
     }
 
     final sites = _popularSites;
     if (sites.isEmpty) {
       return CasamanceEmptyState(
         icon: Icons.travel_explore_rounded,
-        title: 'Aucune destination chargée',
-        subtitle: 'Vérifiez la connexion avec le serveur patrimonial.',
+        title: 'Aucune destination trouvée',
+        subtitle: 'Vérifiez la connexion avec le serveur de données.',
         actionLabel: 'Actualiser',
         onAction: _loadSites,
       );
     }
 
-    final rowCount = (sites.length / cols).ceil();
+    final leadSite = sites.first;
+    final secondarySites = sites.skip(1).take(2).toList();
 
-    return Column(
-      children: List.generate(rowCount, (rowIndex) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: rowIndex < rowCount - 1 ? 18 : 0),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: List.generate(cols, (col) {
-                final itemIndex = rowIndex * cols + col;
-                if (itemIndex >= sites.length) {
-                  return const Expanded(child: SizedBox.shrink());
-                }
-                final site = sites[itemIndex];
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left: 16.0 * col / cols,
-                      right: 16.0 * (cols - 1 - col) / cols,
-                    ),
-                    child: CasamanceSiteCard(
-                      site: site,
-                      heroTagPrefix: 'home_incontournable',
-                      isFavorite: _favoriteIds.contains(site.id),
-                      rating: _ratingFor(site),
-                      reviewCount: _reviewCounts[site.id] ?? 0,
-                      onToggleFavorite: () => _toggleFavorite(site),
-                      onTap: () => _openSiteDetail(site),
-                    ),
-                  ),
-                );
-              }),
+    if (isDesktop && secondarySites.length >= 2) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Grande carte majeure à gauche
+          Expanded(
+            flex: 6,
+            child: _MagazineHeroSiteCard(
+              site: leadSite,
+              rating: _ratingFor(leadSite),
+              reviewCount: _reviewCounts[leadSite.id] ?? 0,
+              isFavorite: _favoriteIds.contains(leadSite.id),
+              onToggleFavorite: () => _toggleFavorite(leadSite),
+              onTap: () => _openSiteDetail(leadSite),
             ),
           ),
+          const SizedBox(width: 20),
+
+          // 2. Deux cartes secondaires verticales à droite
+          Expanded(
+            flex: 5,
+            child: Column(
+              children: [
+                _MagazineCompactSiteCard(
+                  site: secondarySites[0],
+                  rating: _ratingFor(secondarySites[0]),
+                  isFavorite: _favoriteIds.contains(secondarySites[0].id),
+                  onToggleFavorite: () =>
+                      _toggleFavorite(secondarySites[0]),
+                  onTap: () => _openSiteDetail(secondarySites[0]),
+                ),
+                const SizedBox(height: 20),
+                _MagazineCompactSiteCard(
+                  site: secondarySites[1],
+                  rating: _ratingFor(secondarySites[1]),
+                  isFavorite: _favoriteIds.contains(secondarySites[1].id),
+                  onToggleFavorite: () =>
+                      _toggleFavorite(secondarySites[1]),
+                  onTap: () => _openSiteDetail(secondarySites[1]),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Version Mobile ou liste réduite
+    return Column(
+      children: sites.take(3).map((s) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: CasamanceSiteCard(
+            site: s,
+            heroTagPrefix: 'magazine_site',
+            isFavorite: _favoriteIds.contains(s.id),
+            rating: _ratingFor(s),
+            reviewCount: _reviewCounts[s.id] ?? 0,
+            onToggleFavorite: () => _toggleFavorite(s),
+            onTap: () => _openSiteDetail(s),
+          ),
         );
-      }),
+      }).toList(),
     );
   }
 
-  Widget _buildCategoriesShowcase(double width) {
-    if (width >= 1040) {
-      return Row(
-        children: List.generate(_categoryCards.length, (index) {
-          final item = _categoryCards[index];
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: 12.0 * index / _categoryCards.length,
-                right: 12.0 *
-                    (_categoryCards.length - 1 - index) /
-                    _categoryCards.length,
-              ),
-              child: _CategoryPhotoCard(
-                spec: item,
-                height: 184,
-                onTap: () => MainNavigationShell.switchTab(
-                  context,
-                  MainNavigationShell.tabExplorer,
-                  explorerCategory: item.code,
+  // ════════════════════════════════════════════════════════════════════════════
+  // 4. SECTION « L'ÂME DE LA CASAMANCE » (6 PILIERS D'EXCEPTION)
+  // ════════════════════════════════════════════════════════════════════════════
+
+  Widget _buildSoulOfCasamanceSection(double horizontalPad, bool isDesktop) {
+    final surface = AppTheme.surfaceOf(context);
+    final border = AppTheme.borderOf(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: surface,
+        border: Border(
+          top: BorderSide(color: border),
+          bottom: BorderSide(color: border),
+        ),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        horizontalPad,
+        isDesktop ? 50 : 36,
+        horizontalPad,
+        isDesktop ? 56 : 38,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppTheme.maxContentWidth),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'IMMERSION TERRITORIALE',
+                style: AppTheme.bodyStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.terracotta,
+                  letterSpacing: 1.5,
                 ),
               ),
-            ),
-          );
-        }),
-      );
-    }
-
-    if (width >= 660) {
-      const cols = 4;
-      final rowCount = (_categoryCards.length / cols).ceil();
-      return Column(
-        children: List.generate(rowCount, (row) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: row < rowCount - 1 ? 12 : 0),
-            child: Row(
-              children: List.generate(cols, (col) {
-                final idx = row * cols + col;
-                if (idx >= _categoryCards.length) {
-                  return const Expanded(child: SizedBox.shrink());
-                }
-                final item = _categoryCards[idx];
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left: 12.0 * col / cols,
-                      right: 12.0 * (cols - 1 - col) / cols,
-                    ),
-                    child: _CategoryPhotoCard(
-                      spec: item,
-                      height: 164,
-                      onTap: () => MainNavigationShell.switchTab(
-                        context,
-                        MainNavigationShell.tabExplorer,
-                        explorerCategory: item.code,
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          );
-        }),
-      );
-    }
-
-    return SizedBox(
-      height: 172,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _categoryCards.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final item = _categoryCards[index];
-          return SizedBox(
-            width: 154,
-            child: _CategoryPhotoCard(
-              spec: item,
-              height: 172,
-              onTap: () => MainNavigationShell.switchTab(
-                context,
-                MainNavigationShell.tabExplorer,
-                explorerCategory: item.code,
+              const SizedBox(height: 6),
+              Text(
+                'L\'âme de la Casamance',
+                style: AppTheme.headingStyle(
+                  fontSize: isDesktop ? 34 : 26,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textOf(context),
+                ),
               ),
-            ),
-          );
-        },
+              const SizedBox(height: 6),
+              Text(
+                'Explorez les six facettes qui font de cette région l\'un des sanctuaires les plus fascinants d\'Afrique de l\'Ouest.',
+                style: AppTheme.bodyStyle(
+                  fontSize: 14,
+                  color: AppTheme.mutedOf(context),
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // Grille des piliers
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final w = constraints.maxWidth;
+                  final int cols = w >= 980 ? 3 : (w >= 620 ? 2 : 1);
+                  final rowCount = (_casamancePillars.length / cols).ceil();
+
+                  return Column(
+                    children: List.generate(rowCount, (r) {
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: r < rowCount - 1 ? 20 : 0,
+                        ),
+                        child: Row(
+                          children: List.generate(cols, (c) {
+                            final idx = r * cols + c;
+                            if (idx >= _casamancePillars.length) {
+                              return const Expanded(child: SizedBox.shrink());
+                            }
+                            final pillar = _casamancePillars[idx];
+                            return Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  left: 16.0 * c / cols,
+                                  right: 16.0 * (cols - 1 - c) / cols,
+                                ),
+                                child: _LuxuryPillarCard(
+                                  pillar: pillar,
+                                  onTap: () => MainNavigationShell.switchTab(
+                                    context,
+                                    MainNavigationShell.tabExplorer,
+                                    explorerCategory: pillar.code,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      );
+                    }),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // 5. AVIS DES VOYAGEURS D'EXCEPTION
+  // ════════════════════════════════════════════════════════════════════════════
 
   Widget _buildReviewsSection(double horizontalPad, bool isDesktop) {
     final list = _allRecentAvis.isNotEmpty
@@ -898,9 +1276,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: EdgeInsets.fromLTRB(
         horizontalPad,
-        isDesktop ? 48 : 34,
+        isDesktop ? 48 : 32,
         horizontalPad,
-        isDesktop ? 46 : 32,
+        isDesktop ? 48 : 32,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -908,10 +1286,23 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CasamanceSectionHeader(
-                title: 'Avis des visiteurs',
-                subtitle:
-                    'Les retours authentiques de voyageurs ayant exploré nos sites patrimoniaux',
+              Text(
+                'TÉMOIGNAGES',
+                style: AppTheme.bodyStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.terracotta,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Avis des visiteurs',
+                style: AppTheme.headingStyle(
+                  fontSize: isDesktop ? 32 : 24,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textOf(context),
+                ),
               ),
               const SizedBox(height: 22),
               LayoutBuilder(
@@ -962,31 +1353,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWhyBookWithUs(double horizontalPad, bool isDesktop) {
-    const reasons = [
-      _ReasonSpec(
-        icon: Icons.verified_user_rounded,
-        title: 'Sites & Tarifs Officiels',
+  // ════════════════════════════════════════════════════════════════════════════
+  // 6. L'ENGAGEMENT CASAMANCE TOURISME
+  // ════════════════════════════════════════════════════════════════════════════
+
+  Widget _buildLuxuryPledgesSection(double horizontalPad, bool isDesktop) {
+    const pledges = [
+      _PledgeSpec(
+        icon: Icons.verified_user_outlined,
+        title: 'Authenticité Certifiée',
         description:
-            'Partenariat direct avec les gestionnaires locaux et tarifs transparents sans mauvaise surprise.',
+            'Partenariat officiel direct avec les conservateurs, guides et communautés locales.',
       ),
-      _ReasonSpec(
-        icon: Icons.support_agent_rounded,
-        title: 'Guides Locaux Certifiés',
+      _PledgeSpec(
+        icon: Icons.shield_outlined,
+        title: 'Voyage d\'Exception',
         description:
-            'Des passionnés nés en Casamance formés pour partager l\'histoire et les traditions diola.',
+            'Des itinéraires respectueux de la nature, des traditions et de l\'hospitalité teranga.',
       ),
-      _ReasonSpec(
+      _PledgeSpec(
         icon: Icons.qr_code_2_rounded,
-        title: 'Billetterie QR Instantanée',
+        title: 'Billetterie Dématérialisée',
         description:
-            'Recevez vos accès numériques immédiatement, consultables hors-ligne lors de vos traversées.',
+            'Accès numériques instantanés utilisables hors-ligne lors de toutes vos traversées.',
       ),
-      _ReasonSpec(
-        icon: Icons.volunteer_activism_rounded,
-        title: 'Impact Communautaire',
+      _PledgeSpec(
+        icon: Icons.volunteer_activism_outlined,
+        title: 'Impact Éco-responsable',
         description:
-            'Chaque visite soutient directement l\'artisanat, les piroguiers et la préservation du patrimoine.',
+            'Chaque visite soutient directement l\'artisanat local et la préservation de la mangrove.',
       ),
     ];
 
@@ -1003,9 +1398,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       padding: EdgeInsets.fromLTRB(
         horizontalPad,
-        isDesktop ? 50 : 34,
+        isDesktop ? 48 : 34,
         horizontalPad,
-        isDesktop ? 54 : 38,
+        isDesktop ? 52 : 36,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -1013,17 +1408,30 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CasamanceSectionHeader(
-                title: 'Pourquoi réserver avec nous ?',
-                subtitle:
-                    'Une expérience touristique engagée, fluide et respectueuse des terroirs',
+              Text(
+                'POURQUOI CHOISIR CASAMANCE TOURISME',
+                style: AppTheme.bodyStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.terracotta,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'L\'excellence au service de vos découvertes',
+                style: AppTheme.headingStyle(
+                  fontSize: isDesktop ? 30 : 24,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textOf(context),
+                ),
               ),
               const SizedBox(height: 24),
               LayoutBuilder(
                 builder: (context, constraints) {
                   final w = constraints.maxWidth;
                   final int cols = w >= 980 ? 4 : (w >= 540 ? 2 : 1);
-                  final rowCount = (reasons.length / cols).ceil();
+                  final rowCount = (pledges.length / cols).ceil();
 
                   return Column(
                     children: List.generate(rowCount, (r) {
@@ -1031,28 +1439,26 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: EdgeInsets.only(
                           bottom: r < rowCount - 1 ? 16 : 0,
                         ),
-                        child: IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: List.generate(cols, (c) {
-                              final idx = r * cols + c;
-                              if (idx >= reasons.length) {
-                                return const Expanded(
-                                  child: SizedBox.shrink(),
-                                );
-                              }
-                              final spec = reasons[idx];
-                              return Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    left: 16.0 * c / cols,
-                                    right: 16.0 * (cols - 1 - c) / cols,
-                                  ),
-                                  child: _WhyBookCard(spec: spec),
-                                ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: List.generate(cols, (c) {
+                            final idx = r * cols + c;
+                            if (idx >= pledges.length) {
+                              return const Expanded(
+                                child: SizedBox.shrink(),
                               );
-                            }),
-                          ),
+                            }
+                            final spec = pledges[idx];
+                            return Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  left: 16.0 * c / cols,
+                                  right: 16.0 * (cols - 1 - c) / cols,
+                                ),
+                                child: _LuxuryPledgeCard(spec: spec),
+                              ),
+                            );
+                          }),
                         ),
                       );
                     }),
@@ -1066,12 +1472,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // 7. FOOTER COMPLET & ÉPURÉ
+  // ════════════════════════════════════════════════════════════════════════════
+
   Widget _buildFooter(double horizontalPad, bool isDesktop) {
     return Container(
-      color: AppTheme.forestGreen,
+      color: AppTheme.deepForest,
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPad,
-        vertical: isDesktop ? 40 : 28,
+        vertical: isDesktop ? 48 : 32,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -1079,15 +1489,30 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               Wrap(
-                spacing: 28,
-                runSpacing: 20,
+                spacing: 32,
+                runSpacing: 24,
                 alignment: WrapAlignment.spaceBetween,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const CasamanceEmblemMark(size: 40),
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppTheme.emeraldGreen,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.goldenSand.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.eco_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
                       const SizedBox(width: 14),
                       Flexible(
                         child: Column(
@@ -1095,19 +1520,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Casamance Tourisme & Visites',
+                              'CASAMANCE TOURISME & VISITES',
                               style: AppTheme.headingStyle(
-                                fontSize: 16.5,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
+                                letterSpacing: 0.5,
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 3),
                             Text(
-                              'Patrimoine, culture et visites guidées en Casamance',
+                              'Plateforme officielle de valorisation et de réservation patrimoniale',
                               style: AppTheme.bodyStyle(
                                 fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.8),
+                                color: Colors.white.withValues(alpha: 0.78),
                               ),
                             ),
                           ],
@@ -1116,8 +1542,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
+                    spacing: 12,
+                    runSpacing: 8,
                     children: [
                       _footerLink(
                         'Accueil',
@@ -1127,7 +1553,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       _footerLink(
-                        'Explorer',
+                        'Destinations',
                         () => MainNavigationShell.switchTab(
                           context,
                           MainNavigationShell.tabExplorer,
@@ -1165,19 +1591,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
               const Divider(color: Colors.white24, height: 1),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Flexible(
                     child: Text(
-                      '© 2026 Casamance Tourisme · UASZ L3-2I',
+                      '© 2026 Casamance Tourisme · UASZ L3-2I (Collé SYLL & Ndeye Thiamba FAYE)',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTheme.bodyStyle(
-                        fontSize: 11.5,
+                        fontSize: 12,
                         color: Colors.white.withValues(alpha: 0.65),
                       ),
                     ),
@@ -1212,7 +1638,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Text(
         label,
         style: AppTheme.bodyStyle(
-          fontSize: 12.5,
+          fontSize: 13,
           fontWeight: FontWeight.w600,
           color: Colors.white.withValues(alpha: 0.92),
         ),
@@ -1221,553 +1647,584 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Barre de recherche flottante élégante inspirée des meilleures plateformes
-class _HeroSearchCard extends StatelessWidget {
-  final bool isDesktop;
-  final TextEditingController searchController;
-  final String selectedCategory;
-  final String selectedLocation;
-  final DateTime? selectedDate;
-  final List<Map<String, String>> categories;
-  final List<Map<String, String>> locations;
-  final ValueChanged<String> onCategoryChanged;
-  final ValueChanged<String> onLocationChanged;
-  final VoidCallback onPickDate;
-  final VoidCallback onClearDate;
-  final VoidCallback onSubmit;
+// ════════════════════════════════════════════════════════════════════════════
+// COMPOSANTS INTERNES LUXURY
+// ════════════════════════════════════════════════════════════════════════════
 
-  const _HeroSearchCard({
-    required this.isDesktop,
-    required this.searchController,
-    required this.selectedCategory,
-    required this.selectedLocation,
-    required this.selectedDate,
-    required this.categories,
-    required this.locations,
-    required this.onCategoryChanged,
-    required this.onLocationChanged,
-    required this.onPickDate,
-    required this.onClearDate,
-    required this.onSubmit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(isDesktop ? 10 : 12),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceOf(context),
-        borderRadius: BorderRadius.circular(AppTheme.radius24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 28,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: isDesktop ? _buildDesktopRow(context) : _buildMobileStack(context),
-    );
-  }
-
-  Widget _buildDesktopRow(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // 1. Site / Mot-clé
-          Expanded(
-            flex: 3,
-            child: _searchFieldBlock(context),
-          ),
-          _divider(),
-          // 2. Catégorie
-          Expanded(
-            flex: 2,
-            child: _dropdownBlock(
-              icon: Icons.category_outlined,
-              label: 'Catégorie',
-              value: selectedCategory,
-              items: categories,
-              onChanged: onCategoryChanged,
-            ),
-          ),
-          _divider(),
-          // 3. Localisation
-          Expanded(
-            flex: 2,
-            child: _dropdownBlock(
-              icon: Icons.place_outlined,
-              label: 'Localisation',
-              value: selectedLocation,
-              items: locations,
-              onChanged: onLocationChanged,
-            ),
-          ),
-          _divider(),
-          // 4. Date de visite
-          Expanded(
-            flex: 2,
-            child: _dateBlock(context),
-          ),
-          const SizedBox(width: 8),
-          // 5. Bouton Rechercher
-          SizedBox(
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: onSubmit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.forestGreen,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 22),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius16),
-                ),
-              ),
-              icon: const Icon(Icons.search_rounded, size: 20),
-              label: Text(
-                'Rechercher',
-                style: AppTheme.bodyStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMobileStack(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _searchFieldBlock(context),
-        const Divider(height: 14, color: AppTheme.borderSand),
-        Row(
-          children: [
-            Expanded(
-              child: _dropdownBlock(
-                icon: Icons.category_outlined,
-                label: 'Catégorie',
-                value: selectedCategory,
-                items: categories,
-                onChanged: onCategoryChanged,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _dropdownBlock(
-                icon: Icons.place_outlined,
-                label: 'Localisation',
-                value: selectedLocation,
-                items: locations,
-                onChanged: onLocationChanged,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        _dateBlock(context),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: ElevatedButton.icon(
-            onPressed: onSubmit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.forestGreen,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-              ),
-            ),
-            icon: const Icon(Icons.search_rounded, size: 19),
-            label: Text(
-              'Rechercher',
-              style: AppTheme.bodyStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _divider() {
-    return const VerticalDivider(
-      width: 18,
-      thickness: 1,
-      indent: 8,
-      endIndent: 8,
-      color: AppTheme.borderSand,
-    );
-  }
-
-  Widget _searchFieldBlock(BuildContext context) {
-    final textDark = AppTheme.textOf(context);
-    final textMuted = AppTheme.mutedOf(context);
-
-    return TextField(
-      controller: searchController,
-      textInputAction: TextInputAction.search,
-      onSubmitted: (_) => onSubmit(),
-      style: AppTheme.bodyStyle(
-        fontSize: 13.5,
-        fontWeight: FontWeight.w600,
-        color: textDark,
-      ),
-      decoration: InputDecoration(
-        prefixIcon: const Icon(
-          Icons.search_rounded,
-          color: AppTheme.forestGreen,
-          size: 21,
-        ),
-        hintText: 'Rechercher un site (Carabane, Boudody...)',
-        hintStyle: AppTheme.bodyStyle(
-          fontSize: 13,
-          color: textMuted,
-        ),
-        border: InputBorder.none,
-        enabledBorder: InputBorder.none,
-        focusedBorder: InputBorder.none,
-        filled: false,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      ),
-    );
-  }
-
-  Widget _dropdownBlock({
-    required IconData icon,
-    required String label,
-    required String value,
-    required List<Map<String, String>> items,
-    required ValueChanged<String> onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: Text(
-            label,
-            style: AppTheme.bodyStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textMuted,
-            ),
-          ),
-        ),
-        DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: value,
-            isExpanded: true,
-            isDense: true,
-            icon: const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 18,
-              color: AppTheme.forestGreen,
-            ),
-            style: AppTheme.bodyStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-            ),
-            items: items.map((entry) {
-              return DropdownMenuItem<String>(
-                value: entry['code']!,
-                child: Row(
-                  children: [
-                    Icon(icon, size: 14, color: AppTheme.naturalGreen),
-                    const SizedBox(width: 5),
-                    Expanded(
-                      child: Text(
-                        entry['label']!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) onChanged(val);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _dateBlock(BuildContext context) {
-    final dateStr = selectedDate != null
-        ? '${selectedDate!.day.toString().padLeft(2, '0')}/${selectedDate!.month.toString().padLeft(2, '0')}/${selectedDate!.year}'
-        : 'Indifférente';
-
-    return InkWell(
-      onTap: onPickDate,
-      borderRadius: BorderRadius.circular(AppTheme.radius12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Date de visite',
-              style: AppTheme.bodyStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textMuted,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Row(
-              children: [
-                const Icon(
-                  Icons.calendar_today_rounded,
-                  size: 14,
-                  color: AppTheme.oceanBlue,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    dateStr,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: selectedDate != null
-                          ? AppTheme.textOf(context)
-                          : AppTheme.mutedOf(context),
-                    ),
-                  ),
-                ),
-                if (selectedDate != null)
-                  InkWell(
-                    onTap: onClearDate,
-                    child: const Icon(
-                      Icons.close_rounded,
-                      size: 14,
-                      color: AppTheme.textMuted,
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Sélecteur de panorama panoramique avec miniatures
-class _HeroPanoramaSwitcher extends StatelessWidget {
-  final List<Map<String, String>> panoramas;
-  final int selectedIndex;
-  final ValueChanged<int> onSelected;
-
-  const _HeroPanoramaSwitcher({
-    required this.panoramas,
-    required this.selectedIndex,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.38),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(panoramas.length, (index) {
-          final item = panoramas[index];
-          final active = index == selectedIndex;
-          return GestureDetector(
-            onTap: () => onSelected(index),
-            child: Tooltip(
-              message: item['label']!,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: EdgeInsets.only(left: index > 0 ? 6 : 0),
-                width: active ? 48 : 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: active
-                        ? AppTheme.ocreGold
-                        : Colors.white.withValues(alpha: 0.5),
-                    width: active ? 2 : 1,
-                  ),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset(item['asset']!, fit: BoxFit.cover),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class _CategoryCardSpec {
-  final String code;
-  final String label;
+/// Carte flottante de destination mise en avant sur le Hero
+class _HeroDestinationSpotlightCard extends StatelessWidget {
+  final String title;
   final String subtitle;
-  final String asset;
-  final IconData icon;
-
-  const _CategoryCardSpec({
-    required this.code,
-    required this.label,
-    required this.subtitle,
-    required this.asset,
-    required this.icon,
-  });
-}
-
-class _CategoryPhotoCard extends StatefulWidget {
-  final _CategoryCardSpec spec;
-  final double height;
+  final String detail;
+  final List<Map<String, String>> panoramas;
+  final int currentIndex;
+  final ValueChanged<int> onSelectPanorama;
   final VoidCallback onTap;
 
-  const _CategoryPhotoCard({
-    required this.spec,
-    required this.height,
+  const _HeroDestinationSpotlightCard({
+    required this.title,
+    required this.subtitle,
+    required this.detail,
+    required this.panoramas,
+    required this.currentIndex,
+    required this.onSelectPanorama,
     required this.onTap,
   });
 
   @override
-  State<_CategoryPhotoCard> createState() => _CategoryPhotoCardState();
+  Widget build(BuildContext context) {
+    return Container(
+      width: 320,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(AppTheme.radius24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.35),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.terracotta,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  'EN VEDETTE',
+                  style: AppTheme.bodyStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              const Icon(
+                Icons.verified_rounded,
+                size: 16,
+                color: AppTheme.goldenSand,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: AppTheme.headingStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: AppTheme.bodyStyle(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.85),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(
+                Icons.directions_boat_filled_rounded,
+                size: 14,
+                color: AppTheme.goldenSand,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  detail,
+                  style: AppTheme.bodyStyle(
+                    fontSize: 11.5,
+                    color: AppTheme.goldenSand,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Sélecteur de panoramas miniatures
+          Row(
+            children: List.generate(panoramas.length, (i) {
+              final isSel = currentIndex == i;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => onSelectPanorama(i),
+                  child: Container(
+                    height: 44,
+                    margin: EdgeInsets.only(right: i < panoramas.length - 1 ? 8 : 0),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSel ? AppTheme.goldenSand : Colors.white24,
+                        width: isSel ? 2 : 1,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        panoramas[i]['asset']!,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _CategoryPhotoCardState extends State<_CategoryPhotoCard> {
-  bool _hovered = false;
+/// Grande carte destination majeure de la grille magazine
+class _MagazineHeroSiteCard extends StatelessWidget {
+  final Patrimoine site;
+  final double rating;
+  final int reviewCount;
+  final bool isFavorite;
+  final VoidCallback onToggleFavorite;
+  final VoidCallback onTap;
+
+  const _MagazineHeroSiteCard({
+    required this.site,
+    required this.rating,
+    required this.reviewCount,
+    required this.isFavorite,
+    required this.onToggleFavorite,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final spec = widget.spec;
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        height: widget.height,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 430,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppTheme.radius16),
-          boxShadow: _hovered
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.16),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
-                  ),
-                ]
-              : AppTheme.softShadow,
+          borderRadius: BorderRadius.circular(AppTheme.radius24),
+          boxShadow: AppTheme.shadowFor(context),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: widget.onTap,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                AnimatedScale(
-                  scale: _hovered ? 1.05 : 1.0,
-                  duration: const Duration(milliseconds: 240),
-                  curve: Curves.easeOutCubic,
-                  child: Image.asset(
-                    spec.asset,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.center,
-                  ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            SitePhotoView(site: site, fit: BoxFit.cover),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.45, 1.0],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.15),
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.85),
+                  ],
                 ),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: const [0.0, 0.45, 1.0],
-                      colors: [
-                        Colors.black.withValues(alpha: 0.1),
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.75),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 10,
-                  left: 10,
-                  child: Container(
-                    padding: const EdgeInsets.all(7),
+              ),
+            ),
+            // Badge catégorie + Bouton favori
+            Positioned(
+              top: 18,
+              left: 18,
+              right: 18,
+              child: Row(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.94),
-                      borderRadius: BorderRadius.circular(10),
+                      color: AppTheme.emeraldGreen.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Icon(
-                      spec.icon,
-                      size: 16,
-                      color: AppTheme.forestGreen,
+                    child: Text(
+                      SiteMediaHelper.labelCategorie(site.categorie),
+                      style: AppTheme.bodyStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
-                Positioned(
-                  left: 12,
-                  right: 10,
-                  bottom: 12,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+                  const Spacer(),
+                  IconButton(
+                    onPressed: onToggleFavorite,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.black.withValues(alpha: 0.4),
+                    ),
+                    icon: Icon(
+                      isFavorite
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      color: isFavorite ? AppTheme.terracotta : Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Contenu bas
+            Positioned(
+              bottom: 22,
+              left: 22,
+              right: 22,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
+                      const Icon(Icons.star_rounded,
+                          size: 18, color: AppTheme.goldenSand),
+                      const SizedBox(width: 4),
                       Text(
-                        spec.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTheme.headingStyle(
-                          fontSize: 14.5,
+                        '${rating.toStringAsFixed(1)}/5',
+                        style: AppTheme.bodyStyle(
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),
                       ),
                       Text(
-                        spec.subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        ' • $reviewCount avis',
                         style: AppTheme.bodyStyle(
-                          fontSize: 11.5,
-                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12,
+                          color: Colors.white70,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    site.nom,
+                    style: AppTheme.headingStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.place_outlined,
+                          size: 15, color: Colors.white70),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          site.localisation,
+                          style: AppTheme.bodyStyle(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    site.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.bodyStyle(
+                      fontSize: 12.5,
+                      color: Colors.white.withValues(alpha: 0.82),
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Carte élégante d'avis d'un voyageur
+/// Carte destination compacte de la grille magazine
+class _MagazineCompactSiteCard extends StatelessWidget {
+  final Patrimoine site;
+  final double rating;
+  final bool isFavorite;
+  final VoidCallback onToggleFavorite;
+  final VoidCallback onTap;
+
+  const _MagazineCompactSiteCard({
+    required this.site,
+    required this.rating,
+    required this.isFavorite,
+    required this.onToggleFavorite,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 205,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppTheme.radius24),
+          boxShadow: AppTheme.shadowFor(context),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            SitePhotoView(site: site, fit: BoxFit.cover),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.40, 1.0],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.15),
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.80),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              top: 12,
+              left: 14,
+              right: 14,
+              child: Row(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.deepForest.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      SiteMediaHelper.labelCategorie(site.categorie),
+                      style: AppTheme.bodyStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: onToggleFavorite,
+                    icon: Icon(
+                      isFavorite
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      color: isFavorite ? AppTheme.terracotta : Colors.white,
+                      size: 18,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 14,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    site.nom,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.headingStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.place_outlined,
+                          size: 13, color: Colors.white70),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          site.localisation,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.bodyStyle(
+                            fontSize: 11.5,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '★ ${rating.toStringAsFixed(1)}',
+                        style: AppTheme.bodyStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.goldenSand,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Carte de pilier d'immersion territoriale (L'Âme de la Casamance)
+class _LuxuryPillarCard extends StatelessWidget {
+  final _PillarSpec pillar;
+  final VoidCallback onTap;
+
+  const _LuxuryPillarCard({required this.pillar, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 230,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppTheme.radius24),
+          boxShadow: AppTheme.shadowFor(context),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              pillar.asset,
+              fit: BoxFit.cover,
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.40, 1.0],
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.3),
+                    Colors.black.withValues(alpha: 0.85),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 18,
+              left: 18,
+              right: 18,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(pillar.icon, color: AppTheme.goldenSand, size: 22),
+                  const SizedBox(height: 6),
+                  Text(
+                    pillar.title,
+                    style: AppTheme.headingStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    pillar.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.bodyStyle(
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.85),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Carte d'engagement qualité & prestige
+class _LuxuryPledgeCard extends StatelessWidget {
+  final _PledgeSpec spec;
+
+  const _LuxuryPledgeCard({required this.spec});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundOf(context),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
+        border: Border.all(color: AppTheme.borderOf(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.emeraldGreen.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(spec.icon, color: AppTheme.emeraldGreen, size: 22),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            spec.title,
+            style: AppTheme.headingStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textOf(context),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            spec.description,
+            style: AppTheme.bodyStyle(
+              fontSize: 12.5,
+              color: AppTheme.mutedOf(context),
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Carte d'avis visiteur authentique
 class _VisitorReviewCard extends StatelessWidget {
   final Avis avis;
 
@@ -1777,8 +2234,6 @@ class _VisitorReviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final surface = AppTheme.surfaceOf(context);
     final border = AppTheme.borderOf(context);
-    final textDark = AppTheme.textOf(context);
-    final textMuted = AppTheme.mutedOf(context);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -1790,151 +2245,96 @@ class _VisitorReviewCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: List.generate(5, (starIdx) {
-                      return Icon(
-                        starIdx < avis.note
-                            ? Icons.star_rounded
-                            : Icons.star_outline_rounded,
-                        size: 16,
-                        color: AppTheme.ocreGold,
-                      );
-                    }),
-                  ),
-                  Text(
-                    avis.datePublication,
-                    style: AppTheme.bodyStyle(
-                      fontSize: 11,
-                      color: textMuted,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '"${avis.commentaire}"',
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-                style: AppTheme.bodyStyle(
-                  fontSize: 13,
-                  color: textDark,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
           Row(
             children: [
               CircleAvatar(
-                radius: 14,
+                radius: 17,
                 backgroundColor: AppTheme.paleGreen,
                 child: Text(
                   avis.auteur.isNotEmpty ? avis.auteur[0].toUpperCase() : 'V',
                   style: AppTheme.bodyStyle(
-                    fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.forestGreen,
+                    color: AppTheme.emeraldGreen,
+                    fontSize: 12,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  avis.auteur,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: textDark,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      avis.auteur,
+                      style: AppTheme.bodyStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textOf(context),
+                      ),
+                    ),
+                    Text(
+                      avis.datePublication,
+                      style: AppTheme.bodyStyle(
+                        fontSize: 11,
+                        color: AppTheme.mutedOf(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: List.generate(
+                  5,
+                  (i) => Icon(
+                    Icons.star_rounded,
+                    size: 15,
+                    color: i < avis.note ? AppTheme.goldenSand : Colors.black12,
                   ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Text(
+            '« ${avis.commentaire} »',
+            style: AppTheme.bodyStyle(
+              fontSize: 12.5,
+              color: AppTheme.textOf(context),
+              height: 1.5,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _ReasonSpec {
+class _PillarSpec {
+  final String code;
+  final String title;
+  final String subtitle;
+  final String asset;
+  final IconData icon;
+
+  const _PillarSpec({
+    required this.code,
+    required this.title,
+    required this.subtitle,
+    required this.asset,
+    required this.icon,
+  });
+}
+
+class _PledgeSpec {
   final IconData icon;
   final String title;
   final String description;
 
-  const _ReasonSpec({
+  const _PledgeSpec({
     required this.icon,
     required this.title,
     required this.description,
   });
-}
-
-/// Carte d'engagement « Pourquoi réserver avec nous »
-class _WhyBookCard extends StatelessWidget {
-  final _ReasonSpec spec;
-
-  const _WhyBookCard({required this.spec});
-
-  @override
-  Widget build(BuildContext context) {
-    final surface = AppTheme.surfaceOf(context);
-    final border = AppTheme.borderOf(context);
-    final textDark = AppTheme.textOf(context);
-    final textMuted = AppTheme.mutedOf(context);
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(AppTheme.radius16),
-        border: Border.all(color: border),
-        boxShadow: AppTheme.shadowFor(context),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppTheme.paleGreen,
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-            ),
-            child: Icon(
-              spec.icon,
-              size: 22,
-              color: AppTheme.forestGreen,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            spec.title,
-            style: AppTheme.headingStyle(
-              fontSize: 15.5,
-              fontWeight: FontWeight.w700,
-              color: textDark,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            spec.description,
-            style: AppTheme.bodyStyle(
-              fontSize: 12.5,
-              color: textMuted,
-              height: 1.45,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

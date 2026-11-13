@@ -101,7 +101,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     // Ouvre directement la plateforme sur Accueil (pas d'écran Splash bloquant)
-    expect(find.text('La Casamance vous attend'), findsOneWidget);
+    expect(find.text('Là où la nature rencontre l\'authenticité.'), findsOneWidget);
     expect(find.text('Accueil'), findsAtLeastNWidgets(1));
     expect(find.text('Explorer'), findsAtLeastNWidgets(1));
     expect(find.text('Carte GPS'), findsAtLeastNWidgets(1));
@@ -111,12 +111,10 @@ void main() {
     // Bascule sur largeur ordinateur (1280px)
     tester.view.physicalSize = const Size(1280, 900);
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Casamance Tourisme & Visites'), findsWidgets);
+    expect(find.text('CASAMANCE'), findsWidgets);
     expect(find.text('Accueil'), findsAtLeastNWidgets(1));
-    expect(find.text('Explorer'), findsAtLeastNWidgets(1));
+    expect(find.text('Destinations'), findsAtLeastNWidgets(1));
     expect(find.text('Carte GPS'), findsAtLeastNWidgets(1));
-    expect(find.text('Réservations'), findsAtLeastNWidgets(1));
-    expect(find.text('Favoris'), findsAtLeastNWidgets(1));
     expect(find.text('Connexion'), findsOneWidget);
   });
 
@@ -134,40 +132,38 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('La Casamance vous attend'), findsOneWidget);
+    expect(find.text('Là où la nature rencontre l\'authenticité.'), findsOneWidget);
     expect(
       find.text(
-        'Explorez ses merveilles, vivez sa culture et découvrez des lieux inoubliables.',
+        'Découvrez les trésors cachés de la Casamance, entre fleuves majestueux, patrimoine séculaire et traditions vivantes.',
       ),
       findsOneWidget,
     );
-    expect(find.text('Explorer les destinations'), findsOneWidget);
-    expect(find.text('Découvrir les incontournables'), findsOneWidget);
+    expect(find.text('Explorer la Casamance'), findsOneWidget);
+    expect(find.text('Les incontournables'), findsOneWidget);
     expect(
-      find.text('Explorez les incontournables de la Casamance'),
+      find.text('Des lieux qui méritent le détour'),
       findsOneWidget,
     );
-    expect(find.text('Explorer par catégorie'), findsOneWidget);
+    expect(find.text('L\'âme de la Casamance'), findsOneWidget);
     expect(find.text('Avis des visiteurs'), findsOneWidget);
-    expect(find.text('Pourquoi réserver avec nous ?'), findsOneWidget);
 
-    for (final cat in const [
-      'Nature',
-      'Patrimoine',
-      'Architecture',
-      'Musées',
-      'Plages',
-      'Artisanat',
-      'Culture',
+    for (final pillarTitle in const [
+      'Nature & Mangroves',
+      'Patrimoine & Histoire',
+      'Architecture Diola',
+      'Mémoire & Musées',
+      'Fleuves & Plages Sauvages',
+      'Artisanat & Savoir-faire',
     ]) {
-      expect(find.text(cat), findsAtLeastNWidgets(1));
+      expect(find.text(pillarTitle), findsAtLeastNWidgets(1));
     }
 
     // Largeur mobile 390px
     tester.view.physicalSize = const Size(390, 844);
     await tester.pumpAndSettle();
-    expect(find.text('La Casamance vous attend'), findsOneWidget);
-    expect(find.text('Explorer les destinations'), findsOneWidget);
+    expect(find.text('Là où la nature rencontre l\'authenticité.'), findsOneWidget);
+    expect(find.text('Explorer la Casamance'), findsOneWidget);
   });
 
   testWidgets(
