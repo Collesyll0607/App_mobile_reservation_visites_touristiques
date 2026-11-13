@@ -53,7 +53,15 @@ else
     done
 fi
 
-# 3. Démarrer le Frontend Flutter Web (port 8090)
+# 3. Libérer le port 8090 s'il était occupé par un ancien processus
+OLD_PID=$(netstat -ano 2>/dev/null | grep ":8090 " | awk '{print $NF}' | head -n 1 || true)
+if [ -n "$OLD_PID" ] && [ "$OLD_PID" != "0" ]; then
+    echo "  -> Libération automatique du port 8090 (PID résiduel: $OLD_PID)..."
+    taskkill //F //PID "$OLD_PID" 2>/dev/null || true
+    sleep 1
+fi
+
+# 4. Démarrer le Frontend Flutter Web (port 8090)
 echo "[3/3] Lancement de l'application Flutter Web..."
 echo "=================================================================="
 echo "  Application accessible sur : http://127.0.0.1:8090              "

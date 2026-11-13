@@ -38,7 +38,13 @@ if %errorlevel% equ 0 (
     timeout /t 10 /nobreak > nul
 )
 
-:: 3. Démarrage Flutter Web
+:: 3. Libération du port 8090 si déjà occupé
+for /f "tokens=5" %%a in ('netstat -aon ^| find ":8090 "') do (
+    echo   -^> Liberation automatique du port 8090 (PID %%a)...
+    taskkill /F /PID %%a > nul 2>&1
+)
+
+:: 4. Démarrage Flutter Web
 echo [3/3] Lancement de Flutter Web sur http://127.0.0.1:8090...
 start "" "http://127.0.0.1:8090"
 "C:\src\flutter\bin\flutter.bat" run -d web-server --web-hostname 127.0.0.1 --web-port 8090
