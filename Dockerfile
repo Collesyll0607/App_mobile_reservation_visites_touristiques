@@ -23,11 +23,13 @@ FROM nginx:alpine
 # Copie des fichiers compilés de Flutter Web
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Copie de la configuration Nginx (support du template pour $BACKEND_URL sur Render)
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Copie de la configuration Nginx et du script d'injection dynamique d'URL
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 # Port d'écoute du serveur web
 EXPOSE 80
 
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
