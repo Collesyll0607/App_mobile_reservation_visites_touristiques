@@ -152,6 +152,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     if (_currentIndex != index) {
       setState(() => _currentIndex = index);
     }
+    _loadUserStatus();
   }
 
   Widget _buildBody() {
@@ -169,7 +170,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       case MainNavigationShell.tabFavoris:
         return const FavoritesScreen();
       case MainNavigationShell.tabCompte:
-        return const LoginScreen();
+        return LoginScreen(
+          onAuthChanged: (_) => _loadUserStatus(),
+        );
       default:
         return const HomeScreen();
     }

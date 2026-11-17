@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/models/reservation.dart';
+import '../../core/models/utilisateur.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/casamance_widgets.dart';
+import '../../features_colle/auth/auth_service.dart';
 import '../guide/guide_dashboard_screen.dart';
 import '../services/reservation_service.dart';
 import '../ticketing/ticket_qr_screen.dart';
@@ -29,6 +31,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   String _filtreStatut = 'TOUTES';
   bool _isLoading = true;
   String? _apiErrorMessage;
+  Utilisateur? _currentUser;
+  bool _afficherToutesReservations = false;
+  final TextEditingController _rechercheBilletController = TextEditingController();
 
   static const List<Map<String, String>> _filtres = [
     {'code': 'TOUTES', 'label': 'Toutes'},
@@ -44,15 +49,23 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     _chargerReservations();
   }
 
+  @override
+  void dispose() {
+    _rechercheBilletController.dispose();
+    super.dispose();
+  }
+
   Future<void> _chargerReservations() async {
     setState(() {
       _isLoading = true;
       _apiErrorMessage = null;
     });
+    final user = await AuthService.getCurrentUser();
     final sauvegardees = await _reservationService.loadAll();
     if (!mounted) return;
 
     setState(() {
+      _currentUser = user;
       _apiErrorMessage = _reservationService.lastError;
       if (sauvegardees.isNotEmpty) {
         _reservations = sauvegardees;
@@ -66,8 +79,27 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   List<Reservation> get _reservationsFiltrees {
-    if (_filtreStatut == 'TOUTES') return _reservations;
-    return _reservations.where((r) => r.statut == _filtreStatut).toList();
+    List<Reservation> base = _reservations;
+
+    final q = _rechercheBilletController.text.trim().toUpperCase();
+    if (q.isNotEmpty) {
+      base = base.where((r) => r.codeReservation.toUpperCase().contains(q)).toList();
+    } else if (!_afficherToutesReservations) {
+      if (_currentUser != null) {
+        if (_currentUser!.role.toUpperCase() != 'GUIDE') {
+          final nomU = _currentUser!.nomComplet.trim().toLowerCase();
+          base = base.where((r) {
+            final nomR = r.nomTouriste.trim().toLowerCase();
+            return nomR.contains(nomU) || nomU.contains(nomR);
+          }).toList();
+        }
+      } else {
+        base = [];
+      }
+    }
+
+    if (_filtreStatut == 'TOUTES') return base;
+    return base.where((r) => r.statut == _filtreStatut).toList();
   }
 
   bool _estAnnulable(Reservation reservation) =>
@@ -401,6 +433,59 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         },
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 36,
+                            child: TextField(
+                              controller: _rechercheBilletController,
+                              onChanged: (_) => setState(() {}),
+                              style: const TextStyle(fontSize: 12.5),
+                              decoration: InputDecoration(
+                                hintText: 'Rechercher par référence (ex: ZIG-26743)...',
+                                hintStyle: TextStyle(fontSize: 12, color: mutedCol),
+                                prefixIcon: const Icon(Icons.search, size: 16),
+                                suffixIcon: _rechercheBilletController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear, size: 14),
+                                        onPressed: () {
+                                          _rechercheBilletController.clear();
+                                          setState(() {});
+                                        },
+                                      )
+                                    : null,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                isDense: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _afficherToutesReservations = !_afficherToutesReservations;
+                            });
+                          },
+                          icon: Icon(
+                            _afficherToutesReservations ? Icons.filter_alt_outlined : Icons.visibility_outlined,
+                            size: 16,
+                            color: AppTheme.forestGreen,
+                          ),
+                          label: Text(
+                            _afficherToutesReservations
+                                ? (_currentUser != null ? 'Mes billets' : 'Mode Invité')
+                                : 'Voir tout (${_reservations.length})',
+                            style: const TextStyle(fontSize: 12, color: AppTheme.forestGreen, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -617,6 +702,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   Widget _buildEmptyState(Color surface, Color textCol, Color mutedCol) {
+    final bool isGuest = _currentUser == null;
+    final bool isSearch = _rechercheBilletController.text.trim().isNotEmpty;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -637,22 +725,45 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             ),
             const SizedBox(height: 18),
             Text(
-              'Aucune réservation trouvée',
+              isSearch
+                  ? 'Aucun billet trouvé pour "${_rechercheBilletController.text.trim()}"'
+                  : isGuest
+                      ? 'Aucune réservation personnelle (Mode Invité)'
+                      : 'Aucune réservation pour ${_currentUser!.nomComplet}',
               style: AppTheme.headingStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: textCol,
               ),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
-              'Réservez vos visites de sites en Casamance pour obtenir vos billets numériques avec QR Code.',
+              isGuest
+                  ? 'Vous naviguez sans être connecté. Vos réservations personnelles apparaîtront dès votre connexion, ou affichez toutes les réservations du site ci-dessous.'
+                  : 'Vous n\'avez pas encore effectué de réservation sous ce compte.',
               textAlign: TextAlign.center,
               style: AppTheme.bodyStyle(
                 fontSize: 13.5,
                 color: mutedCol,
               ),
             ),
+            const SizedBox(height: 16),
+            if (isGuest && !_afficherToutesReservations)
+              ElevatedButton.icon(
+                onPressed: () {
+                  setState(() => _afficherToutesReservations = true);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.forestGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
+                  ),
+                ),
+                icon: const Icon(Icons.visibility, size: 18),
+                label: Text('Afficher toutes les réservations (${_reservations.length})'),
+              ),
           ],
         ),
       ),

@@ -1046,12 +1046,20 @@ class CasamanceStatusBadge extends StatelessWidget {
 
   factory CasamanceStatusBadge.fromStatus(String status) {
     final s = status.toUpperCase();
-    if (s.contains('CONFIRM') || s.contains('VALIDE') || s.contains('PAY')) {
+    if (s.contains('EFFECTU') || s.contains('TERMINE') || s.contains('CLOTUR')) {
       return const CasamanceStatusBadge(
-        label: 'Confirmée',
+        label: 'Effectuée',
         backgroundColor: Color(0xFFDCFCE7),
         foregroundColor: Color(0xFF14532D),
         icon: Icons.check_circle_rounded,
+      );
+    }
+    if (s.contains('CONFIRM') || s.contains('VALIDE') || s.contains('PAY')) {
+      return const CasamanceStatusBadge(
+        label: 'Confirmée',
+        backgroundColor: Color(0xFFE0F2FE),
+        foregroundColor: Color(0xFF0369A1),
+        icon: Icons.verified_rounded,
       );
     }
     if (s.contains('ANNUL') || s.contains('REFUS')) {

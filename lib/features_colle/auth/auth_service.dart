@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/utilisateur.dart';
 
@@ -8,7 +9,15 @@ import '../../core/models/utilisateur.dart';
 class AuthService {
   static const String _sessionKey = 'colle_auth_current_user';
   static const String _usersListKey = 'colle_auth_registered_users';
-  static const String _apiAuthBase = 'http://127.0.0.1:8081/api/auth';
+  static String get _apiAuthBase {
+    if (kIsWeb) {
+      final origin = Uri.base.origin;
+      if (origin.isNotEmpty && !origin.startsWith('null')) {
+        return '$origin/api/auth';
+      }
+    }
+    return 'http://127.0.0.1:8081/api/auth';
+  }
 
   static Utilisateur? _currentUser;
 

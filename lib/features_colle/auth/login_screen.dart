@@ -9,16 +9,20 @@ import 'register_screen.dart';
 /// Écran d'Authentification & Profil Utilisateur — DA Casamance Tourisme
 /// Responsable : Collé SYLL (Pôle 1 - Module Auth)
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final ValueChanged<Utilisateur?>? onAuthChanged;
+
+  const LoginScreen({
+    super.key,
+    this.onAuthChanged,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController =
-      TextEditingController(text: 'aissatou.fall@gmail.com');
-  final _passwordController = TextEditingController(text: 'passer123');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   Utilisateur? _currentUser;
   bool _isLoading = true;
@@ -54,6 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = false;
       if (user != null) {
         _currentUser = user;
+        widget.onAuthChanged?.call(user);
       } else {
         _errorMessage = 'Email/identifiant ou mot de passe incorrect.';
       }
@@ -219,8 +224,14 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: AppTheme.ivorySand,
         body: ProfileScreen(
           user: _currentUser!,
-          onUpdated: (updated) => setState(() => _currentUser = updated),
-          onLogout: () => setState(() => _currentUser = null),
+          onUpdated: (updated) {
+            setState(() => _currentUser = updated);
+            widget.onAuthChanged?.call(updated);
+          },
+          onLogout: () {
+            setState(() => _currentUser = null);
+            widget.onAuthChanged?.call(null);
+          },
         ),
       );
     }
@@ -274,19 +285,64 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: AppTheme.sageSurface,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        'Compte démo MySQL : aissatou.fall@gmail.com (ou "touriste") • Mdp : passer123',
-                        textAlign: TextAlign.center,
-                        style: AppTheme.bodyStyle(
-                          fontSize: 11.5,
-                          color: AppTheme.deepForest,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Comptes de test (cliquez pour pré-remplir) :',
+                            textAlign: TextAlign.center,
+                            style: AppTheme.bodyStyle(
+                              fontSize: 11.5,
+                              color: AppTheme.deepForest,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 8,
+                            runSpacing: 6,
+                            children: [
+                              ActionChip(
+                                label: const Text('Touriste Démo', style: TextStyle(fontSize: 11)),
+                                avatar: const Icon(Icons.person_outline, size: 14),
+                                onPressed: () {
+                                  setState(() {
+                                    _emailController.text = 'touriste@uasz.sn';
+                                    _passwordController.text = '123456';
+                                    _errorMessage = null;
+                                  });
+                                },
+                              ),
+                              ActionChip(
+                                label: const Text('Aïssatou Fall', style: TextStyle(fontSize: 11)),
+                                avatar: const Icon(Icons.person_pin, size: 14),
+                                onPressed: () {
+                                  setState(() {
+                                    _emailController.text = 'aissatou.fall@gmail.com';
+                                    _passwordController.text = 'passer123';
+                                    _errorMessage = null;
+                                  });
+                                },
+                              ),
+                              ActionChip(
+                                label: const Text('Guide Démo', style: TextStyle(fontSize: 11)),
+                                avatar: const Icon(Icons.tour_outlined, size: 14),
+                                onPressed: () {
+                                  setState(() {
+                                    _emailController.text = 'guide@uasz.sn';
+                                    _passwordController.text = '123456';
+                                    _errorMessage = null;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -373,6 +429,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             builder: (_) => RegisterScreen(
                               onRegistered: (newUser) {
                                 setState(() => _currentUser = newUser);
+                                widget.onAuthChanged?.call(newUser);
                               },
                             ),
                           ),

@@ -12,8 +12,9 @@ class ReservationService {
   
   static List<String> get _candidateBaseUrls {
     if (kIsWeb) {
+      final origin = Uri.base.origin;
       return [
-        '/api/reservations',
+        if (origin.isNotEmpty && !origin.startsWith('null')) '$origin/api/reservations',
         'http://localhost:8081/api/reservations',
         'http://127.0.0.1:8081/api/reservations',
       ];

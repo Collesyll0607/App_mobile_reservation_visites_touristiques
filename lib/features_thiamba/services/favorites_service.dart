@@ -2,26 +2,36 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/patrimoine.dart';
 
+import '../../features_colle/auth/auth_service.dart';
+
 /// Service de persistance locale des sites favoris (Pôle 2 - Ndeye Thiamba FAYE)
 ///
 /// Stocke les sites favoris sous forme d'une liste JSON dans SharedPreferences
-/// avec la clé [_storageKey].
-///
-/// Fonctionne 100 % hors-ligne sans connexion Internet ni serveur Spring Boot.
+/// isolée par compte utilisateur connecté pour garantir l'indépendance des profils.
 class FavoritesService {
-  static const String _storageKey = 'pole2_favoris_sites';
+  static const String _defaultStorageKey = 'pole2_favoris_sites';
 
   // Singleton
   static final FavoritesService _instance = FavoritesService._internal();
   factory FavoritesService() => _instance;
   FavoritesService._internal();
 
+  Future<String> _getStorageKey() async {
+    final user = await AuthService.getCurrentUser();
+    if (user != null && user.email.isNotEmpty) {
+      final sanitized = user.email.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_').toLowerCase();
+      return 'pole2_favoris_$sanitized';
+    }
+    return _defaultStorageKey;
+  }
+
   /// Charge tous les sites favoris sauvegardés localement.
   /// Retourne une liste vide si aucun favori n'est présent ou en cas d'erreur.
   Future<List<Patrimoine>> loadAll() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? rawJson = prefs.getString(_storageKey);
+      final key = await _getStorageKey();
+      final String? rawJson = prefs.getString(key);
 
       if (rawJson == null || rawJson.isEmpty) return [];
 
@@ -95,7 +105,8 @@ class FavoritesService {
   Future<bool> clearAll() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return await prefs.remove(_storageKey);
+      final key = await _getStorageKey();
+      return await prefs.remove(key);
     } catch (e) {
       return false;
     }
@@ -105,14 +116,16 @@ class FavoritesService {
 
   Future<bool> _persist(List<Patrimoine> sites) async {
     final prefs = await SharedPreferences.getInstance();
+    final key = await _getStorageKey();
     final String encoded = jsonEncode(sites.map((s) => s.toJson()).toList());
-    return await prefs.setString(_storageKey, encoded);
+    return await prefs.setString(key, encoded);
   }
 
   Future<void> _clearCorruptedData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_storageKey);
+      final key = await _getStorageKey();
+      await prefs.remove(key);
     } catch (_) {
       // Ignorer
     }
