@@ -1,14 +1,14 @@
 server:
-  port: 8081
+  port: ${PORT:8081}
 
 spring:
   application:
     name: patrimoine
   datasource:
-    url: jdbc:mysql://localhost:3306/patrimoinedb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/patrimoinedb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: ''
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
   jpa:
     show-sql: true
     hibernate:

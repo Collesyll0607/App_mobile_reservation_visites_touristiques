@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../core/config/api_config.dart';
 import '../../core/models/patrimoine.dart';
@@ -19,10 +20,20 @@ class PatrimoineFetchResult {
 /// Service HTTP de récupération du Catalogue des Sites Touristiques
 /// Responsable : Collé SYLL (Pôle 1 - Module Catalogue & API REST)
 class PatrimoineService {
-  static const List<String> _candidateUrls = [
-    'http://127.0.0.1:8081/api/patrimoines',
-    'http://10.0.2.2:8081/api/patrimoines',
-  ];
+  static List<String> get _candidateUrls {
+    if (kIsWeb) {
+      final origin = Uri.base.origin;
+      return [
+        if (origin.isNotEmpty && !origin.startsWith('null')) '$origin/api/patrimoines',
+        'http://127.0.0.1:8081/api/patrimoines',
+        'http://localhost:8081/api/patrimoines',
+      ];
+    }
+    return const [
+      'http://127.0.0.1:8081/api/patrimoines',
+      'http://10.0.2.2:8081/api/patrimoines',
+    ];
+  }
 
   /// Récupère les sites depuis le microservice Spring Boot (ms-patrimoine)
   /// et fournit une erreur explicite + cache local en cas d'indisponibilité réseau.

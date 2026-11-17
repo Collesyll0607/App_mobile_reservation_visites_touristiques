@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/avis.dart';
@@ -7,7 +8,15 @@ import '../../core/models/avis.dart';
 /// Responsable : Collé SYLL (Pôle 1 - Module Avis & Notes)
 class ReviewsService {
   static const String _storageKey = 'colle_reviews_data';
-  static const String _apiAvisBase = 'http://127.0.0.1:8081/api/avis';
+  static String get _apiAvisBase {
+    if (kIsWeb) {
+      final origin = Uri.base.origin;
+      if (origin.isNotEmpty && !origin.startsWith('null')) {
+        return '$origin/api/avis';
+      }
+    }
+    return 'http://127.0.0.1:8081/api/avis';
+  }
 
   static final List<Avis> _initialReviews = [
     const Avis(

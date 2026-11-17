@@ -23,7 +23,8 @@ FROM nginx:alpine
 # Copie des fichiers compilés de Flutter Web
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Copie de la configuration Nginx
+# Copie de la configuration Nginx (support du template pour $BACKEND_URL sur Render)
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Port d'écoute du serveur web
