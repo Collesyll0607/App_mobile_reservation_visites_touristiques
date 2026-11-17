@@ -24,7 +24,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
   late Utilisateur _guideConnecte;
   List<Reservation> _toutesLesVisites = [];
   List<Reservation> _visitesAffichees = [];
-  bool _voirToutesLesVisites = false;
+  bool _voirToutesLesVisites = true;
   bool _isLoading = true;
 
   @override
@@ -415,6 +415,34 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
+              if (reservationTrouvee != null && reservationTrouvee!.statut == 'EFFECTUEE')
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final String initPaiement = reservationTrouvee!.modePaiement.contains('ESPECES')
+                        ? 'SUR_PLACE'
+                        : reservationTrouvee!.modePaiement;
+
+                    final bool succes = await _reservationService.updateStatut(
+                      reservationTrouvee!.codeReservation,
+                      'EN_ATTENTE',
+                      nouveauModePaiement: initPaiement,
+                    );
+
+                    if (succes) {
+                      await _chargerVisites();
+                      if (!dialogContext.mounted) return;
+                      Navigator.pop(dialogContext);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: const Color(0xFFC8754D),
+                          content: Text('Billet ${reservationTrouvee!.codeReservation} remis "En attente" pour test.'),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.replay),
+                  label: const Text('Remettre en attente (Test)'),
+                ),
             ],
           );
         },
@@ -612,19 +640,15 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Calcul des statistiques pour le guide connecté
-    final mesVisites = _toutesLesVisites.where((r) {
-      final guide = (r.nomGuide ?? '').trim().toLowerCase();
-      final connecte = _guideConnecte.nomComplet.trim().toLowerCase();
-      return guide == connecte || guide.contains(connecte) || connecte.contains(guide);
-    }).toList();
+    // Calcul des statistiques selon la vue active (Toutes les visites ou Mes visites)
+    final List<Reservation> sourceStats = _visitesAffichees;
 
-    final int nbTotal = mesVisites.length;
-    final int nbConfirmes = mesVisites.where((r) => r.statut == 'CONFIRMEE').length;
-    final int nbEffectuees = mesVisites.where((r) => r.statut == 'EFFECTUEE').length;
+    final int nbTotal = sourceStats.length;
+    final int nbConfirmes = sourceStats.where((r) => r.statut == 'CONFIRMEE' || r.statut == 'EN_ATTENTE').length;
+    final int nbEffectuees = sourceStats.where((r) => r.statut == 'EFFECTUEE').length;
 
-    // Calcul du total des espèces encaissées sur place par ce guide (traçabilité financière)
-    final double totalEspeces = mesVisites
+    // Calcul du total des espèces encaissées sur place (traçabilité financière)
+    final double totalEspeces = sourceStats
         .where((r) => r.modePaiement == 'PAYE_ESPECES_SUR_PLACE' || (r.modePaiement == 'SUR_PLACE' && r.statut == 'EFFECTUEE'))
         .fold(0.0, (somme, r) => somme + r.montantTotal);
 

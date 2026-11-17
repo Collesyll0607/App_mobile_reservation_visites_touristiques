@@ -3,14 +3,27 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/reservation.dart';
 
+import 'package:flutter/foundation.dart';
+
 /// Service de gestion des réservations connecté à MySQL (via ms-patrimoine /api/reservations)
 /// avec synchronisation locale SharedPreferences pour le mode hors-ligne.
 class ReservationService {
   static const String _storageKey = 'pole2_reservations';
-  static const List<String> _candidateBaseUrls = [
-    'http://127.0.0.1:8081/api/reservations',
-    'http://10.0.2.2:8081/api/reservations',
-  ];
+  
+  static List<String> get _candidateBaseUrls {
+    if (kIsWeb) {
+      return [
+        '/api/reservations',
+        'http://localhost:8081/api/reservations',
+        'http://127.0.0.1:8081/api/reservations',
+      ];
+    }
+    return [
+      'http://10.0.2.2:8081/api/reservations',
+      'http://127.0.0.1:8081/api/reservations',
+      'http://localhost:8081/api/reservations',
+    ];
+  }
 
   // Singleton
   static final ReservationService _instance = ReservationService._internal();
