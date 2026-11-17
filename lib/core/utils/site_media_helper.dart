@@ -20,7 +20,7 @@ class SiteMediaHelper {
   static const String beachCarabaneAsset =
       'assets/images/casamance/plage_carabane.jpg';
   static const String gastronomieAsset =
-      'assets/images/casamance/gastronomie_casamance.jpg';
+      'assets/images/casamance/bras_de_mer.jpg';
   static const String cultureAsset =
       'assets/images/casamance/culture_casamance.jpg';
 
@@ -109,7 +109,7 @@ class SiteMediaHelper {
     if (nom.contains('boudody') || nom.contains('port')) {
       return [
         primary,
-        gastronomieAsset,
+        'assets/images/casamance/bras_de_mer.jpg',
         'assets/images/casamance/pirogue_fleuve.jpg',
       ];
     }
