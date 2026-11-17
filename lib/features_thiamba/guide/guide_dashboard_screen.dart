@@ -4,7 +4,24 @@ import '../../core/models/reservation.dart';
 import '../../core/models/utilisateur.dart';
 import '../services/reservation_service.dart';
 
-/// Écran du Tableau de Bord de l'Espace Guide Touristique
+/// Modèle pour le filtre de profil dans l'Espace Guide / Administration
+class ProfilVueOption {
+  final String code; // 'GLOBAL', 'LIBRE', ou email du guide
+  final String nomAffichage;
+  final String sousTitre;
+  final IconData icone;
+  final Utilisateur? guideAssocie;
+
+  const ProfilVueOption({
+    required this.code,
+    required this.nomAffichage,
+    required this.sousTitre,
+    required this.icone,
+    this.guideAssocie,
+  });
+}
+
+/// Écran du Tableau de Bord de l'Espace Guide & Administration du Site
 /// Responsable : Ndeye Thiamba FAYE (Pôle 2)
 class GuideDashboardScreen extends StatefulWidget {
   final Utilisateur? guideInitial;
@@ -21,23 +38,51 @@ class GuideDashboardScreen extends StatefulWidget {
 class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
   final ReservationService _reservationService = ReservationService();
 
-  late Utilisateur _guideConnecte;
+  late List<ProfilVueOption> _optionsProfil;
+  late ProfilVueOption _profilActif;
+
   List<Reservation> _toutesLesVisites = [];
   List<Reservation> _visitesAffichees = [];
-  bool _voirToutesLesVisites = true;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _guideConnecte = widget.guideInitial ?? ApiConfig.guidesDisponibles.first;
+    _initialiserOptionsProfil();
     _chargerVisites();
   }
 
+  void _initialiserOptionsProfil() {
+    _optionsProfil = [
+      const ProfilVueOption(
+        code: 'GLOBAL',
+        nomAffichage: '🏛️ Administration du Site (Vue Globale)',
+        sousTitre: 'Supervision de toutes les arrivées (guidées & libres)',
+        icone: Icons.admin_panel_settings,
+      ),
+      const ProfilVueOption(
+        code: 'LIBRE',
+        nomAffichage: '🚶 Visites Libres (Guichet / Sans guide dédié)',
+        sousTitre: 'Toutes les entrées prises sans accompagnateur',
+        icone: Icons.directions_walk,
+      ),
+      ...ApiConfig.guidesDisponibles.map(
+        (g) => ProfilVueOption(
+          code: g.email,
+          nomAffichage: '👤 ${g.nomComplet} (Guide officiel)',
+          sousTitre: '${g.telephone} • ${(g.tarifGuideJournalier ?? 0).toInt()} FCFA/j',
+          icone: Icons.person_pin,
+          guideAssocie: g,
+        ),
+      ),
+    ];
+
+    // Par défaut : Vue Globale Administration pour tout voir sans restriction
+    _profilActif = _optionsProfil.first;
+  }
+
   Future<void> _chargerVisites() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     final all = await _reservationService.loadAll();
 
@@ -51,13 +96,24 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
   }
 
   void _filtrerVisites() {
-    if (_voirToutesLesVisites) {
+    if (_profilActif.code == 'GLOBAL') {
+      // Vue globale : absolument toutes les réservations
       _visitesAffichees = List.from(_toutesLesVisites);
-    } else {
+    } else if (_profilActif.code == 'LIBRE') {
+      // Visites libres uniquement (aucun guide dédié)
       _visitesAffichees = _toutesLesVisites.where((r) {
         final guide = (r.nomGuide ?? '').trim().toLowerCase();
-        final connecte = _guideConnecte.nomComplet.trim().toLowerCase();
-        return guide == connecte || guide.contains(connecte) || connecte.contains(guide);
+        return guide.isEmpty ||
+            guide == 'visite libre' ||
+            guide.contains('sans guide') ||
+            guide == 'null';
+      }).toList();
+    } else {
+      // Guide individuel
+      final guideNom = (_profilActif.guideAssocie?.nomComplet ?? '').trim().toLowerCase();
+      _visitesAffichees = _toutesLesVisites.where((r) {
+        final guide = (r.nomGuide ?? '').trim().toLowerCase();
+        return guide == guideNom || guide.contains(guideNom) || guideNom.contains(guide);
       }).toList();
     }
   }
@@ -98,7 +154,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
     }
     if (r.modePaiement == 'SUR_PLACE') {
       return r.statut == 'EFFECTUEE'
-          ? 'Espèces (Encaissé)'
+          ? 'Espèces (Encaissé au guichet)'
           : 'Sur place (À encaisser)';
     }
     if (r.modePaiement == 'WAVE') return 'Wave (Payé en ligne)';
@@ -113,7 +169,6 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
     Reservation? reservationTrouvee;
     bool enRecherche = false;
 
-    // Si un code est pré-rempli, charger immédiatement la réservation
     if (codePreRempli != null && codePreRempli.isNotEmpty) {
       reservationTrouvee = await _reservationService.loadByCode(codePreRempli.trim());
     }
@@ -129,6 +184,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
           final bool dejaPayeEnLigne = reservationTrouvee?.modePaiement == 'WAVE' ||
               reservationTrouvee?.modePaiement == 'ORANGE_MONEY' ||
               reservationTrouvee?.modePaiement == 'PAYE_ESPECES_SUR_PLACE';
+          final bool estDejaEffectuee = reservationTrouvee?.statut == 'EFFECTUEE';
 
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -148,7 +204,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Scannez le QR Code ou saisissez la référence du billet :',
+                    'Entrez le code de réservation présent sur le pass du visiteur :',
                     style: TextStyle(fontSize: 13, color: Colors.black87),
                   ),
                   const SizedBox(height: 12),
@@ -158,8 +214,8 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                         child: TextField(
                           controller: controller,
                           decoration: const InputDecoration(
-                            labelText: 'Référence billet',
-                            hintText: 'Ex: ZIG-2026-001',
+                            labelText: 'Référence du billet',
+                            hintText: 'Ex: ZIG-32005',
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.confirmation_number_outlined),
                             isDense: true,
@@ -272,6 +328,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                           Text('👥 Participants : ${reservationTrouvee!.nombrePersonnes} personne(s)'),
                           Text('📅 Date : ${reservationTrouvee!.dateVisite} (${reservationTrouvee!.creneauHoraire})'),
                           Text('💰 Montant : ${reservationTrouvee!.montantTotal.toInt()} FCFA'),
+                          Text('🧭 Guide : ${reservationTrouvee!.nomGuide ?? "Visite libre (Guichet)"}'),
                           Text(
                             '📌 Statut actuel : ${_nomStatut(reservationTrouvee!.statut)}',
                             style: TextStyle(
@@ -281,8 +338,28 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                           ),
                           const SizedBox(height: 10),
 
-                          // ALERTE TRAÇABILITÉ DU PAIEMENT EN LIQUIDE OU EN LIGNE
-                          if (estSurPlace && reservationTrouvee!.statut != 'EFFECTUEE') ...[
+                          if (estDejaEffectuee) ...[
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE0F2F1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFB2DFDB)),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.task_alt, color: Color(0xFF007A78), size: 20),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Cette visite a déjà été effectuée et validée au guichet.',
+                                      style: TextStyle(fontSize: 12, color: Color(0xFF007A78), fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else if (estSurPlace) ...[
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -318,7 +395,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   const Text(
-                                    'Veuillez percevoir la somme en liquide avant de valider l\'entrée du client.',
+                                    'Veuillez percevoir les espèces au guichet avant de valider l\'entrée.',
                                     style: TextStyle(fontSize: 11.5, color: Color(0xFF856404)),
                                   ),
                                 ],
@@ -358,7 +435,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                 onPressed: () => Navigator.pop(dialogContext),
                 child: const Text('Fermer'),
               ),
-              if (reservationTrouvee != null && reservationTrouvee!.statut != 'EFFECTUEE')
+              if (reservationTrouvee != null && !estDejaEffectuee)
                 ElevatedButton.icon(
                   onPressed: () async {
                     if (reservationTrouvee!.statut == 'ANNULEE') {
@@ -368,17 +445,19 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                       return;
                     }
 
-                    // Déterminer le mode de paiement final pour traçabilité
                     final String nouveauPaiement = (reservationTrouvee!.modePaiement == 'SUR_PLACE')
                         ? 'PAYE_ESPECES_SUR_PLACE'
                         : reservationTrouvee!.modePaiement;
 
-                    // Validation : on associe le guide connecté comme valideur officiel
+                    // Nom du guide valideur
+                    final String guideValideur = _profilActif.guideAssocie?.nomComplet ??
+                        (reservationTrouvee!.nomGuide ?? 'Guichet / Admin du Site');
+
                     final bool succes = await _reservationService.updateStatut(
                       reservationTrouvee!.codeReservation,
                       'EFFECTUEE',
                       nouveauModePaiement: nouveauPaiement,
-                      nomGuideValideur: _guideConnecte.nomComplet,
+                      nomGuideValideur: guideValideur,
                     );
 
                     if (succes) {
@@ -387,7 +466,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                       Navigator.pop(dialogContext);
 
                       final messageNotification = (reservationTrouvee!.modePaiement == 'SUR_PLACE')
-                          ? '✅ Billet validé ! Paiement de ${reservationTrouvee!.montantTotal.toInt()} FCFA encaissé en espèces par ${_guideConnecte.nomComplet}.'
+                          ? '✅ Billet validé ! Paiement de ${reservationTrouvee!.montantTotal.toInt()} FCFA encaissé en espèces au guichet.'
                           : '✅ Billet ${reservationTrouvee!.codeReservation} validé avec succès ! Visite marquée EFFECTUÉE.';
 
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -415,7 +494,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
-              if (reservationTrouvee != null && reservationTrouvee!.statut == 'EFFECTUEE')
+              if (reservationTrouvee != null && estDejaEffectuee)
                 OutlinedButton.icon(
                   onPressed: () async {
                     final String initPaiement = reservationTrouvee!.modePaiement.contains('ESPECES')
@@ -435,7 +514,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           backgroundColor: const Color(0xFFC8754D),
-                          content: Text('Billet ${reservationTrouvee!.codeReservation} remis "En attente" pour test.'),
+                          content: Text('Billet ${reservationTrouvee!.codeReservation} remis "En attente" pour nouveau test.'),
                         ),
                       );
                     }
@@ -469,7 +548,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
               _detailRow('Participants', '${r.nombrePersonnes} personne(s)'),
               _detailRow('Montant Total', '${r.montantTotal.toInt()} FCFA'),
               _detailRow('Paiement', _libellePaiement(r)),
-              _detailRow('Guide désigné', r.nomGuide ?? 'Visite libre / Non assigné'),
+              _detailRow('Guide désigné', r.nomGuide ?? 'Visite libre (Guichet)'),
               _detailRow('Statut', _nomStatut(r.statut)),
             ],
           ),
@@ -586,6 +665,15 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
 
             Row(
               children: [
+                const Icon(Icons.directions_walk, size: 16, color: Colors.grey),
+                const SizedBox(width: 6),
+                Text('Guide : ${r.nomGuide ?? "Visite libre (Guichet)"}', style: const TextStyle(fontSize: 13)),
+              ],
+            ),
+            const SizedBox(height: 4),
+
+            Row(
+              children: [
                 const Icon(Icons.payments_outlined, size: 16, color: Colors.grey),
                 const SizedBox(width: 6),
                 Expanded(
@@ -640,14 +728,14 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Calcul des statistiques selon la vue active (Toutes les visites ou Mes visites)
+    // Calcul des statistiques selon la vue sélectionnée
     final List<Reservation> sourceStats = _visitesAffichees;
 
     final int nbTotal = sourceStats.length;
-    final int nbConfirmes = sourceStats.where((r) => r.statut == 'CONFIRMEE' || r.statut == 'EN_ATTENTE').length;
+    final int nbAvenir = sourceStats.where((r) => r.statut == 'CONFIRMEE' || r.statut == 'EN_ATTENTE').length;
     final int nbEffectuees = sourceStats.where((r) => r.statut == 'EFFECTUEE').length;
 
-    // Calcul du total des espèces encaissées sur place (traçabilité financière)
+    // Calcul du total des espèces perçues au guichet sur ce périmètre
     final double totalEspeces = sourceStats
         .where((r) => r.modePaiement == 'PAYE_ESPECES_SUR_PLACE' || (r.modePaiement == 'SUR_PLACE' && r.statut == 'EFFECTUEE'))
         .fold(0.0, (somme, r) => somme + r.montantTotal);
@@ -655,12 +743,12 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFAF8F1),
       appBar: AppBar(
-        title: const Text('Espace Guide Touristique'),
+        title: const Text('Espace Guide & Administration'),
         backgroundColor: const Color(0xFF145C42),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            tooltip: 'Actualiser le planning',
+            tooltip: 'Actualiser les données',
             icon: const Icon(Icons.refresh),
             onPressed: _chargerVisites,
           ),
@@ -671,7 +759,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Profil du guide
+            // 1. Sélecteur de rôle & profil (Admin global, Visites libres, Guide officiel)
             Card(
               color: Colors.white,
               elevation: 2,
@@ -683,11 +771,11 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                   children: [
                     Row(
                       children: [
-                        const CircleAvatar(
-                          backgroundColor: Color(0xFF145C42),
+                        CircleAvatar(
+                          backgroundColor: const Color(0xFF145C42),
                           foregroundColor: Colors.white,
                           radius: 24,
-                          child: Icon(Icons.person, size: 28),
+                          child: Icon(_profilActif.icone, size: 28),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -695,14 +783,14 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _guideConnecte.nomComplet,
+                                _profilActif.nomAffichage,
                                 style: const TextStyle(
-                                  fontSize: 17,
+                                  fontSize: 16.5,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                '${_guideConnecte.telephone} • ${_guideConnecte.email}',
+                                _profilActif.sousTitre,
                                 style: const TextStyle(fontSize: 12, color: Colors.grey),
                               ),
                             ],
@@ -710,35 +798,27 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Langues : ${_guideConnecte.languesParlees ?? "Français"}',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    Text(
-                      'Tarif journalier officiel : ${(_guideConnecte.tarifGuideJournalier ?? 0).toInt()} FCFA',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
                     const Divider(height: 20),
-                    DropdownButtonFormField<Utilisateur>(
-                      initialValue: _guideConnecte,
+                    DropdownButtonFormField<ProfilVueOption>(
+                      initialValue: _profilActif,
+                      isExpanded: true,
                       decoration: const InputDecoration(
-                        labelText: 'Changer de profil Guide',
+                        labelText: 'Filtrer par rôle / Guide',
                         border: OutlineInputBorder(),
                         isDense: true,
                         fillColor: Color(0xFFFAF8F1),
                         filled: true,
                       ),
-                      items: ApiConfig.guidesDisponibles.map((g) {
-                        return DropdownMenuItem<Utilisateur>(
-                          value: g,
-                          child: Text(g.nomComplet),
+                      items: _optionsProfil.map((opt) {
+                        return DropdownMenuItem<ProfilVueOption>(
+                          value: opt,
+                          child: Text(opt.nomAffichage, overflow: TextOverflow.ellipsis),
                         );
                       }).toList(),
-                      onChanged: (nouveauGuide) {
-                        if (nouveauGuide != null) {
+                      onChanged: (nouvelleOption) {
+                        if (nouvelleOption != null) {
                           setState(() {
-                            _guideConnecte = nouveauGuide;
+                            _profilActif = nouvelleOption;
                             _filtrerVisites();
                           });
                         }
@@ -767,15 +847,15 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
             ),
             const SizedBox(height: 16),
 
-            // 3. Compteurs de statistiques avec traçabilité espèces
+            // 3. Compteurs de statistiques avec traçabilité des espèces
             Row(
               children: [
                 Expanded(
-                  child: _statCard('Assignées', '$nbTotal', Colors.blueGrey),
+                  child: _statCard('Total visites', '$nbTotal', Colors.blueGrey),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _statCard('À venir', '$nbConfirmes', const Color(0xFFC8754D)),
+                  child: _statCard('À venir', '$nbAvenir', const Color(0xFFC8754D)),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -801,9 +881,9 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Traçabilité Caisse Espèces (Sur place)',
-                          style: TextStyle(fontSize: 11.5, color: Colors.grey, fontWeight: FontWeight.w600),
+                        Text(
+                          'Traçabilité Caisse Espèces (${_profilActif.code == "GLOBAL" ? "Tout le site" : _profilActif.nomAffichage})',
+                          style: const TextStyle(fontSize: 11.5, color: Colors.grey, fontWeight: FontWeight.w600),
                         ),
                         Text(
                           '${totalEspeces.toInt()} FCFA encaissés',
@@ -817,28 +897,10 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
             ),
             const SizedBox(height: 20),
 
-            // 4. Commutateur d'affichage du planning
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _voirToutesLesVisites ? 'Toutes les visites du site' : 'Mes Visites assignées',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(value: false, label: Text('Mes visites')),
-                    ButtonSegment(value: true, label: Text('Toutes')),
-                  ],
-                  selected: {_voirToutesLesVisites},
-                  onSelectionChanged: (val) {
-                    setState(() {
-                      _voirToutesLesVisites = val.first;
-                      _filtrerVisites();
-                    });
-                  },
-                ),
-              ],
+            // 4. Titre de la liste
+            Text(
+              'Planning des Visites — ${_profilActif.nomAffichage}',
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
 
@@ -854,9 +916,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                       const Icon(Icons.event_available, size: 50, color: Colors.grey),
                       const SizedBox(height: 12),
                       Text(
-                        _voirToutesLesVisites
-                            ? 'Aucune réservation enregistrée sur le site pour le moment.'
-                            : 'Aucune visite assignée à ${_guideConnecte.nomComplet} pour le moment.\nUtilisez le bouton "Toutes" ou validez un billet QR pour vous l\'attribuer.',
+                        'Aucune visite trouvée pour ${_profilActif.nomAffichage}.\nChangez de filtre ou contrôlez un billet QR.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 13.5, color: Colors.grey),
                       ),
