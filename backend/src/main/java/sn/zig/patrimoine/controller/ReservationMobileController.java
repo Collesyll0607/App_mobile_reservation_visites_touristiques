@@ -76,6 +76,12 @@ public class ReservationMobileController {
         }
         ReservationMobile res = opt.get();
         res.setStatut(nouveauStatut);
+        if (payload.containsKey("modePaiement") && !payload.get("modePaiement").isBlank()) {
+            res.setModePaiement(payload.get("modePaiement"));
+        }
+        if (payload.containsKey("nomGuide") && !payload.get("nomGuide").isBlank()) {
+            res.setNomGuide(payload.get("nomGuide"));
+        }
         return ResponseEntity.ok(reservationRepository.save(res));
     }
 

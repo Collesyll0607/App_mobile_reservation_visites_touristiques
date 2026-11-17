@@ -108,10 +108,21 @@ class ReservationService {
 
   // ─── MISE À JOUR DE STATUT ────────────────────────────────────────────────
 
-  /// Met à jour le statut d'une réservation dans MySQL et en local.
+  /// Met à jour le statut d'une réservation dans MySQL et en local,
+  /// avec option de mise à jour du mode de paiement (ex: encaissement sur place) et du guide valideur.
   Future<bool> updateStatut(
-      String codeReservation, String nouveauStatut) async {
+    String codeReservation,
+    String nouveauStatut, {
+    String? nouveauModePaiement,
+    String? nomGuideValideur,
+  }) async {
     bool savedInBackend = false;
+
+    final payload = <String, String>{
+      'statut': nouveauStatut,
+      if (nouveauModePaiement != null) 'modePaiement': nouveauModePaiement,
+      if (nomGuideValideur != null) 'nomGuide': nomGuideValideur,
+    };
 
     for (final baseUrl in _candidateBaseUrls) {
       try {
@@ -119,7 +130,7 @@ class ReservationService {
             .put(
               Uri.parse('$baseUrl/$codeReservation/statut'),
               headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({'statut': nouveauStatut}),
+              body: jsonEncode(payload),
             )
             .timeout(const Duration(seconds: 3));
 
@@ -141,7 +152,11 @@ class ReservationService {
         (r) => r.codeReservation == codeReservation,
       );
       if (index < 0) return false;
-      all[index] = all[index].copyWith(statut: nouveauStatut);
+      all[index] = all[index].copyWith(
+        statut: nouveauStatut,
+        modePaiement: nouveauModePaiement ?? all[index].modePaiement,
+        nomGuide: nomGuideValideur ?? all[index].nomGuide,
+      );
       return await _persistLocal(all);
     } catch (_) {
       return false;
