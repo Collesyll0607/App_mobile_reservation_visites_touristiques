@@ -16,7 +16,7 @@ class AuthService {
         return '$origin/api/auth';
       }
     }
-    return 'http://127.0.0.1:8081/api/auth';
+    return 'https://casamance-backend-gwav.onrender.com/api/auth';
   }
 
   static Utilisateur? _currentUser;

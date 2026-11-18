@@ -15,11 +15,13 @@ class ReservationService {
       final origin = Uri.base.origin;
       return [
         if (origin.isNotEmpty && !origin.startsWith('null')) '$origin/api/reservations',
+        'https://casamance-backend-gwav.onrender.com/api/reservations',
         'http://localhost:8081/api/reservations',
         'http://127.0.0.1:8081/api/reservations',
       ];
     }
-    return [
+    return const [
+      'https://casamance-backend-gwav.onrender.com/api/reservations',
       'http://10.0.2.2:8081/api/reservations',
       'http://127.0.0.1:8081/api/reservations',
       'http://localhost:8081/api/reservations',

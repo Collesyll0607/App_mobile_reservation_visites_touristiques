@@ -25,13 +25,15 @@ class PatrimoineService {
       final origin = Uri.base.origin;
       return [
         if (origin.isNotEmpty && !origin.startsWith('null')) '$origin/api/patrimoines',
+        'https://casamance-backend-gwav.onrender.com/api/patrimoines',
         'http://127.0.0.1:8081/api/patrimoines',
         'http://localhost:8081/api/patrimoines',
       ];
     }
     return const [
-      'http://127.0.0.1:8081/api/patrimoines',
+      'https://casamance-backend-gwav.onrender.com/api/patrimoines',
       'http://10.0.2.2:8081/api/patrimoines',
+      'http://127.0.0.1:8081/api/patrimoines',
     ];
   }
 

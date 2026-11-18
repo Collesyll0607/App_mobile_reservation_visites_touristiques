@@ -2,9 +2,11 @@ import '../models/patrimoine.dart';
 import '../models/utilisateur.dart';
 
 class ApiConfig {
+  /// URL de base du microservice Spring Boot en Cloud (Render)
+  static const String cloudBaseUrl = 'https://casamance-backend-gwav.onrender.com/api';
+
   /// URL de base du microservice Spring Boot (ms-patrimoine)
-  /// Sur émulateur Android : 10.0.2.2 pointe vers le localhost du PC
-  static const String baseUrl = 'http://10.0.2.2:8081/api';
+  static const String baseUrl = 'https://casamance-backend-gwav.onrender.com/api';
 
   /// Sites touristiques de Ziguinchor & Casamance (Données de démonstration / Fallback)
   static const List<Patrimoine> sitesCasamance = [

@@ -15,7 +15,7 @@ class ReviewsService {
         return '$origin/api/avis';
       }
     }
-    return 'http://127.0.0.1:8081/api/avis';
+    return 'https://casamance-backend-gwav.onrender.com/api/avis';
   }
 
   static final List<Avis> _initialReviews = [
