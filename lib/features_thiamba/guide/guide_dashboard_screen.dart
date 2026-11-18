@@ -450,8 +450,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                         : reservationTrouvee!.modePaiement;
 
                     // Nom du guide valideur
-                    final String guideValideur = _profilActif.guideAssocie?.nomComplet ??
-                        (reservationTrouvee!.nomGuide ?? 'Guichet / Admin du Site');
+                    final String guideValideur = reservationTrouvee!.nomGuide ?? 'Guide Officiel (PIN 2026)';
 
                     final bool succes = await _reservationService.updateStatut(
                       reservationTrouvee!.codeReservation,
@@ -759,70 +758,41 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Sélecteur de rôle & profil (Admin global, Visites libres, Guide officiel)
+            // 1. En-tête Espace Guide Officiel & Contrôle
             Card(
               color: Colors.white,
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              child: const Padding(
+                padding: EdgeInsets.all(16),
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: const Color(0xFF145C42),
-                          foregroundColor: Colors.white,
-                          radius: 24,
-                          child: Icon(_profilActif.icone, size: 28),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _profilActif.nomAffichage,
-                                style: const TextStyle(
-                                  fontSize: 16.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                _profilActif.sousTitre,
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    CircleAvatar(
+                      backgroundColor: Color(0xFF145C42),
+                      foregroundColor: Colors.white,
+                      radius: 24,
+                      child: Icon(Icons.verified_user_rounded, size: 28),
                     ),
-                    const Divider(height: 20),
-                    DropdownButtonFormField<ProfilVueOption>(
-                      initialValue: _profilActif,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Filtrer par rôle / Guide',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        fillColor: Color(0xFFFAF8F1),
-                        filled: true,
+                    SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Poste de Contrôle & Validation',
+                            style: TextStyle(
+                              fontSize: 16.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF145C42),
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Session Guide Officiel active • Code PIN 2026',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
                       ),
-                      items: _optionsProfil.map((opt) {
-                        return DropdownMenuItem<ProfilVueOption>(
-                          value: opt,
-                          child: Text(opt.nomAffichage, overflow: TextOverflow.ellipsis),
-                        );
-                      }).toList(),
-                      onChanged: (nouvelleOption) {
-                        if (nouvelleOption != null) {
-                          setState(() {
-                            _profilActif = nouvelleOption;
-                            _filtrerVisites();
-                          });
-                        }
-                      },
                     ),
                   ],
                 ),
@@ -881,9 +851,9 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Traçabilité Caisse Espèces (${_profilActif.code == "GLOBAL" ? "Tout le site" : _profilActif.nomAffichage})',
-                          style: const TextStyle(fontSize: 11.5, color: Colors.grey, fontWeight: FontWeight.w600),
+                        const Text(
+                          'Traçabilité Caisse Espèces (Toutes les arrivées)',
+                          style: TextStyle(fontSize: 11.5, color: Colors.grey, fontWeight: FontWeight.w600),
                         ),
                         Text(
                           '${totalEspeces.toInt()} FCFA encaissés',
@@ -898,9 +868,9 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
             const SizedBox(height: 20),
 
             // 4. Titre de la liste
-            Text(
-              'Planning des Visites — ${_profilActif.nomAffichage}',
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            const Text(
+              'Planning et Arrivées des Visiteurs',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
 
@@ -908,17 +878,17 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
             if (_isLoading)
               const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()))
             else if (_visitesAffichees.isEmpty)
-              Card(
+              const Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      const Icon(Icons.event_available, size: 50, color: Colors.grey),
-                      const SizedBox(height: 12),
+                      Icon(Icons.event_available, size: 50, color: Colors.grey),
+                      SizedBox(height: 12),
                       Text(
-                        'Aucune visite trouvée pour ${_profilActif.nomAffichage}.\nChangez de filtre ou contrôlez un billet QR.',
+                        'Aucune réservation enregistrée pour le moment.\nUtilisez le bouton ci-dessus pour contrôler un billet QR.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 13.5, color: Colors.grey),
+                        style: TextStyle(fontSize: 13.5, color: Colors.grey),
                       ),
                     ],
                   ),

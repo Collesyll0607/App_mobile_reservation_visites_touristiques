@@ -329,17 +329,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   });
                                 },
                               ),
-                              ActionChip(
-                                label: const Text('Guide Démo', style: TextStyle(fontSize: 11)),
-                                avatar: const Icon(Icons.tour_outlined, size: 14),
-                                onPressed: () {
-                                  setState(() {
-                                    _emailController.text = 'guide@uasz.sn';
-                                    _passwordController.text = '123456';
-                                    _errorMessage = null;
-                                  });
-                                },
-                              ),
                             ],
                           ),
                         ],
