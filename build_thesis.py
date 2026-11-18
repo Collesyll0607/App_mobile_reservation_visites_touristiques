@@ -2,7 +2,7 @@
 """
 Générateur officiel du Mémoire académique de Licence en Ingénierie Informatique
 Université Assane Seck de Ziguinchor (UASZ)
-Auteurs : Collé SYLL (Matricule : 202300489) & Ndeye Thiamba FAYE (Matricule : 202300288)
+Auteurs : Collé SYLL (Matricule : 202300489) & Ndeye Thiamba FAYE (Matricule : 202300488)
 Encadrant : M. Lamine FATY, Enseignant-Chercheur, Département Informatique
 """
 
@@ -265,7 +265,7 @@ def create_pdf_story(s, page_map=None):
         [
             Paragraph("<b>Présenté et soutenu par :</b><br/>"
                       "• <b>Collé SYLL</b> (Matricule : 202300489)<br/>"
-                      "• <b>Ndeye Thiamba FAYE</b> (Matricule : 202300288)", s['cover_meta']),
+                      "• <b>Ndeye Thiamba FAYE</b> (Matricule : 202300488)", s['cover_meta']),
             Paragraph("<b>Sous la direction de :</b><br/>"
                       "• <b>M. Lamine FATY</b><br/>"
                       "Enseignant-Chercheur<br/>"
@@ -305,50 +305,7 @@ def create_pdf_story(s, page_map=None):
     story.append(PageBreak())
 
     # =========================================================================
-    # PAGE 2 : DÉDICACES
-    # =========================================================================
-    story.append(Paragraph("DÉDICACES", s['h1']))
-    story.append(HRFlowable(width="100%", thickness=1, color=COLOR_PRIMARY, spaceAfter=14))
-
-    story.append(Paragraph("<b>Dédicace de Collé SYLL :</b>", s['h2']))
-    story.append(Paragraph(
-        "Je dédie avec une profonde émotion et une gratitude infinie ce travail à mes très chers parents. "
-        "Leurs sacrifices inestimables, leur affection sans faille, leurs prières quotidiennes et leurs conseils précieux "
-        "ont guidé chacun de mes pas et ont forgé ma persévérance tout au long de mes études universitaires.",
-        s['body']
-    ))
-    story.append(Paragraph(
-        "À mes frères, sœurs et proches, dont la bienveillance constante et les encouragements continus ont constitué "
-        "une source intarissable de réconfort et de motivation dans les moments d'exigence intellectuelle.",
-        s['body']
-    ))
-    story.append(Paragraph(
-        "À mon binôme <b>Ndeye Thiamba FAYE</b>, pour son esprit d'équipe exemplaire, sa rigueur intellectuelle, sa loyauté "
-        "et la franche complicité professionnelle qui a rythmé nos journées d'ingénierie et de développement.",
-        s['body']
-    ))
-    story.append(Spacer(1, 14))
-
-    story.append(Paragraph("<b>Dédicace de Ndeye Thiamba FAYE :</b>", s['h2']))
-    story.append(Paragraph(
-        "Je dédie ce travail avec toute la tendresse de mon cœur à mes chers parents. Que ce mémoire soit l'humble "
-        "témoignage de ma reconnaissance éternelle pour leur amour inconditionnel, leur dévouement sans limite et les sacrifices "
-        "consentis pour mon éducation et ma réussite.",
-        s['body']
-    ))
-    story.append(Paragraph(
-        "À l'ensemble de ma famille, pour leur soutien moral indéfectible, leur patience et leur foi inébranlable en mes capacités.",
-        s['body']
-    ))
-    story.append(Paragraph(
-        "À ma binôme <b>Collé SYLL</b>, pour son dévouement remarquable, sa persévérance face aux défis d'architecture "
-        "et la complémentarité constante qui a permis l'aboutissement de ce projet opérationnel.",
-        s['body']
-    ))
-    story.append(PageBreak())
-
-    # =========================================================================
-    # PAGE 3 : REMERCIEMENTS
+    # REMERCIEMENTS
     # =========================================================================
     story.append(Paragraph("REMERCIEMENTS", s['h1']))
     story.append(HRFlowable(width="100%", thickness=1, color=COLOR_PRIMARY, spaceAfter=12))
@@ -503,7 +460,6 @@ def create_pdf_story(s, page_map=None):
     story.append(HRFlowable(width="100%", thickness=1, color=COLOR_PRIMARY, spaceAfter=8))
 
     somm_rows = [
-        [Paragraph("<b>DÉDICACES</b>", s['body']), Paragraph(f"<b>{p_page('dedicaces')}</b>", s['body'])],
         [Paragraph("<b>REMERCIEMENTS</b>", s['body']), Paragraph(f"<b>{p_page('remerciements')}</b>", s['body'])],
         [Paragraph("<b>RÉSUMÉ TECHNIQUE & ABSTRACT</b>", s['body']), Paragraph(f"<b>{p_page('resume')}</b>", s['body'])],
         [Paragraph("<b>GLOSSAIRE ET LISTE DES SIGLES</b>", s['body']), Paragraph(f"<b>{p_page('glossaire')}</b>", s['body'])],
@@ -1641,7 +1597,6 @@ def generate_exact_pdf(output_pdf_path):
     reader = pypdf.PdfReader("temp_pass1.pdf")
     page_map = {}
     markers = {
-        'dedicaces': 'DÉDICACES',
         'remerciements': 'REMERCIEMENTS',
         'resume': 'RÉSUMÉ TECHNIQUE',
         'glossaire': 'GLOSSAIRE ET LISTE DES SIGLES',
@@ -1758,7 +1713,7 @@ def generate_matching_docx(output_docx_path):
     t_bin.rows[0].cells[0].paragraphs[0].add_run(
         "Présenté et soutenu par :\n"
         "• Collé SYLL (Matricule : 202300489)\n"
-        "• Ndeye Thiamba FAYE (Matricule : 202300288)"
+        "• Ndeye Thiamba FAYE (Matricule : 202300488)"
     ).font.bold = True
     t_bin.rows[0].cells[1].paragraphs[0].add_run(
         "Sous la direction de :\n"
@@ -1789,19 +1744,7 @@ def generate_matching_docx(output_docx_path):
 
     doc.add_page_break()
 
-    # Dédicaces & Remerciements
-    doc.add_heading("DÉDICACES", level=1)
-    doc.add_heading("Dédicace de Collé SYLL :", level=2)
-    doc.add_paragraph("Je dédie avec une profonde émotion et une gratitude infinie ce travail à mes très chers parents. Leurs sacrifices inestimables, leur affection sans faille, leurs prières quotidiennes et leurs conseils précieux ont guidé chacun de mes pas tout au long de mes études.")
-    doc.add_paragraph("À mes frères, sœurs et proches pour leur bienveillance constante.")
-    doc.add_paragraph("À mon binôme Ndeye Thiamba FAYE pour son esprit d'équipe exemplaire, sa rigueur constante et la franche complicité professionnelle qui a rythmé nos journées de développement.")
-
-    doc.add_heading("Dédicace de Ndeye Thiamba FAYE :", level=2)
-    doc.add_paragraph("Je dédie ce travail avec toute la tendresse de mon cœur à mes chers parents. Que ce mémoire soit l'humble témoignage de ma reconnaissance éternelle pour leur amour inconditionnel et les sacrifices consentis pour mon éducation et ma réussite.")
-    doc.add_paragraph("À l'ensemble de ma famille pour leur soutien moral indéfectible.")
-    doc.add_paragraph("À ma binôme Collé SYLL pour son dévouement remarquable et sa persévérance face aux défis d'ingénierie logicielle.")
-
-    doc.add_page_break()
+    # Remerciements
     doc.add_heading("REMERCIEMENTS", level=1)
     doc.add_paragraph("Au terme de ce projet opérationnel de Licence en Ingénierie Informatique, nous rendons grâce à Dieu Tout-Puissant pour la santé, la force et la persévérance accordées.")
     doc.add_paragraph("Nous exprimons notre profonde et sincère gratitude à notre encadrant, Monsieur Lamine FATY, Enseignant-Chercheur au Département Informatique de l'UASZ, pour sa disponibilité, sa rigueur scientifique et son accompagnement bienveillant.")
